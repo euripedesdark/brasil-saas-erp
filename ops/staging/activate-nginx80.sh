@@ -49,9 +49,17 @@ NGINX
 chmod 0644 "$TARGET"
 nginx -t
 systemctl reload nginx
-curl --fail --silent --show-error --max-time 10 -D "$HEADERS" \
-    -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login -o /dev/null
-python3 -c 'import pathlib,sys; assert any(line.lower().strip() == "x-erp-environment: staging" for line in pathlib.Path(sys.argv[1]).read_text().splitlines())' "$HEADERS"
+VERIFIED=false
+for attempt in $(seq 1 10); do
+    if curl --fail --silent --show-error --max-time 5 -D "$HEADERS" \
+        -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login -o /dev/null \
+        && python3 -c 'import pathlib,sys; sys.exit(0 if any(line.lower().strip() == "x-erp-environment: staging" for line in pathlib.Path(sys.argv[1]).read_text().splitlines()) else 1)' "$HEADERS"; then
+        VERIFIED=true
+        break
+    fi
+    sleep 1
+done
+[ "$VERIFIED" = true ]
 curl --fail --silent --show-error --max-time 10 http://127.0.0.1/login -o /dev/null
 trap - ERR
 rm -f "$BACKUP" "$HEADERS"
