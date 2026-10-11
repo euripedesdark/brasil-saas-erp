@@ -34,7 +34,13 @@ jobs:
                       print(label,'HTTP',response.status,'health',json.load(response).get('status'))
               except Exception as error: print(label,type(error).__name__)
           print('PRODUCTION_PUBLIC_URL', (pathlib.Path.home()/'.local/share/brasil-saas-public-access/url.txt').read_text().strip())
-          auth=pathlib.Path.home()/'brasil-saas-auth'
+          print(subprocess.run(['systemctl','list-units','--all','--no-pager'],capture_output=True,text=True).stdout)
+          auth=pathlib.Path('/opt/brasil-saas-auth')
+          for base in [pathlib.Path('/opt'),pathlib.Path.home()]:
+              try:
+                  for p in base.iterdir():
+                      if any(k in p.name.lower() for k in ['auth','iam']): print('AUTH_DIRECTORY',p)
+              except OSError: pass
           for p in auth.rglob('*.jar'):
               print('AUTH_JAR',p,p.stat().st_size)
           for p in auth.rglob('*'):
