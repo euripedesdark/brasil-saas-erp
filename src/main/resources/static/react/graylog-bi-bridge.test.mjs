@@ -15,6 +15,7 @@ test('calendar validation and inclusive 366 day limit', () => {
 });
 test('plugin URL preserves reverse proxy prefix and contains no credentials', () => {
     assert.equal(presentationUrl('https://graylog.example/logs/', 'https://erp.example', 'nonce').pathname, '/logs/brasil-saas-bi');
+    assert.equal(new URLSearchParams(presentationUrl('https://graylog.example/', 'https://erp.example', 'nonce', 'fr-FR').hash.slice(1)).get('locale'), 'fr-FR');
     for (const url of ['javascript:alert(1)', 'https://user:pass@graylog.example', 'https://graylog.example/?token=secret']) assert.throws(() => presentationUrl(url, 'https://erp.example', 'nonce'));
 });
 test('requires the bound window, exact origin, protocol and nonce', async () => {

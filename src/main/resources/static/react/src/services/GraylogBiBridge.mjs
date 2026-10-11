@@ -14,11 +14,12 @@ export function validPeriod(inicio, fim) {
     return Number.isFinite(start) && Number.isFinite(end) && end >= start && end - start <= 365 * 86400000;
 }
 
-export function presentationUrl(webUrl, erpOrigin, nonce) {
+export function presentationUrl(webUrl, erpOrigin, nonce, locale) {
     const url = new URL(webUrl);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error('Invalid Graylog URL');
     url.pathname = `${url.pathname.replace(/\/$/, '')}/brasil-saas-bi`;
     url.hash = new URLSearchParams({ erpOrigin, nonce }).toString();
+    if (['pt-BR', 'en-US', 'es-ES', 'fr-FR'].includes(locale)) url.hash += `&locale=${locale}`;
     return url;
 }
 

@@ -5,7 +5,7 @@ import { apiFetch } from '../../services/ApiConfig';
 import { biNonce, createBiHost, presentationUrl } from '../../services/GraylogBiBridge.mjs';
 
 export default function GraylogBiPresentation({ webUrl }) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const session = useRef(null);
     const [status, setStatus] = useState('idle');
@@ -18,7 +18,7 @@ export default function GraylogBiPresentation({ webUrl }) {
         session.current?.(); session.current = null;
         const nonce = biNonce();
         let url;
-        try { url = presentationUrl(webUrl, window.location.origin, nonce); }
+        try { url = presentationUrl(webUrl, window.location.origin, nonce, i18n.resolvedLanguage); }
         catch { setStatus('unavailable'); return; }
         const popup = window.open(url.href, `brasil-saas-bi-${nonce}`, 'popup,width=1150,height=800');
         if (!popup) { setStatus('blocked'); return; }

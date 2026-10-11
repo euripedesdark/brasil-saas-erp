@@ -7,7 +7,9 @@ import fr from '../../../../src/main/resources/static/react/src/locales/bi-fr-FR
 
 const date = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const translations = { pt, en, es, fr };
-const language = Object.hasOwn(translations, navigator.language.slice(0, 2)) ? navigator.language.slice(0, 2) : 'en';
+const requestedLocale = new URLSearchParams(window.location.hash.slice(1)).get('locale');
+const locale = ['pt-BR', 'en-US', 'es-ES', 'fr-FR'].includes(requestedLocale) ? requestedLocale : navigator.language;
+const language = Object.hasOwn(translations, locale.slice(0, 2)) ? locale.slice(0, 2) : 'en';
 const text = translations[language];
 const help = {
     pt: 'Abra este painel pelo módulo BI do ERP e mantenha a janela do ERP aberta. Selecione apenas as áreas que deseja consultar.',
@@ -67,7 +69,7 @@ export default function BrasilSaasBi() {
         setBusy(loading);
         setApplied({ inicio, fim });
     };
-    const format = indicator => new Intl.NumberFormat(navigator.language, indicator.unidade === 'BRL'
+    const format = indicator => new Intl.NumberFormat(locale, indicator.unidade === 'BRL'
         ? { style: 'currency', currency: 'BRL' } : { maximumFractionDigits: 0 }).format(Number(indicator.valor));
 
     return <section style={{ padding: 24 }} aria-labelledby="brasil-saas-bi-title">
