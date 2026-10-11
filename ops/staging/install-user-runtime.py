@@ -111,7 +111,15 @@ try:
     # takes its schema-history lock, using only this private PostgreSQL cluster.
     owner_sql = "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $$;\n"
     owner_sql += "ALTER ROLE sa LOGIN SUPERUSER PASSWORD '" + settings['DB_PASSWORD'] + "';\n"
-    owner_sql += "REASSIGN OWNED BY staging_owner TO sa;\n"
+    owner_sql += """DO $$ DECLARE r record; BEGIN
+      FOR r IN SELECT c.oid::regclass AS rel FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+        WHERE n.nspname IN ('brasil_saas','brasil_saas_dl') AND c.relkind='r' AND pg_get_userbyid(c.relowner) <> 'sa'
+      LOOP EXECUTE format('ALTER TABLE %s OWNER TO sa', r.rel); END LOOP;
+      FOR r IN SELECT c.oid::regclass AS rel FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+        WHERE n.nspname IN ('brasil_saas','brasil_saas_dl') AND c.relkind='S' AND pg_get_userbyid(c.relowner) <> 'sa'
+      LOOP EXECUTE format('ALTER SEQUENCE %s OWNER TO sa', r.rel); END LOOP;
+    END $$;
+    """
     run(['psql', '-X', '-h', '127.0.0.1', '-p', '15432', '-U', 'staging_owner', '-d', 'brasil_saas_staging', '-v', 'ON_ERROR_STOP=1'], input=owner_sql, text=True, env=pgenv, stdout=subprocess.DEVNULL)
     run(['systemctl', '--user', 'start', names[1]])
     wait_port(27018)
