@@ -6,11 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -164,10 +161,10 @@ public class GerenciadorSqlService {
             comando = comando.substring(0, comando.length() - 1).strip();
         }
 
-        boolean soLeitura = SO_LEITURA.matcher(comando).find();
         boolean temEscrita = QUALQUER_ESCRITA.matcher(comando).find();
+        boolean soLeitura = SO_LEITURA.matcher(comando).find() && !temEscrita;
 
-        if (temEscrita && !soLeitura && !confirmarDestructive) {
+        if (!soLeitura && !confirmarDestructive) {
             throw new ConfirmacaoNecessariaException(
                     "Este comando altera dados. Envie confirmacao explicita para executar.");
         }

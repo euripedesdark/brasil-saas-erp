@@ -6,7 +6,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
-import java.math.BigDecimal;
 import java.util.Map;
 
 @RestController

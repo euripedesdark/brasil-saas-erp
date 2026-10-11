@@ -11,8 +11,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.IsoFields;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.WeekFields;
-import java.util.Locale;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

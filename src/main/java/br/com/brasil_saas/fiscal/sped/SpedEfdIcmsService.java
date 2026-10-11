@@ -2,20 +2,14 @@ package br.com.brasil_saas.fiscal.sped;
 
 import br.com.swconsultoria.efd.icms.bo.GerarEfdIcms;
 import br.com.swconsultoria.efd.icms.registros.EfdIcms;
-import br.com.swconsultoria.efd.icms.registros.bloco0.Bloco0;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0000;
-import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0001;
-import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0005;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0100;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0150;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0200;
 import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0206;
-import br.com.swconsultoria.efd.icms.registros.bloco0.Registro0990;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Gera o arquivo SPED EFD ICMS/IPI.

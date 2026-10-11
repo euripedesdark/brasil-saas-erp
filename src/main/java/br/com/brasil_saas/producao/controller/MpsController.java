@@ -3,7 +3,6 @@ import br.com.brasil_saas.producao.model.MpsItem;
 import br.com.brasil_saas.producao.service.MpsService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

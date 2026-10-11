@@ -7,7 +7,6 @@ import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.web.PageResponse;
 import br.com.brasil_saas.financeiro.model.Comissao;
 import br.com.brasil_saas.financeiro.repository.ComissaoRepository;
-import br.com.brasil_saas.rh.model.Funcionario;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;

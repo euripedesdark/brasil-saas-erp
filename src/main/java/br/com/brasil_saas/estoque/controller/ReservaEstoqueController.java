@@ -3,7 +3,6 @@ package br.com.brasil_saas.estoque.controller;
 import br.com.brasil_saas.estoque.model.ReservaEstoque;
 import br.com.brasil_saas.estoque.model.SaldoEstoque;
 import br.com.brasil_saas.estoque.model.LoteEstoque;
-import br.com.brasil_saas.estoque.model.EnderecoEstoque;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import br.com.brasil_saas.estoque.repository.LoteEstoqueRepository;

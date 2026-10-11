@@ -2,7 +2,6 @@ package br.com.brasil_saas.wms.model;
 import br.com.brasil_saas.shared.model.TenantEntity;
 import jakarta.persistence.*; import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 @Entity @Table(name="bc_wms_volume_item", schema="brasil_saas") @Getter @Setter
 public class WmsVolumeItem extends TenantEntity {
     @Column(name="volume_id", nullable=false) private Long volumeId;

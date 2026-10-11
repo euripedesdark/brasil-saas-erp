@@ -3,7 +3,6 @@ package br.com.brasil_saas.ia.service;
 import br.com.brasil_saas.ia.dto.AnalisePreditivaRequest;
 import br.com.brasil_saas.ia.model.AnalisePreditiva;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 

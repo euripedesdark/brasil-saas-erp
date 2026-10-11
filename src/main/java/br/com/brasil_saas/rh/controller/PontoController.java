@@ -3,13 +3,11 @@ import br.com.brasil_saas.rh.model.Ponto;
 import br.com.brasil_saas.rh.service.PontoService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 @RestController @RequestMapping("/api/rh/ponto") @RequiredArgsConstructor

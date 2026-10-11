@@ -3,7 +3,6 @@ package br.com.brasil_saas.ia.controller;
 import br.com.brasil_saas.ia.dto.ChatSessaoRequest;
 import br.com.brasil_saas.ia.model.ChatSessao;
 import br.com.brasil_saas.ia.service.ChatSessaoService;
-import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

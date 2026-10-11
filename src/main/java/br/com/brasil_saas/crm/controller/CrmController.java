@@ -2,7 +2,6 @@ package br.com.brasil_saas.crm.controller;
 import br.com.brasil_saas.crm.model.*;
 import br.com.brasil_saas.crm.service.CrmService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -4,7 +4,6 @@ import br.com.brasil_saas.financeiro.dto.ComissaoDtos.RegraRequest;
 import br.com.brasil_saas.financeiro.model.Comissao;
 import br.com.brasil_saas.financeiro.repository.ComissaoRepository;
 import br.com.brasil_saas.financeiro.service.ComissaoService;
-import br.com.brasil_saas.rh.model.Funcionario;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.List;
 
 @Service

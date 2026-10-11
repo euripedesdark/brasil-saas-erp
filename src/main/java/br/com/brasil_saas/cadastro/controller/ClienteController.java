@@ -4,7 +4,6 @@ import br.com.brasil_saas.cadastro.service.ClienteService;
 import br.com.brasil_saas.cadastro.service.dto.ClienteDtos;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import br.com.brasil_saas.shared.web.PageResponse;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
