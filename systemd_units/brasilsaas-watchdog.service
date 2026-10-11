@@ -5,8 +5,8 @@ After=network.target postgresql.service
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP
-ExecStart=/bin/bash /home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP/scripts/service-watchdog.sh start
+WorkingDirectory=/home/euripedes/brasil-saas-erp
+ExecStart=/bin/bash /home/euripedes/brasil-saas-erp/scripts/service-watchdog.sh start
 Restart=always
 RestartSec=30
 Environment=GRAYLOG_SERVER=127.0.0.1
