@@ -11,6 +11,8 @@ sudo bash /home/euripedes/.local/share/brasil-saas-bi-ready/activate-bi.sh
 
 O comando instala o JAR validado, ajusta somente os campos permitidos de server.conf,
 reinicia Graylog e pede login Graylog no terminal para registrar a conexão no ERP.
+Após salvar a conexão, reinicia o serviço de usuário do staging para que o Spring
+importe as propriedades novas. Não reinicia produção.
 Preserva senhas, MongoDB de metadados, porta 9002, permissões e backups privados.
 Não compila o plugin no dc-erp nem atualiza o JAR de produção.
 

@@ -38,7 +38,7 @@ jobs:
           PLUGIN_SOURCE: ${{ runner.temp }}/brasil-saas-bi-plugin
         run: |
           python3 - <<'PY'
-          import pathlib, os, shutil, importlib.util, subprocess
+          import pathlib, os, shutil, importlib.util, subprocess, pwd, shlex
           root = pathlib.Path.home() / '.local/share/brasil-saas-bi-ready'
           scripts = root / 'scripts/bi'
           target = root / 'integrations/graylog-bi/target'
@@ -56,10 +56,15 @@ jobs:
           shutil.copyfile(source, destination); destination.chmod(0o600)
           launcher = root / 'activate-bi.sh'
           if launcher.is_symlink(): raise RuntimeError('Launcher destination cannot be a symlink')
+          user = shlex.quote(pwd.getpwuid(os.getuid()).pw_name)
+          runtime = '/run/user/' + str(os.getuid())
+          user_command = 'runuser -u ' + user + ' -- env XDG_RUNTIME_DIR=' + runtime + ' DBUS_SESSION_BUS_ADDRESS=unix:path=' + runtime + '/bus '
           launcher.write_text('#!/usr/bin/env bash\nset -Eeuo pipefail\n'
               + 'test "$(id -u)" = 0 || { echo "Execute com sudo bash."; exit 1; }\n'
               + 'python3 "' + str(scripts / 'install-graylog-bi.py') + '" --web-url http://192.168.2.10:9002/ --apply --restart\n'
-              + 'python3 "' + str(scripts / 'configure-graylog.py') + '" --web-url http://192.168.2.10:9002/ --apply --login\n')
+              + 'python3 "' + str(scripts / 'configure-graylog.py') + '" --web-url http://192.168.2.10:9002/ --apply --login\n'
+              + user_command + 'systemctl --user restart brasil-saas-staging-app.service\n'
+              + 'echo "Conexao salva. O staging foi reiniciado para ler a configuracao; valide apos inicializar."\n')
           launcher.chmod(0o700)
           subprocess.run(['bash', '-n', str(launcher)], check=True)
           print('VALIDATED_PLUGIN_SHA256', digest)
