@@ -13,13 +13,13 @@ jobs:
       - name: Read sanitized staging startup logs
         run: |
           python3 - <<'PY'
-          import os,pathlib,subprocess,re
+          import os,pathlib,subprocess,re,urllib.request,json
           os.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'
           os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
           root=pathlib.Path.home()/'.local/share/brasil-saas-staging'
           settings=dict(l.split('=',1) for l in (root/'staging.env').read_text().splitlines() if '=' in l)
-          for component in ['app','postgres','redis']:
-              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','2026-10-11 07:58:00','--no-pager','-n','3000'],capture_output=True,text=True).stdout
+          for component in ['app','postgres','redis','mail']:
+              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','30 minutes ago','--no-pager','-n','3000'],capture_output=True,text=True).stdout
               for k,v in settings.items():
                   if v and any(x in k for x in ['PASSWORD','SECRET','URI']): s=s.replace(v,'[REDACTED]')
               s=re.sub(r'(generated security password:).*',r'\1 [REDACTED]',s)
@@ -28,4 +28,10 @@ jobs:
               if component=='app':
                   lines=[l for l in lines if any(x in l for x in ['ERROR','WARN','Caused by','Exception','Flyway','Migrat','schema','Hikari','Started','Starting','NOAUTH','WRONGPASS','DENIED']) and 'Pool - Starting' not in l]
               print('\n'.join(lines[-250:]))
+          for label,url in [('production','http://127.0.0.1/actuator/health'),('staging','http://127.0.0.1:18081/actuator/health')]:
+              try:
+                  with urllib.request.urlopen(url,timeout=10) as response:
+                      print(label,'HTTP',response.status,'health',json.load(response).get('status'))
+              except Exception as error: print(label,type(error).__name__)
+          print('PRODUCTION_PUBLIC_URL', (pathlib.Path.home()/'.local/share/brasil-saas-public-access/url.txt').read_text().strip())
           PY
