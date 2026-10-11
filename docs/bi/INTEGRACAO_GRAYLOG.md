@@ -55,3 +55,9 @@ cancelamento, orcamentos, limites de datas, dados vazios e calculos das quatro a
 Validacao PostgreSQL e testes do adaptador real dependem do ambiente de staging.
 Executar build Maven e npm ci/test/build; revisar a migracao antes de implantar.
 Nao atualizar producao enquanto a PR e a integracao real nao forem validadas.
+
+Validacao local desta etapa: 4 testes JUnit/H2 passaram em Java 21; npm ci,
+npm test e npm run build passaram. Build Vite alertou sobre bundles grandes.
+O Maven completo local nao executou por falta de dependencias no cache; CI sera
+usado para confirmar compilacao completa. Build/testes da base #188 passaram,
+mas a revisao OpenRouter dessa base retornou HTTP 429 (limite gratuito).
