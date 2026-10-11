@@ -1,0 +1,44 @@
+name: Inspect actual microservice runtime without changes
+on:
+  push:
+    branches: [ops/microservice-usage-audit]
+    paths: [.github/workflows/inspect-microservice-runtime.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Read service state, process artifact paths and local listeners
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,re,pathlib,urllib.request,json,socket
+          def cmd(args):
+              return subprocess.run(args,capture_output=True,text=True,timeout=25).stdout
+          units=cmd(['systemctl','list-unit-files','--type=service','--no-legend','--no-pager'])
+          names=[l.split()[0] for l in units.splitlines() if re.search(r'nfse|cnab|boleto|esocial|avatar|brasil.*watchdog',l,re.I)]
+          for name in names:
+              out=cmd(['systemctl','show',name,'-p','ActiveState','-p','UnitFileState','-p','WorkingDirectory','-p','FragmentPath','-p','ExecStart'])
+              safe=[]
+              for line in out.splitlines():
+                  if line.startswith('ExecStart='):
+                      paths=re.findall(r'[^\s;"{}]+\.(?:jar|rb|sh)',line)
+                      safe.append('ArtifactPaths='+','.join(paths))
+                  else: safe.append(line)
+              print('UNIT',name,' | '.join(safe))
+          for port in [4567,4568,4569,4570,9292,8082,8083]:
+              with socket.socket() as s:
+                  s.settimeout(1); print('PORT',port,'OPEN' if s.connect_ex(('127.0.0.1',port))==0 else 'CLOSED')
+          for port in [4567,4568,4569]:
+              try:
+                  with urllib.request.urlopen(f'http://127.0.0.1:{port}/api/nfse-sp/status',timeout=4) as r:
+                      data=json.load(r)
+                      print('NFSE_STATUS',port,r.status,{k:data[k] for k in ['sucesso','certificado_configurado','senha_configurada','leiaute_xsd'] if k in data})
+              except Exception as e: print('NFSE_STATUS',port,type(e).__name__)
+          for root in [pathlib.Path('/opt'),pathlib.Path.home()/'brasil-saas-erp/src/main/resources/microservices']:
+              if root.exists():
+                  for p in root.iterdir():
+                      if re.search(r'nfse|cnab|boleto|esocial|avatar',p.name,re.I): print('RUNTIME_DIRECTORY',p)
+          PY
