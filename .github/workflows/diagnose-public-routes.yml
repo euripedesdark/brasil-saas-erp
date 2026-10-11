@@ -1,0 +1,49 @@
+name: Diagnose ERP public routes
+on:
+  push:
+    branches: [fix/staging-host-routing]
+    paths: [.github/workflows/diagnose-public-routes.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Inspect services, routes and DNS without credentials
+        shell: bash
+        run: |
+          set -u
+          for svc in nginx cloudflared cloudflared-tunel brasil-saas-erp-staging brasil_saas-erp brasil-saas-erp; do
+            echo "$svc: $(systemctl is-active "$svc" 2>/dev/null || true)"
+          done
+          for port in 80 8080 8081; do
+            curl -sS --max-time 5 -o /dev/null -w "PORT=$port HTTP=%{http_code}\n" "http://127.0.0.1:$port/login" || true
+          done
+          for host in brasil-saaserp.com staging.brasil-saaserp.com; do
+            echo "HOST=$host"
+            getent ahostsv4 "$host" || true
+            curl -sS --max-time 10 -o /dev/null -w "PUBLIC_HTTP=%{http_code}\n" "https://$host/login" || true
+            curl -sS --max-time 5 -H "Host: $host" -o /dev/null -w "NGINX_HTTP=%{http_code}\n" http://127.0.0.1/login || true
+            if command -v dig >/dev/null; then dig +time=2 +tries=1 +noall +comments +answer +authority @1.1.1.1 "$host" A; fi
+          done
+          curl -sS --max-time 15 -o /tmp/erp-domain-rdap.json -w "RDAP_HTTP=%{http_code}\n" https://rdap.verisign.com/com/v1/domain/brasil-saaserp.com || true
+          python3 - <<'PY'
+          import json, os, pathlib
+          try:
+              d=json.load(open('/tmp/erp-domain-rdap.json'))
+              print('RDAP',d.get('ldhName'),d.get('errorCode'),d.get('title'))
+          except Exception: print('RDAP unavailable')
+          for f in ['/etc/nginx/nginx.conf','/etc/cloudflared/config.yml','/etc/brasil-saas/staging.env','/opt/brasil-saas-erp/staging/app.jar']:
+              p=pathlib.Path(f)
+              print(f,'exists=',p.exists(),'readable=',os.access(f,os.R_OK),'writable=',os.access(f,os.W_OK))
+          roots=[pathlib.Path('/etc/nginx')]
+          for root in roots:
+              for p in root.rglob('*'):
+                  if p.is_file() and (p.suffix=='.conf' or p.parent.name=='sites-enabled'):
+                      try:
+                          for line in p.read_text().splitlines():
+                              if line.strip().startswith(('listen ','server_name ','proxy_pass ','server 127.0.0.1:')):
+                                  print(str(p),line.strip())
+                      except OSError: pass
+          PY
