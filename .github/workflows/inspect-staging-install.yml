@@ -34,4 +34,15 @@ jobs:
                       print(label,'HTTP',response.status,'health',json.load(response).get('status'))
               except Exception as error: print(label,type(error).__name__)
           print('PRODUCTION_PUBLIC_URL', (pathlib.Path.home()/'.local/share/brasil-saas-public-access/url.txt').read_text().strip())
+          auth=pathlib.Path.home()/'brasil-saas-auth'
+          for p in auth.rglob('*.jar'):
+              print('AUTH_JAR',p,p.stat().st_size)
+          for p in auth.rglob('*'):
+              if p.is_file() and ('src/main/resources/application' in str(p) or (p.suffix=='.java' and any(x in p.name for x in ['Properties','Postgres','PostgreSQL','IdentityController']))):
+                  print('AUTH_SOURCE',p)
+                  lines=p.read_text(errors='replace').splitlines()
+                  for line in lines:
+                      if any(x in line.lower() for x in ['password','secret','token','credential','key-store','keytab']):
+                          print('[sensitive configuration line omitted]')
+                      else: print(line)
           PY
