@@ -15,7 +15,8 @@ Preserva senhas, MongoDB de metadados, porta 9002, permissões e backups privado
 Não compila no dc-erp nem atualiza os JARs de produção/staging.
 
 O validador usa exclusivamente HTTP local na porta 18081 e recusa banco diferente
-de brasil-saas-staging antes de autenticar. Usa a credencial privada staging-admin
+de brasil_saas_staging no PostgreSQL local dedicado da porta 15432 antes de autenticar.
+Usa a credencial privada staging-admin
 existente e confere consultas seletivas, resumo e rejeição de acesso anônimo/área
 inválida. Relatório somente de status HTTP/contrato: sem token, empresa, senha ou
 valores financeiros. Falha real permanece falha. Também inspeciona estados systemd

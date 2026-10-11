@@ -44,8 +44,10 @@ def valid_summary(body, expected):
 def validate(settings):
     # Never authenticate if this configuration points at the production database.
     url = settings.get('SPRING_DATASOURCE_URL', settings.get('DB_URL', ''))
-    database = urllib.parse.urlsplit(url.removeprefix('jdbc:')).path.rsplit('/', 1)[-1]
-    if database != 'brasil-saas-staging': raise ValueError('Banco nao identificado como staging isolado')
+    parsed = urllib.parse.urlsplit(url.removeprefix('jdbc:'))
+    database = parsed.path.rsplit('/', 1)[-1]
+    if database != 'brasil_saas_staging' or parsed.hostname not in {'127.0.0.1', 'localhost', '::1'} or parsed.port != 15432:
+        raise ValueError('Banco nao identificado como PostgreSQL staging isolado na porta 15432')
     password = settings.get('STAGING_ADMIN_PASSWORD')
     if not password: raise ValueError('Credencial de staging ausente')
     report = {'staging_only': True, 'checks': {}}

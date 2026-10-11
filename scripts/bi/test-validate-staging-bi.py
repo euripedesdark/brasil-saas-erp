@@ -15,7 +15,7 @@ class StagingValidationTest(unittest.TestCase):
 
     def test_failed_login_does_not_query_or_print_secret(self):
         with patch.object(validator, 'request', return_value=(401, None)) as request:
-            report = validator.validate({'DB_URL': 'jdbc:postgresql://localhost/brasil-saas-staging', 'STAGING_ADMIN_PASSWORD': 'PRIVATE'})
+            report = validator.validate({'DB_URL': 'jdbc:postgresql://localhost:15432/brasil_saas_staging', 'STAGING_ADMIN_PASSWORD': 'PRIVATE'})
             self.assertFalse(report['passed']); self.assertEqual(request.call_count, 1)
             self.assertNotIn('PRIVATE', str(report))
 
@@ -39,7 +39,7 @@ class StagingValidationTest(unittest.TestCase):
             areas = validator.AREAS if area == 'resumo' else {area}
             return 200, {'data': {'areas': [{'codigo': value, 'indicadores': [{}, {}, {}]} for value in areas]}}
         with patch.object(validator, 'request', side_effect=request):
-            report = validator.validate({'DB_URL': 'jdbc:postgresql://localhost/brasil-saas-staging', 'STAGING_ADMIN_PASSWORD': 'PRIVATE'})
+            report = validator.validate({'DB_URL': 'jdbc:postgresql://localhost:15432/brasil_saas_staging', 'STAGING_ADMIN_PASSWORD': 'PRIVATE'})
         self.assertTrue(report['passed']); self.assertNotIn('PRIVATE', str(report)); self.assertNotIn('123', str(report))
         self.assertEqual(len(paths), 10)
 
