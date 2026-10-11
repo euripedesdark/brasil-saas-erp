@@ -10,6 +10,8 @@ Nao usar o MongoDB de configuracao do Graylog como base dos dados do ERP.
 ## Implementacao desta etapa
 
 GET /api/bi/resumo?inicio=2026-01-01&fim=2026-01-31 retorna ApiResponse<BiResumo>.
+GET /api/bi/resumo/{area} consulta somente a area solicitada (financeiro,
+producao, vendas ou servicos); areas invalidas sao recusadas antes da consulta.
 Exige JWT e papel ADMIN, SUPERADMIN ou SUPERUSER. A empresa vem exclusivamente
 do principal autenticado, inclusive para superuser. Nao aceita empresaId, SQL,
 nome de tabela ou consulta arbitraria do cliente. Usuario sem empresa e recusado.
@@ -56,7 +58,7 @@ Validacao PostgreSQL e testes do adaptador real dependem do ambiente de staging.
 Executar build Maven e npm ci/test/build; revisar a migracao antes de implantar.
 Nao atualizar producao enquanto a PR e a integracao real nao forem validadas.
 
-Validacao local desta etapa: 4 testes JUnit/H2 passaram em Java 21; npm ci,
+Validacao local desta etapa: 5 testes JUnit/H2 passaram em Java 21; npm ci,
 npm test e npm run build passaram. Build Vite alertou sobre bundles grandes.
 O Maven completo local nao executou por falta de dependencias no cache; CI sera
 usado para confirmar compilacao completa. Build/testes da base #188 passaram,

@@ -70,6 +70,16 @@ class BiResumoServiceTest {
         assertDoesNotThrow(() -> service.consultar(1L, inicio, inicio.plusDays(365)));
     }
 
+    @Test void consultaAreaSelecionadaSemConsultarAsDemais() {
+        jdbc.execute("DROP VIEW brasil_saas_dl.v_bi_financeiro");
+        jdbc.execute("DROP VIEW brasil_saas_dl.v_bi_producao");
+        jdbc.execute("DROP VIEW brasil_saas_dl.v_bi_servicos");
+        var resumo = service.consultarArea(1L, inicio, fim, "vendas");
+        assertEquals(1, resumo.areas().size());
+        assertEquals("vendas", resumo.areas().getFirst().codigo());
+        assertThrows(BusinessException.class, () -> service.consultarArea(1L, inicio, fim, "vendas;DROP TABLE x"));
+    }
+
     private void valor(BiResumo resumo, String area, String indicador, String esperado) {
         BigDecimal atual = resumo.areas().stream().filter(a -> a.codigo().equals(area)).findFirst().orElseThrow()
                 .indicadores().stream().filter(i -> i.codigo().equals(indicador)).findFirst().orElseThrow().valor();
