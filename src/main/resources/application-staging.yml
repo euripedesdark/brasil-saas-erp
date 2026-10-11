@@ -1,6 +1,6 @@
 # Staging isolado: nao apontar para banco, bucket, IAM/AD ou URL publica de producao.
 server:
-  port: ${SERVER_PORT:8081}
+  port: ${SERVER_PORT:18081}
   error:
     include-message: never
     include-binding-errors: never
@@ -62,5 +62,5 @@ brasil-saas:
     enabled: ${BRASIL_SAAS_AD_ENABLED:false}
 
 stripe:
-  success-url: ${STRIPE_SUCCESS_URL:http://localhost:8081/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}
-  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:8081/financeiro/stripe/cancelado}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:18081/financeiro/stripe/sucesso?session_id={CHECKOUT_SESSION_ID}}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:18081/financeiro/stripe/cancelado}
