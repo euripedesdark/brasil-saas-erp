@@ -58,6 +58,7 @@ for key in ['MONGO_PASSWORD', 'STAGING_ADMIN_PASSWORD']:
     settings.setdefault(key, secrets.token_urlsafe(36))
 settings['MONGODB_URI'] = 'mongodb://stagingadmin:' + settings['MONGO_PASSWORD'] + '@127.0.0.1:27018/brasil_saas_staging?authSource=admin'
 settings.update({
+    'DB_USER': 'sa',
     'MINIO_ROOT_USER': settings['MINIO_ACCESS_KEY'],
     'MINIO_ROOT_PASSWORD': settings['MINIO_SECRET_KEY'],
     'RABBITMQ_NODENAME': 'erp_staging@localhost',
@@ -105,8 +106,13 @@ try:
     run(['systemctl', '--user', 'start', names[0]])
     wait_port(15432, 30)
     pgenv = os.environ.copy()
-    pgenv['PGPASSWORD'] = settings['DB_PASSWORD']
-    run(['psql', '-X', '-h', '127.0.0.1', '-p', '15432', '-U', settings['DB_USER'], '-d', 'brasil_saas_staging', '-v', 'ON_ERROR_STOP=1', '-c', "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $$;"], env=pgenv, stdout=subprocess.DEVNULL)
+    pgenv['PGPASSWORD'] = (root / 'postgres/password').read_text().strip()
+    # V187 targets the operational role sa. Initialize ownership before Flyway
+    # takes its schema-history lock, using only this private PostgreSQL cluster.
+    owner_sql = "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $$;\n"
+    owner_sql += "ALTER ROLE sa LOGIN SUPERUSER PASSWORD '" + settings['DB_PASSWORD'] + "';\n"
+    owner_sql += "REASSIGN OWNED BY staging_owner TO sa;\n"
+    run(['psql', '-X', '-h', '127.0.0.1', '-p', '15432', '-U', 'staging_owner', '-d', 'brasil_saas_staging', '-v', 'ON_ERROR_STOP=1'], input=owner_sql, text=True, env=pgenv, stdout=subprocess.DEVNULL)
     run(['systemctl', '--user', 'start', names[1]])
     wait_port(27018)
     mongoenv = os.environ.copy()
