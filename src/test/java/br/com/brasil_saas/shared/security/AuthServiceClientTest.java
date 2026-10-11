@@ -25,7 +25,8 @@ class AuthServiceClientTest {
             var properties = new AuthServiceProperties();
             properties.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort());
             var identity = new AuthServiceClient(RestClient.builder(), properties).authenticate("postgres", "teste", "POSTGRES");
-            assertTrue(request.get().contains("\"provider\":\"POSTGRES\""));
+            assertEquals("POSTGRES", new com.fasterxml.jackson.databind.ObjectMapper()
+                    .readTree(request.get()).path("provider").asText());
             assertEquals(java.util.List.of("POSTGRES_SUPERUSER"), identity.groups());
             var error = assertThrows(BusinessException.class,
                     () -> new AuthServiceClient(RestClient.builder(), properties).authenticate("postgres", "teste", "AD"));

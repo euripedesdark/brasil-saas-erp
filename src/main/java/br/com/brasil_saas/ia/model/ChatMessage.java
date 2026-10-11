@@ -4,7 +4,6 @@ import br.com.brasil_saas.shared.model.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bc_ia_chat_message", schema = "brasil_saas")

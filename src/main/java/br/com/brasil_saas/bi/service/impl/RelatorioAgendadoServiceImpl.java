@@ -9,11 +9,11 @@ import br.com.brasil_saas.bi.service.RelatorioAgendadoService;
 import br.com.brasil_saas.bi.service.RelatorioService;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
@@ -28,7 +28,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
     private final RelatorioAgendadoRepository relatorioAgendadoRepository;
     private final RelatorioRepository relatorioRepository;
     private final RelatorioService relatorioService;
-    private final JavaMailSender mailSender;
+    private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
     @Override
     @Transactional
@@ -223,6 +223,8 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
 
     private void enviarEmail(RelatorioAgendado agendado, ByteArrayOutputStream output) {
         try {
+            JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+            if (mailSender == null) throw new IllegalStateException("SMTP nao configurado para enviar relatorios");
             String[] emails = Arrays.stream(agendado.getEmailDestinatarios().split(","))
                     .map(String::trim).filter(s -> !s.isBlank()).toArray(String[]::new);
             if (emails.length == 0) throw new IllegalArgumentException("Nenhum destinatário válido");

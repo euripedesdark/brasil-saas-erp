@@ -2,7 +2,6 @@ package br.com.brasil_saas.wms.model;
 import br.com.brasil_saas.shared.model.TenantEntity;
 import jakarta.persistence.*; import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 @Entity @Table(name="bc_wms_onda_item", schema="brasil_saas") @Getter @Setter
 public class WmsOndaItem extends TenantEntity {
     @Column(name="onda_id", nullable=false) private Long ondaId;

@@ -3,7 +3,6 @@ package br.com.brasil_saas.core.service;
 import br.com.brasil_saas.core.model.Modulo;
 import br.com.brasil_saas.core.model.Usuario;
 import br.com.brasil_saas.core.model.UsuarioModulo;
-import br.com.brasil_saas.core.model.UsuarioModuloId;
 import br.com.brasil_saas.core.repository.ModuloRepository;
 import br.com.brasil_saas.core.repository.UsuarioModuloRepository;
 import br.com.brasil_saas.core.repository.UsuarioRepository;

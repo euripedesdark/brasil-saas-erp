@@ -3,7 +3,6 @@ package br.com.brasil_saas.core.service;
 import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.core.repository.EmpresaRepository;
 import br.com.brasil_saas.shared.security.SecretCipher;
-import com.stripe.StripeClient;
 import com.stripe.model.Account;
 import com.stripe.exception.StripeException;
 import com.stripe.exception.AuthenticationException;

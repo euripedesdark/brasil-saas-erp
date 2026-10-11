@@ -1,7 +1,6 @@
 package br.com.brasil_saas.shared.identity;
 
 import java.util.List;
-import lombok.Getter;
 
 /**
  * O que o Auth Service respondeu.

@@ -1,7 +1,5 @@
 package br.com.brasil_saas.core.controller;
 
-import br.com.brasil_saas.core.model.Perfil;
-import br.com.brasil_saas.core.model.Usuario;
 import br.com.brasil_saas.core.repository.PerfilRepository;
 import br.com.brasil_saas.core.repository.UsuarioRepository;
 import br.com.brasil_saas.core.service.PermissionService;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/superadmin")

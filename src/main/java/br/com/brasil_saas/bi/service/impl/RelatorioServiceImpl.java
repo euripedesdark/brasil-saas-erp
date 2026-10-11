@@ -10,15 +10,13 @@ import org.openpdf.text.pdf.PdfPCell;
 import org.openpdf.text.pdf.PdfPTable;
 import org.openpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +27,6 @@ import java.util.*;
 import java.util.List;
 
 // Import explícito para evitar ambiguidade
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Cell;
 
 @Service
 @RequiredArgsConstructor
@@ -134,14 +130,10 @@ public class RelatorioServiceImpl implements RelatorioService {
     public Map<String, Object> executarRelatorio(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);
 
-        // Substituir parametros na query
-        String sql = relatorio.getSqlQuery();
-        for (Map.Entry<String, Object> entry : parametros.entrySet()) {
-            sql = sql.replace("{" + entry.getKey() + "}", String.valueOf(entry.getValue()));
-        }
-
-        // Executar query
-        List<Map<String, Object>> resultados = jdbcTemplate.queryForList(sql);
+        Map<String, Object> valores = parametros == null ? Map.of() : parametros;
+        String sql = ReportSqlParameters.bind(relatorio.getSqlQuery(), valores);
+        List<Map<String, Object>> resultados = new NamedParameterJdbcTemplate(jdbcTemplate)
+                .queryForList(sql, valores);
 
         // Calcular resumo
         Map<String, Object> resumo = new HashMap<>();
@@ -161,6 +153,7 @@ public class RelatorioServiceImpl implements RelatorioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ByteArrayOutputStream gerarPdf(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Map<String, Object> dados = executarRelatorio(empresaId, relatorioId, parametros);
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);
@@ -248,6 +241,7 @@ public class RelatorioServiceImpl implements RelatorioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ByteArrayOutputStream gerarExcel(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Map<String, Object> dados = executarRelatorio(empresaId, relatorioId, parametros);
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);
@@ -302,6 +296,7 @@ public class RelatorioServiceImpl implements RelatorioService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ByteArrayOutputStream gerarCsv(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Map<String, Object> dados = executarRelatorio(empresaId, relatorioId, parametros);
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);

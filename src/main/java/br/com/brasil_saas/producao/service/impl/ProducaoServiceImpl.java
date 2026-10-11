@@ -5,7 +5,6 @@ import br.com.brasil_saas.producao.model.*;
 import br.com.brasil_saas.producao.repository.*;
 import br.com.brasil_saas.producao.service.ProducaoService;
 import br.com.brasil_saas.producao.service.ProducaoRequest;
-import br.com.brasil_saas.producao.service.ItemRequest;
 import br.com.brasil_saas.producao.service.CustoProducaoService;
 import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import java.math.RoundingMode;

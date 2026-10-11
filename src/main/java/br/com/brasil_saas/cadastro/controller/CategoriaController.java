@@ -3,7 +3,6 @@ package br.com.brasil_saas.cadastro.controller;
 import br.com.brasil_saas.cadastro.dto.CategoriaRequest;
 import br.com.brasil_saas.cadastro.dto.CategoriaResponse;
 import br.com.brasil_saas.cadastro.service.CategoriaService;
-import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import br.com.brasil_saas.shared.tenant.EmpresaDaGravacao;
 import br.com.brasil_saas.shared.web.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import br.com.brasil_saas.shared.security.AuthenticatedUser;
 
 @RestController
 @RequestMapping("/api/cadastro/categorias")

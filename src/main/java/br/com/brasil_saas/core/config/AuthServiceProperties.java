@@ -15,4 +15,5 @@ public class AuthServiceProperties {
     private boolean enabled = true;
     private String baseUrl = "http://localhost:8181";
     private String authenticatePath = "/api/v1/identity/authenticate";
+    private String provider = "AD";
 }

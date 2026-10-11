@@ -36,7 +36,7 @@ public class IcmsStService {
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal icmsStCheio = baseSt.multiply(interna).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal icmsSt = icmsStCheio.subtract(icmsOperacao);
-        if (icmsSt.signum() < 0) icmsSt = BigDecimal.ZERO.setScale(2);
+        if (icmsSt.signum() < 0) icmsSt = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
 
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("baseOperacao", baseOp);

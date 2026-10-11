@@ -4,8 +4,6 @@ import br.com.brasil_saas.shared.model.TenantEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name="bc_ativo_classe", schema="brasil_saas")

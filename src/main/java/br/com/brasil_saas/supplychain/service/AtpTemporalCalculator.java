@@ -32,10 +32,10 @@ public final class AtpTemporalCalculator {
         pontos.add(data);
         for (Movimento m : lista(entradas)) if (m.data().isAfter(data)) pontos.add(m.data());
         for (Movimento m : lista(saidas)) if (m.data().isAfter(data)) pontos.add(m.data());
-        BigDecimal menor = null;
+        BigDecimal menor = disponivelEm(data, estoque, reservas, entradas, saidas);
         for (LocalDate d : pontos) {
             BigDecimal v = disponivelEm(d, estoque, reservas, entradas, saidas);
-            if (menor == null || v.compareTo(menor) < 0) menor = v;
+            if (v.compareTo(menor) < 0) menor = v;
         }
         return menor.max(BigDecimal.ZERO);
     }

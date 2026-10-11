@@ -65,7 +65,11 @@ public class AiServiceImpl implements AiService {
         ResponseEntity<Map> response = restTemplate.postForEntity(CLAUDE_API_URL, entity, Map.class);
 
         // Parse do resultado do Claude
-        List<Map<String, Object>> content = (List<Map<String, Object>>) response.getBody().get("content");
+        Map<?, ?> resposta = response.getBody();
+        if (resposta == null || !(resposta.get("content") instanceof List<?> blocos) || blocos.isEmpty()) {
+            throw new IllegalStateException("Claude retornou uma resposta vazia");
+        }
+        List<Map<String, Object>> content = (List<Map<String, Object>>) blocos;
         return (String) content.get(0).get("text");
     }
 }

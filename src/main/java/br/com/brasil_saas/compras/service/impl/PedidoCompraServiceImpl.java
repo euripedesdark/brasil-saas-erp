@@ -202,7 +202,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
                 recebidas.put(item.getId(), entrada);
                 recebeuAlgo = true;
             }
-            if (item.getQuantidadeRecebida().compareTo(item.getQuantidade()) < 0) tudoRecebido = false;
+            if ((item.getQuantidadeRecebida() == null ? BigDecimal.ZERO : item.getQuantidadeRecebida()).compareTo(item.getQuantidade()) < 0) tudoRecebido = false;
         }
 
         if (!recebeuAlgo) throw new BusinessException("Nenhuma quantidade nova foi recebida");

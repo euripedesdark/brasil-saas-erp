@@ -13,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -108,7 +106,7 @@ public class CteOperacaoService {
             out.put("chaveAcesso", documento.getChaveAcesso());
             out.put("cStat", info == null ? null : info.getCodigoStatus());
             out.put("xMotivo", info == null ? null : info.getMotivo());
-            if (info != null && "135".equals(info.getCodigoStatus())) {
+            if (info != null && Integer.valueOf(135).equals(info.getCodigoStatus())) {
                 documento.setStatus("CANCELADO");
                 repository.save(documento);
             }

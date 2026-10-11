@@ -66,7 +66,7 @@ public class PalavraChave {
                         final short peso, final String origem) {
         this.tabela = tabela;
         this.codigo = codigo;
-        this.palavra = palavra;
+        this.palavra = palabra;
         this.peso = peso;
         this.origem = origem;
     }

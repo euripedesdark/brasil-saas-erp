@@ -2,7 +2,6 @@ package br.com.brasil_saas.bi.service;
 
 import br.com.brasil_saas.bi.dto.KpiRequest;
 import br.com.brasil_saas.bi.dto.KpiResponse;
-import br.com.brasil_saas.bi.model.Kpi;
 import br.com.brasil_saas.shared.web.PageResponse;
 import org.springframework.data.domain.Pageable;
 import java.util.List;

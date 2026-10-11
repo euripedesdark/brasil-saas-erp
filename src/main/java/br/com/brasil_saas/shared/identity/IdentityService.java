@@ -1,5 +1,7 @@
 package br.com.brasil_saas.shared.identity;
 
+import br.com.brasil_saas.core.config.AuthServiceProperties;
+
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;

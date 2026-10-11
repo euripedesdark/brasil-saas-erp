@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name="bc_ativo_medicao", schema="brasil_saas")

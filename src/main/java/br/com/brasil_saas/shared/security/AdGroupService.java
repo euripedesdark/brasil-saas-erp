@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.PrivilegedAction;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -181,16 +180,15 @@ public class AdGroupService {
         // A configuração JAAS é montada em memória: o keytab é um arquivo, e um
         // config-file de JAAS seria um arquivo a mais para proteger sem trazer
         // nada. O PasswordCallback recebe o CAMINHO do keytab, não a senha.
-        Configuration.setConfiguration(new Krb5KeytabConfiguration(props));
 
-        LoginContext lc = new LoginContext(null, null, new KeytabCallbackHandler(props), null);
+        LoginContext lc = new LoginContext("BrasilSaasKerberos", null, new KeytabCallbackHandler(props), new Krb5KeytabConfiguration(props));
         lc.login();
         Subject subject = lc.getSubject();
         log.debug("Autenticado no KDC como {}", subject.getPrincipals());
 
-        // Subject.doAs é obrigatório: é ele que torna o tíquete visível para o
+        // A identidade do Subject é obrigatória: é ele que torna o tíquete visível para o
         // mecanismo de GSSAPI do JNDI. Sem, o JNDI não acha credencial nenhuma.
-        return Subject.doAs(subject, (PrivilegedAction<List<String>>) () -> {
+        return Subject.callAs(subject, () -> {
             try {
                 return buscaComGssapi(username);
             } catch (Exception e) {

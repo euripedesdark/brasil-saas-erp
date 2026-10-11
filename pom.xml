@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent – Spring Boot (versão 3.3.5) -->
+    <!-- Parent – Spring Boot 3.5 (atualizacoes de seguranca) -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>3.5.16</version>
         <relativePath/>
     </parent>
 
@@ -52,13 +52,15 @@
         -->
         <lombok.version>1.18.48</lombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <springdoc.version>2.6.0</springdoc.version>
+        <springdoc.version>2.9.1</springdoc.version>
         <jjwt.version>0.12.6</jjwt.version>
         <flyway.version>10.17.0</flyway.version>
         <openpdf.version>3.0.5</openpdf.version>
         <pdfbox.version>3.0.3</pdfbox.version>
         <poi.version>5.3.0</poi.version>
-        <jasperreports.version>6.21.3</jasperreports.version>
+        <jasperreports.version>6.21.5</jasperreports.version>
+        <commons-beanutils.version>1.11.0</commons-beanutils.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
         <java-nfe.version>4.1.3</java-nfe.version>
         <!-- MDF-e, EFD e CT-e: mesma familia do java-nfe, entao a pilha de
              axis2 1.7.5, jaxb 4.0.5 e java_certificado 3.16 ja vem por
@@ -90,6 +92,23 @@
         <minio.version>8.5.12</minio.version>
         <stripe.version>34.0.0</stripe.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2025.0.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons-beanutils.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <!-- =============== DEPENDENCIES =============== -->
     <dependencies>

@@ -27,7 +27,7 @@ public class DifalService {
         }
         BigDecimal icmsOrigem = base.multiply(inter).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal difal = base.multiply(interna.subtract(inter)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        if (difal.signum() < 0) difal = BigDecimal.ZERO.setScale(2);
+        if (difal.signum() < 0) difal = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
         BigDecimal valorFcp = base.multiply(fcp).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal totalDestino = difal.add(valorFcp);
 

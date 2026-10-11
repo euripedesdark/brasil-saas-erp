@@ -3,7 +3,6 @@ package br.com.brasil_saas.core.controller;
 import br.com.brasil_saas.core.service.ModuloAcessoService;
 import br.com.brasil_saas.core.service.PermissionService;
 import br.com.brasil_saas.core.config.IdentidadeProperties;
-import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.core.model.Perfil;
 import br.com.brasil_saas.core.model.Usuario;
 import br.com.brasil_saas.core.repository.EmpresaRepository;
