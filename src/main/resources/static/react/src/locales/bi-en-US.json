@@ -28,5 +28,7 @@
     "abertas": "Open service orders",
     "concluidas": "Completed service orders",
     "valor_concluido": "Completed service order value"
-  }
+  },
+  "openGraylog": "Open Graylog",
+  "graylogPending": "Connection configured; integrated dashboards are in preparation."
 }
