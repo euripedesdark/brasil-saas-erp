@@ -1,45 +1,83 @@
-name: Locate staging sources and verify routing
+name: Build and deploy isolated staging from staging directory
 on:
   push:
     branches: [ops/install-isolated-staging]
     paths: [.github/workflows/inspect-staging-install.yml]
 permissions:
   contents: read
+concurrency:
+  group: isolated-staging-build
+  cancel-in-progress: false
 jobs:
-  inspect:
+  build:
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 40
     steps:
-      - name: Find staging directories and build configuration
+      - name: Compile frontend and backend inside staging and validate deployment
+        shell: bash
         run: |
+          set -euo pipefail
+          export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+          export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+          export MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m -XX:ActiveProcessorCount=2"
+          export NODE_OPTIONS="--max-old-space-size=768"
+          build_dir="$HOME/staging/build-$GITHUB_RUN_ID"
+          runtime_dir="$HOME/.local/share/brasil-saas-staging"
+          mkdir -p "$build_dir"
+          git clone --depth 1 --branch main https://github.com/euripedesdark/brasil-saas-erp.git "$build_dir/source"
+          cd "$build_dir/source"
+          echo "STAGING_BUILD_DIRECTORY=$PWD"
+          git rev-parse HEAD
+          cd src/main/resources/static/react
+          npm ci --no-audit --no-fund
+          nice -n 10 npm run build
+          cd "$build_dir/source"
+          nice -n 10 mvn -B clean package -Dmaven.test.skip=true
           python3 - <<'PY'
-          import os,pathlib,subprocess,urllib.request,urllib.parse,re,json,hashlib
-          home=pathlib.Path.home()
-          candidates=[]
-          for p in (home/'brasil-saas-erp').iterdir(): print('SOURCE_ENTRY',p.name)
-          for p in (home/'brasil-saas-erp').glob('*/package.json'): print('PACKAGE',p, p.read_text()[:4000])
-          for folder in [home/'staging',home/'.local/share/brasil-saas-staging/staging',home/'brasil-saas-erp/staging']:
-              print('DIRECTORY',folder)
-              if folder.exists():
-                  for p in sorted(folder.iterdir()): print('ENTRY',p.name,'dir' if p.is_dir() else 'file')
-          os.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'
-          os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
-          print(subprocess.run(['systemctl','--user','show','brasil-saas-staging-app','-p','ActiveState','-p','ExecStart','-p','WorkingDirectory'],capture_output=True,text=True).stdout)
-          for p in [pathlib.Path('/opt/brasil-saas-erp-deploy/release.jar'),home/'.local/share/brasil-saas-staging/app.jar']:
-              try:
-                  digest=hashlib.file_digest(p.open('rb'),'sha256').hexdigest()
-                  print('JAR',p,'SHA256',digest)
-              except OSError as e: print('JAR_UNREADABLE',p,type(e).__name__)
-          for label,url,host in [('stage-direct','http://127.0.0.1:18081/login',None),('stage-prefix','http://127.0.0.1/staging',None),('stage-host','http://127.0.0.1/login','staging.brasil-saaserp.com')]:
-              try:
-                  req=urllib.request.Request(url,headers={'Host':host} if host else {})
-                  with urllib.request.urlopen(req,timeout=10) as r:
-                      html=r.read().decode()
-                      print('HTTP',label,r.status,r.url,'environment',r.headers.get('X-ERP-Environment'))
-                      for asset in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.(?:js|css))',html)[:4]:
-                          u=urllib.parse.urljoin(r.url,asset)
-                          try:
-                              with urllib.request.urlopen(urllib.request.Request(u,headers={'Host':host} if host else {}),timeout=10) as a: print('ASSET',label,u,a.status,a.headers.get('Content-Type'))
-                          except Exception as e: print('ASSET_FAILED',label,u,type(e).__name__)
-              except Exception as e: print('HTTP_FAILED',label,type(e).__name__)
+          import pathlib,zipfile
+          p=pathlib.Path('target/brasil-saas-erp-1.0.0-SNAPSHOT.jar')
+          with zipfile.ZipFile(p) as z:
+              names=z.namelist()
+              assert any(n.startswith('BOOT-INF/classes/static/dist/assets/') and n.endswith('.js') for n in names), 'Missing frontend assets'
+              assert 'BOOT-INF/classes/static/dist/index.html' in names, 'Missing frontend index'
+          print('STAGING_JAR_FRONTEND_OK')
           PY
+          cp "$runtime_dir/app.jar" "$build_dir/previous.jar"
+          cp target/brasil-saas-erp-1.0.0-SNAPSHOT.jar "$runtime_dir/app.jar.next"
+          chmod 600 "$runtime_dir/app.jar.next"
+          mv "$runtime_dir/app.jar.next" "$runtime_dir/app.jar"
+          systemctl --user restart brasil-saas-staging-app
+          if python3 - <<'PY'
+          import urllib.request,json,time,re,urllib.parse
+          for i in range(90):
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:18081/actuator/health',timeout=5) as r:
+                      assert json.load(r)['status']=='UP'
+                  break
+              except Exception:
+                  if i==89: raise
+                  time.sleep(5)
+          for origin,host in [('http://127.0.0.1:18081',None),('http://127.0.0.1','staging.brasil-saaserp.com')]:
+              headers={'Host':host} if host else {}
+              with urllib.request.urlopen(urllib.request.Request(origin+'/login',headers=headers),timeout=10) as r:
+                  assert r.status==200
+                  html=r.read().decode()
+                  if host: assert r.headers.get('X-ERP-Environment')=='staging'
+              assets=re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.(?:js|css))',html)
+              assert assets,'No frontend assets'
+              for asset in assets:
+                  url=urllib.parse.urljoin(origin+'/login',asset)
+                  with urllib.request.urlopen(urllib.request.Request(url,headers=headers),timeout=10) as r:
+                      assert r.status==200 and 'text/html' not in r.headers.get('Content-Type','')
+              print('STAGING_LOGIN_AND_ASSETS_OK',origin)
+          with urllib.request.urlopen('http://127.0.0.1/login',timeout=10) as r: assert r.status==200
+          print('PRODUCTION_LOGIN_200; STAGING_BUILD_DEPLOY_OK')
+          PY
+          then
+            sha256sum "$runtime_dir/app.jar"
+          else
+            cp "$build_dir/previous.jar" "$runtime_dir/app.jar"
+            systemctl --user restart brasil-saas-staging-app
+            echo "STAGING_ROLLBACK; previous JAR restored"
+            exit 1
+          fi
