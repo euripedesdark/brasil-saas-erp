@@ -11,6 +11,7 @@ import { ConfirmDialog } from 'primereact/confirmdialog';
 import { useAuth } from '../contexts/AuthContext';
 import ApiConfig, { apiFetch } from '../services/ApiConfig';
 import './Layout.css';
+import './shared/responsivo.css';
 import { ErrorBoundary } from './shared/ErrorBoundary';
 import RecentUpdates from './RecentUpdates';
 import { ExigeEmpresa } from './core/ExigeEmpresa';
@@ -25,6 +26,7 @@ export const Layout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const userMenuRef = useRef(null);
     const [bgStyle, setBgStyle] = useState({
         backgroundImage: `url(${STATIC_BG})`,
@@ -92,6 +94,7 @@ export const Layout = () => {
 
     const handleNavigation = useCallback((path) => {
         navigate(path);
+        setDrawerOpen(false);
     }, [navigate]);
 
     const menuItems = useMemo(() => {
@@ -507,7 +510,12 @@ export const Layout = () => {
             <Toast ref={toast} />
             <ConfirmDialog />
 
-            <aside className={'enterprise-sidebar' + (collapsed ? ' collapsed' : '')}>
+            <div
+                className={'bc-sidebar-backdrop' + (drawerOpen ? ' visible' : '')}
+                onClick={() => setDrawerOpen(false)}
+            />
+
+            <aside className={'enterprise-sidebar' + (collapsed ? ' collapsed' : '') + (drawerOpen ? ' drawer-open' : '')}>
                 <div className="sidebar-header">
                     <div className="sidebar-brand">
                         <div className="brand-logo">BS</div>
@@ -558,7 +566,13 @@ export const Layout = () => {
             <main className="enterprise-main">
                 <header className="enterprise-header">
                     <div className="header-content">
-                        <div className="current-page-info">
+                        <div className="current-page-info flex align-items-center gap-2">
+                            <Button
+                                icon="pi pi-bars"
+                                className="p-button-rounded p-button-text bc-menu-toggle"
+                                onClick={() => setDrawerOpen(true)}
+                                aria-label="Menu"
+                            />
                             <h2 className="page-title">{t('app.managementTitle')}</h2>
                         </div>
                         <div className="header-actions flex align-items-center gap-2">
