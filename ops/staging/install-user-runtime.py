@@ -59,6 +59,17 @@ for key in ['MONGO_PASSWORD', 'STAGING_ADMIN_PASSWORD']:
 settings['MONGODB_URI'] = 'mongodb://stagingadmin:' + settings['MONGO_PASSWORD'] + '@127.0.0.1:27018/brasil_saas_staging?authSource=admin'
 settings.update({
     'DB_USER': 'sa',
+    'SPRING_DATASOURCE_URL': settings['DB_URL'] + '?currentSchema=brasil_saas',
+    'SPRING_DATASOURCE_USERNAME': 'sa',
+    'SPRING_DATASOURCE_PASSWORD': settings['DB_PASSWORD'],
+    'SPRING_FLYWAY_URL': settings['DB_URL'] + '?currentSchema=brasil_saas',
+    'SPRING_FLYWAY_USER': 'sa',
+    'SPRING_FLYWAY_PASSWORD': settings['DB_PASSWORD'],
+    'SPRING_DATA_MONGODB_URI': settings['MONGODB_URI'],
+    'SPRING_MAIL_HOST': '127.0.0.1',
+    'SPRING_MAIL_PORT': '19025',
+    'SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH': 'false',
+    'SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE': 'false',
     'MINIO_ROOT_USER': settings['MINIO_ACCESS_KEY'],
     'MINIO_ROOT_PASSWORD': settings['MINIO_SECRET_KEY'],
     'RABBITMQ_NODENAME': 'erp_staging@localhost',
@@ -84,6 +95,32 @@ settings.update({
     'SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP': 'true',
 })
 private(root / 'logback-staging.xml', '<configuration><appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"><encoder><pattern>%d %-5level %logger{36} - %msg%n</pattern></encoder></appender><root level="INFO"><appender-ref ref="CONSOLE"/></root></configuration>\n')
+private(root / 'smtp-sink.py', '''import socketserver
+class Sink(socketserver.StreamRequestHandler):
+    def handle(self):
+        self.request.settimeout(30)
+        def reply(s):
+            self.wfile.write((s+'\\r\\n').encode()); self.wfile.flush()
+        reply('220 staging.local SMTP sink')
+        while True:
+            line=self.rfile.readline(65536)
+            if not line: break
+            cmd=line.split(b' ',1)[0].strip().upper()
+            if cmd in (b'EHLO',b'HELO'): reply('250 staging.local')
+            elif cmd==b'DATA':
+                reply('354 End with dot')
+                while True:
+                    data=self.rfile.readline(65536)
+                    if not data or data in (b'.\\r\\n',b'.\\n'): break
+                reply('250 Message discarded by staging sink')
+            elif cmd==b'QUIT': reply('221 Bye'); break
+            elif cmd in (b'MAIL',b'RCPT',b'RSET',b'NOOP'): reply('250 OK')
+            else: reply('502 Unsupported command')
+class Server(socketserver.ThreadingTCPServer):
+    allow_reuse_address=True
+    daemon_threads=True
+Server(('127.0.0.1',19025),Sink).serve_forever()
+''')
 private(envfile, ''.join(k + '=' + v + '\n' for k, v in settings.items()))
 private(root / 'staging-access.txt', 'Username: staging-admin\nPassword: ' + settings['STAGING_ADMIN_PASSWORD'] + '\n')
 private(root / 'redis/redis.conf', 'bind 127.0.0.1\nport 16379\nprotected-mode yes\nrequirepass ' + settings['REDIS_PASSWORD'] + '\ndir ' + str(root / 'redis') + '\nmaxmemory 16mb\nmaxmemory-policy allkeys-lru\nappendonly yes\ndaemonize no\n')
@@ -100,7 +137,9 @@ service('brasil-saas-staging-redis', required['redis-server'] + ' ' + str(root /
 service('brasil-saas-staging-rabbit', required['rabbitmq-server'], '256M')
 service('brasil-saas-staging-minio', required['minio'] + ' server --address 127.0.0.1:19000 --console-address 127.0.0.1:19001 ' + str(root / 'minio'), '256M')
 service('brasil-saas-staging-app', required['java'] + ' -Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:MaxDirectMemorySize=64m -XX:ActiveProcessorCount=2 -jar ' + str(root / 'app.jar'), '768M', 'TimeoutStartSec=300\n')
+service('brasil-saas-staging-mail', shutil.which('python3') + ' ' + str(root / 'smtp-sink.py'), '32M')
 names = ['brasil-saas-staging-' + component + '.service' for component in ['postgres', 'mongo', 'redis', 'rabbit', 'minio', 'app']]
+names.append('brasil-saas-staging-mail.service')
 run(['systemctl', '--user', 'daemon-reload'])
 try:
     run(['systemctl', '--user', 'start', names[0]])
@@ -132,6 +171,8 @@ try:
     for name, port in zip(names[2:5], [16379, 15673, 19000]):
         run(['systemctl', '--user', 'start', name])
         wait_port(port)
+    run(['systemctl', '--user', 'start', names[6]])
+    wait_port(19025)
     run(['systemctl', '--user', 'start', names[5]])
     deadline = time.monotonic() + 240
     while time.monotonic() < deadline:
