@@ -1,0 +1,123 @@
+/* =============================================================================
+   Responsividade do shell e das telas
+   -----------------------------------------------------------------------------
+   Problemas corrigidos aqui:
+
+   1. A barra lateral so encolhia para 76px em tela pequena. Em celular isso
+      ainda come um quarto da largura e o menu nao abria. Agora, ate 900px, ela
+      vira uma gaveta que desliza por cima do conteudo, aberta pelo botao do
+      cabecalho, com fundo escuro que fecha ao toque.
+   2. As guias (TabView) passavam da largura e eram cortadas, porque o painel de
+      conteudo tem overflow-x: hidden. Agora a lista de guias rola na horizontal.
+   3. Barras de botoes, toolbars e formularios largos eram cortados em vez de
+      quebrar linha. Agora quebram linha.
+   4. Tabelas ja rolavam, mas o cabecalho ficava com largura minima fixa; o
+      wrapper agora garante rolagem tambem em telas estreitas.
+   ============================================================================= */
+
+/* Botao do menu (so aparece no mobile) e fundo da gaveta. */
+.bc-menu-toggle { display: none !important; flex-shrink: 0; color: var(--bc-text) !important; }
+.bc-sidebar-backdrop { display: none; }
+
+/* O titulo nao pode empurrar as acoes para fora da tela. */
+.enterprise-header .header-content { min-width: 0; }
+.enterprise-header .current-page-info { min-width: 0; flex: 1 1 auto; }
+.enterprise-header .page-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enterprise-header .header-actions { flex-shrink: 0; }
+
+/* ---------- Guias: rolam em vez de serem cortadas ---------- */
+.page-content .p-tabview .p-tabview-nav-container,
+.page-content .p-tabview .p-tabview-nav-content { max-width: 100%; }
+.page-content .p-tabview .p-tabview-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+.page-content .p-tabview .p-tabview-nav li { flex: 0 0 auto; }
+.page-content .p-tabview .p-tabview-nav li .p-tabview-nav-link { white-space: nowrap; }
+.page-content .p-tabmenu .p-tabmenu-nav { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+.page-content .p-tabmenu .p-tabmenu-nav .p-tabmenuitem { flex: 0 0 auto; }
+
+/* ---------- Barras de botoes e formularios: quebram linha ---------- */
+.page-content .p-toolbar { flex-wrap: wrap; gap: 0.5rem; }
+.page-content .p-toolbar .p-toolbar-group-start,
+.page-content .p-toolbar .p-toolbar-group-end,
+.page-content .p-toolbar .p-toolbar-group-left,
+.page-content .p-toolbar .p-toolbar-group-right { flex-wrap: wrap; gap: 0.5rem; min-width: 0; }
+.page-content .p-buttonset { flex-wrap: wrap; }
+.page-content .p-card .p-card-body,
+.page-content .p-card .p-card-content { min-width: 0; }
+.page-content .grid,
+.page-content .formgrid { min-width: 0; }
+.page-content .p-inputtext,
+.page-content .p-dropdown,
+.page-content .p-calendar,
+.page-content .p-inputnumber,
+.page-content .p-multiselect { max-width: 100%; }
+
+/* Tabelas: o wrapper sempre rola; a pagina nunca fica mais larga que a tela. */
+.page-content .p-datatable { max-width: 100%; }
+.page-content .p-datatable .p-datatable-wrapper { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.page-content .p-paginator { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+
+/* ---------- Tablet e celular: sidebar vira gaveta ---------- */
+@media (max-width: 900px) {
+    .bc-menu-toggle { display: inline-flex !important; }
+
+    .enterprise-sidebar,
+    .enterprise-sidebar:not(.collapsed),
+    .enterprise-sidebar.collapsed {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: min(86vw, 320px);
+        min-width: 0;
+        height: 100dvh;
+        transform: translateX(-105%);
+        transition: transform 0.25s ease;
+        z-index: 1100;
+    }
+    .enterprise-sidebar.drawer-open { transform: translateX(0); }
+
+    /* Na gaveta o menu e sempre completo, mesmo que o estado "recolhido" esteja ativo. */
+    .enterprise-sidebar.collapsed .brand-name,
+    .enterprise-sidebar.collapsed .user-details { display: flex !important; }
+    .enterprise-sidebar.collapsed .brand-name { display: inline !important; }
+    .enterprise-sidebar.collapsed .enterprise-panel-menu .p-menuitem-text,
+    .enterprise-sidebar.collapsed .enterprise-panel-menu .p-submenu-icon { display: inline-block !important; }
+    .enterprise-sidebar.collapsed .sidebar-footer .user-profile-btn .p-button-label { display: inline !important; }
+    .enterprise-sidebar.collapsed .sidebar-header { flex-direction: row; justify-content: space-between; padding: 1.1rem 0.85rem; }
+    .enterprise-sidebar.collapsed .sidebar-user { justify-content: flex-start; padding: 0.25rem 1.1rem 1rem; }
+    .enterprise-sidebar.collapsed .enterprise-panel-menu .p-panelmenu-header-link,
+    .enterprise-sidebar.collapsed .enterprise-panel-menu .p-menuitem-link {
+        justify-content: flex-start;
+        padding-left: 0.9rem !important;
+        padding-right: 0.9rem !important;
+    }
+    .enterprise-sidebar .collapse-btn { display: none !important; }
+
+    .bc-sidebar-backdrop.visible {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 8, 23, 0.55);
+        z-index: 1050;
+    }
+
+    .enterprise-layout { width: 100%; }
+    .enterprise-main { width: 100%; flex: 1 1 100%; }
+    .enterprise-header { padding-left: 0.75rem; padding-right: 0.75rem; gap: 0.5rem; }
+    .enterprise-header .header-content { gap: 0.5rem; }
+    .enterprise-header .bc-language-selector { min-width: 0 !important; width: 6.5rem; }
+}
+
+@media (max-width: 600px) {
+    .page-content { padding-left: 0.6rem; padding-right: 0.6rem; }
+    .enterprise-header .bc-language-selector { display: none; }
+    body .p-dialog { width: 96vw !important; max-width: 96vw !important; }
+    body .p-dialog .p-dialog-content { max-height: calc(100dvh - 150px); }
+    .page-content .p-toolbar { flex-direction: column; align-items: stretch; }
+}
