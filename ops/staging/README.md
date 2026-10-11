@@ -1,25 +1,26 @@
 # Ambiente STAGING
 
-Este ambiente e separado da producao e **nao aponta para dominio publico**.
+Staging e isolado da producao e nao tem URL/DNS publico configurado por este repositorio.
 
-- Aplicacao Spring Boot: porta `8081`, acesso direto por `http://localhost:8081` no proprio servidor.
+- Aplicacao Spring Boot: porta 8081; teste local no servidor por `http://127.0.0.1:8081`.
 - Diretorio de deploy: `/opt/brasil-saas-erp/staging`.
 - Unit systemd: `brasil-saas-erp-staging.service`.
 - Variaveis: `/etc/brasil-saas/staging.env`, criado a partir de `staging.env.example`.
-- Banco PostgreSQL: database `brasil-saas-staging`; nao usar `brasil-saas` de producao.
+- PostgreSQL: database exclusivo `brasil-saas-staging` e usuario exclusivo `brasil-saas-staging`.
 - MongoDB: database `brasil-saas-staging`.
-- Redis: database index `1`.
-- RabbitMQ: virtual host `/staging`.
+- Redis: database index 1.
+- RabbitMQ: virtual host `/staging` e usuario exclusivo.
 - MinIO: bucket `brasil-saas-staging`.
-- IAM/AD compartilhado desabilitado no perfil para impedir autenticacao acidental contra o ambiente produtivo.
-- Stripe success/cancel URLs ficam em `localhost:8081` ate que um hostname de staging seja definido deliberadamente.
+- Auth Service/AD desabilitados por padrao para evitar autenticacao acidental contra producao.
+- URLs Stripe de sucesso/cancelamento ficam em localhost ate que o operador defina conscientemente uma URL de teste.
 
-## Seguranca e ativacao
+## Preparacao obrigatoria
 
-1. Crie banco, usuario e credenciais exclusivos de staging. Nunca copie senhas, chaves JWT, credenciais de mensageria ou Stripe da producao.
-2. Instale o arquivo de ambiente em `/etc/brasil-saas/staging.env`, dono `root:root`, permissao `0600`.
-3. Confirme que a porta `8081` nao esta publicada no proxy de producao.
-4. Instale a unit de `systemd_units/brasil-saas-erp-staging.service`, execute `systemctl daemon-reload` e habilite/inicie a unit quando o servidor estiver preparado.
-5. Valide `curl -fsS http://127.0.0.1:8081/actuator/health`.
+1. Crie database e usuario PostgreSQL exclusivos, conceda as permissoes necessarias e inicialize o schema/migracoes em staging separadamente. O perfil desativa Flyway para evitar alteracoes automaticas; habilite-o somente se o processo de staging estiver preparado para migrar o banco isolado.
+2. Crie database MongoDB, usuario/vhost RabbitMQ e bucket MinIO exclusivos.
+3. Gere uma chave JWT exclusiva para staging. Nunca copie segredos de producao.
+4. Instale o arquivo de ambiente com dono `root:root` e permissao `0600`.
+5. Confirme que a porta 8081 nao esta publicada pelo proxy de producao.
+6. Instale a unit systemd e valide `curl -fsS http://127.0.0.1:8081/actuator/health`.
 
-Nao configure DNS, Nginx ou URL publica para staging sem uma decisao explicita do operador. O workflow de build nao deve trocar nem reiniciar o servico de producao.
+Nenhum dominio, IP publico, Nginx ou URL de producao deve ser definido automaticamente para staging. O workflow de build nao reinicia nem substitui o servico de producao.
