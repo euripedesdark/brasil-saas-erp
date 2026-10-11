@@ -1,6 +1,9 @@
 name: Publish staging through Nginx port 80
 on:
   workflow_dispatch:
+  push:
+    branches: [ops/publish-staging80]
+    paths: [.github/workflows/publish-staging.yml]
 permissions:
   contents: read
 concurrency:
