@@ -18,14 +18,14 @@ jobs:
           os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
           root=pathlib.Path.home()/'.local/share/brasil-saas-staging'
           settings=dict(l.split('=',1) for l in (root/'staging.env').read_text().splitlines() if '=' in l)
-          for component in ['app','postgres']:
-              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','2026-10-11 07:48:00','--no-pager','-n','3000'],capture_output=True,text=True).stdout
+          for component in ['app','postgres','redis']:
+              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','2026-10-11 07:58:00','--no-pager','-n','3000'],capture_output=True,text=True).stdout
               for k,v in settings.items():
                   if v and any(x in k for x in ['PASSWORD','SECRET','URI']): s=s.replace(v,'[REDACTED]')
               s=re.sub(r'(generated security password:).*',r'\1 [REDACTED]',s)
               print('###',component)
               lines=s.splitlines()
               if component=='app':
-                  lines=[l for l in lines if any(x in l for x in ['ERROR','WARN','Caused by','Exception','Flyway','Migrat','schema','Hikari','Started','Starting']) and 'Pool - Starting' not in l]
+                  lines=[l for l in lines if any(x in l for x in ['ERROR','WARN','Caused by','Exception','Flyway','Migrat','schema','Hikari','Started','Starting','NOAUTH','WRONGPASS','DENIED']) and 'Pool - Starting' not in l]
               print('\n'.join(lines[-250:]))
           PY
