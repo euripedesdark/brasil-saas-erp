@@ -55,18 +55,18 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=euripedes
-WorkingDirectory=%h/BRASIL-SAAS-ERP
+WorkingDirectory=%h/brasil-saas-erp
 # Sem EnvironmentFile o perfil dev cai no caminho do notebook, que não existe
 # numa máquina nova, e o app sobe em laço de retentativa do Hikari. O
 # instalador cria este arquivo; se ele não existir, o serviço sobe e o que
 # falha é a conexão — que é o diagnóstico certo.
 EnvironmentFile=-/etc/brasil-saas/erp.env
-Environment=BRASIL_SAAS_REPO_DIR=%h/BRASIL-SAAS-ERP
+Environment=BRASIL_SAAS_REPO_DIR=%h/brasil-saas-erp
 # O ERP entra no Postgres por CERTIFICADO de cliente. Sem esta variável, o
 # perfil dev aponta para a PKI de outra máquina e a conexão falha com
 # "connection requires a valid client certificate" — mensagem que aponta para
 # certificado e cuja causa é o caminho.
-Environment=BRASIL_SAAS_CERTS_DIR=%h/BRASIL-SAAS-ERP/certs/pki
+Environment=BRASIL_SAAS_CERTS_DIR=%h/brasil-saas-erp/certs/pki
 # O valor PRECISA estar entre aspas. Sem elas, o systemd reparte a linha por
 # espaço: "JAVA_OPTS=-Xmx2g" e "-XX:+UseG1GC". A segunda não tem NOME=, então
 # é descartada com "Invalid environment assignment, ignoring" — e o coletor de
