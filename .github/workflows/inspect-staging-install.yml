@@ -1,4 +1,4 @@
-name: Inspect staging startup failure
+name: Locate staging sources and verify routing
 on:
   push:
     branches: [ops/install-isolated-staging]
@@ -8,30 +8,51 @@ permissions:
 jobs:
   inspect:
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 4
+    timeout-minutes: 5
     steps:
-      - name: Read sanitized staging startup logs
+      - name: Find staging directories and build configuration
         run: |
           python3 - <<'PY'
-          import os,pathlib,subprocess,re,urllib.request,json
+          import os,pathlib,subprocess,urllib.request,urllib.parse,re,json,hashlib
+          home=pathlib.Path.home()
+          candidates=[]
+          for base in [home,pathlib.Path('/opt'),pathlib.Path('/srv'),pathlib.Path('/var/www')]:
+              for folder,dirs,files in os.walk(base):
+                  dirs[:]=[d for d in dirs if d not in ['node_modules','.git','.cache','postgres','mongo','rabbitmq','minio']]
+                  if len(pathlib.Path(folder).relative_to(base).parts)>8: dirs[:]=[];continue
+                  if 'stag' in folder.lower() or ('pom.xml' in files and 'brasil' in folder.lower()):
+                      if any(f in files for f in ['pom.xml','package.json','app.jar']) or 'stag' in pathlib.Path(folder).name.lower():
+                          print('FOUND',folder)
+                          candidates.append(pathlib.Path(folder))
+          for folder in candidates:
+              for name in ['pom.xml','package.json','vite.config.js','vite.config.ts']:
+                  p=folder/name
+                  if p.exists():
+                      print('BUILD_CONFIG',p)
+                      s=p.read_text(errors='replace')
+                      if name=='package.json': print(json.dumps(json.loads(s).get('scripts',{})))
+                      else:
+                          print('\n'.join(l for l in s.splitlines() if any(k in l for k in ['base:','staging','profile','artifactId','finalName','context-path']) and not any(k in l.lower() for k in ['password','secret','token'])))
+              r=subprocess.run(['git','-C',str(folder),'rev-parse','--show-toplevel','HEAD'],capture_output=True,text=True)
+              if r.returncode==0: print('GIT',r.stdout.strip())
           os.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'
           os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
-          root=pathlib.Path.home()/'.local/share/brasil-saas-staging'
-          settings=dict(l.split('=',1) for l in (root/'staging.env').read_text().splitlines() if '=' in l)
-          for component in ['app','postgres','redis','mail','auth']:
-              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','30 minutes ago','--no-pager','-n','3000'],capture_output=True,text=True).stdout
-              for k,v in settings.items():
-                  if v and any(x in k for x in ['PASSWORD','SECRET','URI']): s=s.replace(v,'[REDACTED]')
-              s=re.sub(r'(generated security password:).*',r'\1 [REDACTED]',s)
-              print('###',component)
-              lines=s.splitlines()
-              if component=='app':
-                  lines=[l for l in lines if any(x in l for x in ['ERROR','WARN','Caused by','Exception','Flyway','Migrat','schema','Hikari','Started','Starting','NOAUTH','WRONGPASS','DENIED']) and 'Pool - Starting' not in l]
-              print('\n'.join(lines[-250:]))
-          for label,url in [('production','http://127.0.0.1/actuator/health'),('staging','http://127.0.0.1:18081/actuator/health')]:
+          print(subprocess.run(['systemctl','--user','show','brasil-saas-staging-app','-p','ActiveState','-p','ExecStart','-p','WorkingDirectory'],capture_output=True,text=True).stdout)
+          for p in [pathlib.Path('/opt/brasil-saas-erp-deploy/release.jar'),home/'.local/share/brasil-saas-staging/app.jar']:
               try:
-                  with urllib.request.urlopen(url,timeout=10) as response:
-                      print(label,'HTTP',response.status,'health',json.load(response).get('status'))
-              except Exception as error: print(label,type(error).__name__)
-          print('PRODUCTION_PUBLIC_URL', (pathlib.Path.home()/'.local/share/brasil-saas-public-access/url.txt').read_text().strip())
+                  digest=hashlib.file_digest(p.open('rb'),'sha256').hexdigest()
+                  print('JAR',p,'SHA256',digest)
+              except OSError as e: print('JAR_UNREADABLE',p,type(e).__name__)
+          for label,url,host in [('stage-direct','http://127.0.0.1:18081/login',None),('stage-prefix','http://127.0.0.1/staging',None),('stage-host','http://127.0.0.1/login','staging.brasil-saaserp.com')]:
+              try:
+                  req=urllib.request.Request(url,headers={'Host':host} if host else {})
+                  with urllib.request.urlopen(req,timeout=10) as r:
+                      html=r.read().decode()
+                      print('HTTP',label,r.status,r.url,'environment',r.headers.get('X-ERP-Environment'))
+                      for asset in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\\.(?:js|css))',html)[:4]:
+                          u=urllib.parse.urljoin(r.url,asset)
+                          try:
+                              with urllib.request.urlopen(urllib.request.Request(u,headers={'Host':host} if host else {}),timeout=10) as a: print('ASSET',label,u,a.status,a.headers.get('Content-Type'))
+                          except Exception as e: print('ASSET_FAILED',label,u,type(e).__name__)
+              except Exception as e: print('HTTP_FAILED',label,type(e).__name__)
           PY
