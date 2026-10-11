@@ -54,10 +54,12 @@ for component in ['mongo', 'redis', 'rabbitmq', 'minio']:
     folder = root / component
     folder.mkdir(exist_ok=True)
     folder.chmod(0o700)
-for key in ['MONGO_PASSWORD', 'STAGING_ADMIN_PASSWORD']:
+for key in ['MONGO_PASSWORD', 'STAGING_ADMIN_PASSWORD', 'STAGING_AUTH_TOKEN_SECRET']:
     settings.setdefault(key, secrets.token_urlsafe(36))
 settings['MONGODB_URI'] = 'mongodb://stagingadmin:' + settings['MONGO_PASSWORD'] + '@127.0.0.1:27018/brasil_saas_staging?authSource=admin'
 settings.update({
+    'BRASIL_SAAS_AUTH_SERVICE_ENABLED': 'true',
+    'BRASIL_SAAS_AUTH_SERVICE_URL': 'http://127.0.0.1:18181',
     'DB_USER': 'sa',
     'SPRING_DATASOURCE_URL': settings['DB_URL'] + '?currentSchema=brasil_saas',
     'SPRING_DATASOURCE_USERNAME': 'sa',
@@ -138,8 +140,25 @@ service('brasil-saas-staging-rabbit', required['rabbitmq-server'], '256M')
 service('brasil-saas-staging-minio', required['minio'] + ' server --address 127.0.0.1:19000 --console-address 127.0.0.1:19001 ' + str(root / 'minio'), '256M')
 service('brasil-saas-staging-app', required['java'] + ' -Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:MaxDirectMemorySize=64m -XX:ActiveProcessorCount=2 -jar ' + str(root / 'app.jar'), '768M', 'TimeoutStartSec=300\n')
 service('brasil-saas-staging-mail', shutil.which('python3') + ' ' + str(root / 'smtp-sink.py'), '32M')
+authjar = pathlib.Path('/opt/auth-service/auth-service-1.0.0-SNAPSHOT.jar')
+if not (root / 'auth.jar').exists():
+    shutil.copyfile(authjar, root / 'auth.jar')
+    (root / 'auth.jar').chmod(0o600)
+authenv = {
+    'SERVER_PORT': '18181', 'SERVER_ADDRESS': '127.0.0.1',
+    'AUTH_PG_URL': settings['DB_URL'], 'AUTH_PG_SCHEMA': 'brasil_saas',
+    'AUTH_PG_SSL_MODE': 'disable', 'AUTH_PG_CREDENTIAL_SSL_MODE': 'disable',
+    'AUTH_PG_SSL_ROOT_CERT': '', 'AUTH_PG_SSL_CERT': '', 'AUTH_PG_SSL_KEY': '',
+    'AUTH_LDAP_URL': 'ldaps://127.0.0.1:10636', 'AUTH_LDAP_BASE': 'dc=staging,dc=invalid',
+    'AUTH_LDAP_USER_DN': '', 'AUTH_LDAP_PASSWORD': '', 'AUTH_LDAP_USER_SEARCH_BASE': '',
+    'AUTH_TOKEN_SECRET': settings['STAGING_AUTH_TOKEN_SECRET'], 'AUTH_TOKEN_ISSUER': 'auth-service-staging',
+    'MANAGEMENT_HEALTH_LDAP_ENABLED': 'false',
+}
+private(root / 'auth.env', ''.join(k + '=' + v + '\n' for k, v in authenv.items()))
+service('brasil-saas-staging-auth', required['java'] + ' -Xms32m -Xmx128m -XX:MaxMetaspaceSize=96m -XX:MaxDirectMemorySize=32m -XX:ActiveProcessorCount=1 -jar ' + str(root / 'auth.jar'), '320M', 'EnvironmentFile=' + str(root / 'auth.env') + '\n')
 names = ['brasil-saas-staging-' + component + '.service' for component in ['postgres', 'mongo', 'redis', 'rabbit', 'minio', 'app']]
 names.append('brasil-saas-staging-mail.service')
+names.append('brasil-saas-staging-auth.service')
 run(['systemctl', '--user', 'daemon-reload'])
 try:
     run(['systemctl', '--user', 'start', names[0]])
@@ -150,6 +169,8 @@ try:
     # takes its schema-history lock, using only this private PostgreSQL cluster.
     owner_sql = "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='sa') THEN CREATE ROLE sa NOLOGIN; END IF; END $$;\n"
     owner_sql += "ALTER ROLE sa LOGIN SUPERUSER PASSWORD '" + settings['DB_PASSWORD'] + "';\n"
+    owner_sql += "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='staging-admin') THEN CREATE ROLE \"staging-admin\" NOLOGIN; END IF; END $$;\n"
+    owner_sql += "ALTER ROLE \"staging-admin\" LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD '" + settings['STAGING_ADMIN_PASSWORD'] + "';\n"
     owner_sql += """DO $$ DECLARE r record; BEGIN
       FOR r IN SELECT c.oid::regclass AS rel FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
         WHERE n.nspname IN ('brasil_saas','brasil_saas_dl') AND c.relkind='r' AND pg_get_userbyid(c.relowner) <> 'sa'
@@ -184,8 +205,10 @@ try:
         wait_port(port)
     run(['systemctl', '--user', 'start', names[6]])
     wait_port(19025)
+    run(['systemctl', '--user', 'start', names[7]])
+    wait_port(18181)
     run(['systemctl', '--user', 'start', names[5]])
-    deadline = time.monotonic() + 240
+    deadline = time.monotonic() + 360
     while time.monotonic() < deadline:
         try:
             check_login()
@@ -197,11 +220,18 @@ try:
             time.sleep(3)
     else:
         raise RuntimeError('Staging application did not become healthy')
-    payload = json.dumps({'username': 'staging-admin', 'password': settings['STAGING_ADMIN_PASSWORD']}).encode()
+    payload = json.dumps({'username': 'staging-admin', 'password': settings['STAGING_ADMIN_PASSWORD'], 'provider': 'POSTGRES'}).encode()
     request = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=payload, headers={'Content-Type': 'application/json'})
     with urllib.request.urlopen(request, timeout=10) as response:
         login = json.load(response)
         assert login.get('data', {}).get('accessToken'), 'No access token returned'
+    invalid = json.dumps({'username': 'staging-admin', 'password': secrets.token_urlsafe(36), 'provider': 'POSTGRES'}).encode()
+    rejected = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=invalid, headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(rejected, timeout=10):
+            raise RuntimeError('Staging accepted an invalid password')
+    except urllib.error.HTTPError as error:
+        assert error.code in (400, 401, 403), error.code
     for name in names:
         run(['systemctl', '--user', 'enable', name], stdout=subprocess.DEVNULL)
     print('STAGING_HEALTH_UP; LOGIN_AND_AUTH_OK; ISOLATED_DEPENDENCIES_OK')
