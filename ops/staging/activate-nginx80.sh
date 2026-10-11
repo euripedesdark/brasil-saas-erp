@@ -11,6 +11,7 @@ nginx -t
 nginx -T 2>/dev/null | python3 -c 'import sys,re; s=sys.stdin.read(); assert re.search(r"include\s+/etc/nginx/conf\.d/\*\.conf\s*;",s), "Nginx precisa incluir /etc/nginx/conf.d/*.conf no contexto http"'
 TARGET=/etc/nginx/conf.d/brasil-saas-staging.conf
 BACKUP=$(mktemp /etc/nginx/conf.d/brasil-saas-staging.backup.XXXXXX)
+HEADERS=$(mktemp)
 HAD_CONFIG=false
 if [ -e "$TARGET" ]; then
     test -f "$TARGET" && test ! -L "$TARGET"
@@ -18,9 +19,10 @@ if [ -e "$TARGET" ]; then
     HAD_CONFIG=true
 fi
 rollback() {
+    trap - ERR
     if [ "$HAD_CONFIG" = true ]; then cp -p "$BACKUP" "$TARGET"; else rm -f "$TARGET"; fi
     nginx -t && systemctl reload nginx
-    rm -f "$BACKUP"
+    rm -f "$BACKUP" "$HEADERS"
 }
 trap rollback ERR
 cat > "$TARGET" <<'NGINX'
@@ -47,10 +49,10 @@ NGINX
 chmod 0644 "$TARGET"
 nginx -t
 systemctl reload nginx
-curl --fail --silent --show-error --max-time 10 -D /tmp/brasil-saas-staging-headers \
+curl --fail --silent --show-error --max-time 10 -D "$HEADERS" \
     -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login -o /dev/null
-rg -qi '^X-ERP-Environment: staging' /tmp/brasil-saas-staging-headers
+python3 -c 'import pathlib,sys; assert any(line.lower().strip() == "x-erp-environment: staging" for line in pathlib.Path(sys.argv[1]).read_text().splitlines())' "$HEADERS"
 curl --fail --silent --show-error --max-time 10 http://127.0.0.1/login -o /dev/null
 trap - ERR
-rm -f "$BACKUP" /tmp/brasil-saas-staging-headers
+rm -f "$BACKUP" "$HEADERS"
 echo 'Staging e producao validados pelo Nginx na porta 80.'
