@@ -86,7 +86,7 @@ public class CteEmissaoService {
 
         try {
             ConfigCertificadoDocumentoFiscal conf = configuracoes();
-            WSFacade facade = new WSFacade(conf.comoCTe());
+            try (WSFacade facade = new WSFacade(conf.comoCTe())) {
             // O CT-e exige a UF na chamada; o MDF-e tem sobrecarga sem
             // argumento. Sem a UF o compilador reclama de "actual and formal
             // argument lists differ in length", e em tempo de execucao o
@@ -113,6 +113,7 @@ public class CteEmissaoService {
 
             return RespostaMdfePadrao.resposta(emOperacao, cStat,
                     ret.getMotivo(), "cte-status", ms, dados);
+            }
         } catch (Exception e) {
             long ms = Duration.between(inicio, Instant.now()).toMillis();
             log.warn("status do CT-e falhou: {}", e.getMessage());
