@@ -41,7 +41,7 @@ def valid_summary(body, expected):
                and len(area['indicadores']) == 3 for area in areas)
 
 
-def validate(settings):
+def verify_isolated(settings):
     # Never authenticate if this configuration points at the production database.
     url = settings.get('SPRING_DATASOURCE_URL', settings.get('DB_URL', ''))
     parsed = urllib.parse.urlsplit(url.removeprefix('jdbc:'))
@@ -50,6 +50,11 @@ def validate(settings):
         raise ValueError('Banco nao identificado como PostgreSQL staging isolado na porta 15432')
     password = settings.get('STAGING_ADMIN_PASSWORD')
     if not password: raise ValueError('Credencial de staging ausente')
+
+
+def validate(settings):
+    verify_isolated(settings)
+    password = settings['STAGING_ADMIN_PASSWORD']
     report = {'staging_only': True, 'checks': {}}
     status, login = request('/api/auth/login', body={'username': 'staging-admin', 'password': password, 'provider': 'POSTGRES'})
     token = login.get('data', {}).get('accessToken') if isinstance(login, dict) and isinstance(login.get('data'), dict) else None

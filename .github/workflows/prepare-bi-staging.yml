@@ -2,19 +2,29 @@ name: Prepare validated BI package and inspect staging
 on:
   push:
     branches: [ops/bi-staging-validation]
-    paths: ['.github/workflows/prepare-bi-staging.yml', 'scripts/bi/validate-staging-bi.py']
+    paths: ['.github/workflows/prepare-bi-staging.yml', 'scripts/bi/validate-staging-bi.py', 'scripts/bi/update-staging-bi.py']
   workflow_dispatch:
 permissions:
   contents: read
   actions: read
+concurrency:
+  group: bi-isolated-staging-update
+  cancel-in-progress: false
 jobs:
   prepare:
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 5
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Download tested Graylog plugin from main build
         uses: actions/download-artifact@v4
         with:
@@ -77,5 +87,7 @@ jobs:
           except OSError: confirmed = False
           print('MAIN_DEPLOY_MARKER_CONFIRMED', confirmed)
           PY
+      - name: Compile in isolated staging and update only its application with rollback
+        run: python3 scripts/bi/update-staging-bi.py
       - name: Validate actual authenticated staging BI without printing business data
         run: python3 scripts/bi/validate-staging-bi.py
