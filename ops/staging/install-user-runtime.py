@@ -233,7 +233,9 @@ try:
         with urllib.request.urlopen(rejected, timeout=10):
             raise RuntimeError('Staging accepted an invalid password')
     except urllib.error.HTTPError as error:
-        assert error.code in (400, 401, 403), error.code
+        assert error.code == 422, error.code
+        rejection = json.load(error)
+        assert any(item.get('code') == 'INVALID_CREDENTIALS' for item in rejection.get('errors', [])), 'Wrong password did not return INVALID_CREDENTIALS'
     for name in names:
         run(['systemctl', '--user', 'enable', name], stdout=subprocess.DEVNULL)
     print('STAGING_HEALTH_UP; LOGIN_AND_AUTH_OK; ISOLATED_DEPENDENCIES_OK')
