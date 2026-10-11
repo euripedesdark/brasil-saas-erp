@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=euripedes
-WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP/src/main/resources/microservices/esocial/src/esocial-jt-service
+WorkingDirectory=/home/euripedes/brasil-saas-erp/src/main/resources/microservices/esocial/src/esocial-jt-service
 ExecStart=/usr/bin/java -jar target/esocial-jt-service.jar
 Restart=always
 Environment=SPRING_PROFILES_ACTIVE=prod

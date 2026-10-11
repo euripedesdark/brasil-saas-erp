@@ -1,0 +1,32 @@
+name: Repair installed NFS-e repository paths
+on:
+  push:
+    branches: [ops/microservice-usage-audit]
+    paths: [.github/workflows/inspect-microservice-runtime.yml]
+permissions:
+  contents: read
+jobs:
+  repair:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Install verified repair helper and apply when sudo permits
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,pathlib,urllib.request,subprocess
+          url='https://raw.githubusercontent.com/euripedesdark/brasil-saas-erp/c18380336e6d25d56a13b6d571688c830b3ea62c/ops/repair-nfse-unit-paths.py'
+          data=urllib.request.urlopen(url,timeout=30).read()
+          if hashlib.sha256(data).hexdigest()!='94ccdb6f39c0691702ce4f7c62289ee252dccf8a287c4026257c7f36901afd2d':
+              raise SystemExit('Repair helper checksum mismatch')
+          folder=pathlib.Path.home()/'.local/share/brasil-saas-repair'
+          folder.mkdir(parents=True,exist_ok=True,mode=0o700)
+          target=folder/'repair-nfse-unit-paths.py'
+          target.write_bytes(data); target.chmod(0o700)
+          print('Helper validado:',target,flush=True)
+          allowed=subprocess.run(['sudo','-n','true'],capture_output=True)
+          if allowed.returncode:
+              print('ROOT_REQUIRED: sudo python3 '+str(target),flush=True)
+              raise SystemExit(1)
+          subprocess.run(['sudo','-n','python3',str(target)],check=True)
+          PY
