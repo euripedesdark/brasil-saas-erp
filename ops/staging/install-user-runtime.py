@@ -159,6 +159,17 @@ try:
       LOOP EXECUTE format('ALTER SEQUENCE %s OWNER TO sa', r.rel); END LOOP;
     END $$;
     """
+    # Supply a synthetic tenant only in the isolated, already migrated database.
+    # DataBootstrap otherwise explicitly inserts NULL into regime_tributario.
+    owner_sql += """DO $$ BEGIN
+      IF to_regclass('brasil_saas.bc_core_empresa') IS NOT NULL THEN
+        INSERT INTO brasil_saas.bc_core_empresa
+          (razao_social,nome_fantasia,cnpj,uf,status,regime_tributario)
+        SELECT 'EMPRESA FICTICIA DE STAGING','ERP Staging','00000000000000','RS','ATIVO','SIMPLES_NACIONAL'
+        WHERE NOT EXISTS (SELECT 1 FROM brasil_saas.bc_core_empresa);
+      END IF;
+    END $$;
+    """
     run(['psql', '-X', '-h', '127.0.0.1', '-p', '15432', '-U', 'staging_owner', '-d', 'brasil_saas_staging', '-v', 'ON_ERROR_STOP=1'], input=owner_sql, text=True, env=pgenv, stdout=subprocess.DEVNULL)
     run(['systemctl', '--user', 'start', names[1]])
     wait_port(27018)
