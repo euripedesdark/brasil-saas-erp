@@ -1,0 +1,110 @@
+name: Publish staging through Nginx port 80
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: erp-publish-isolated-staging
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    outputs:
+      url: ${{ steps.tunnel.outputs.url }}
+    steps:
+      - name: Require real staging application and dedicated Nginx route
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18081/actuator/health | python3 -c 'import json,sys; assert json.load(sys.stdin)["status"] == "UP"'
+          HEADER_FILE=$(mktemp)
+          trap 'rm -f "$HEADER_FILE"' EXIT
+          curl --fail --silent --show-error --max-time 10 -D "$HEADER_FILE" -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login -o /dev/null
+          python3 - "$HEADER_FILE" <<'PY'
+          import pathlib,sys
+          assert any(line.lower().strip() == 'x-erp-environment: staging' for line in pathlib.Path(sys.argv[1]).read_text().splitlines()), 'Staging route is not installed in Nginx. Administrator must run activate-nginx80.sh.'
+          PY
+      - name: Start isolated staging tunnel and validate authentication
+        id: tunnel
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export XDG_RUNTIME_DIR="/run/user/$(id -u)"
+          export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+          python3 - <<'PY'
+          import pathlib,subprocess,os,re,time,urllib.request,json
+          home=pathlib.Path.home()
+          prod=home/'.local/share/brasil-saas-public-access'
+          stage=home/'.local/share/brasil-saas-staging'
+          root=home/'.local/share/brasil-saas-staging-public-access'
+          root.mkdir(exist_ok=True); root.chmod(0o700)
+          assert (prod/'cloudflared').exists()
+          src=(prod/'supervisor.py').read_text()
+          src=src.replace("str(root/'cloudflared')","str(pathlib.Path.home()/'.local/share/brasil-saas-public-access/cloudflared')")
+          src=src.replace("'brasil-saaserp.com'","'staging.brasil-saaserp.com'").replace("'127.0.0.1:18493'","'127.0.0.1:18494'")
+          (root/'supervisor.py').write_text(src); (root/'supervisor.py').chmod(0o700)
+          compile(src,str(root/'supervisor.py'),'exec')
+          units=home/'.config/systemd/user'
+          unit=units/'brasil-saas-staging-public-access.service'
+          unit.write_text('[Unit]\nDescription=Free isolated staging public access\nAfter=brasil-saas-staging-app.service\n[Service]\nExecStart=/usr/bin/python3 '+str(root/'supervisor.py')+'\nRestart=always\nRestartSec=10\n[Install]\nWantedBy=default.target\n')
+          subprocess.run(['systemctl','--user','daemon-reload'],check=True)
+          subprocess.run(['systemctl','--user','enable','--now',unit.name],check=True)
+          url=''
+          for _ in range(90):
+              try:
+                  urls=re.findall(r'https://[a-z0-9-]+\.trycloudflare\.com',(root/'tunnel.log').read_text(errors='replace'))
+                  if urls:
+                      url=urls[-1]
+                      with urllib.request.urlopen(url+'/login',timeout=5) as r:
+                          assert r.headers.get('X-ERP-Environment')=='staging'
+                          assert r.status==200
+                      break
+              except (OSError,AssertionError): pass
+              time.sleep(2)
+          else: raise RuntimeError('Staging public access did not become ready')
+          settings=dict(line.split('=',1) for line in (stage/'staging.env').read_text().splitlines() if line and not line.startswith('#'))
+          body=json.dumps({'username':'staging-admin','password':settings['STAGING_ADMIN_PASSWORD']}).encode()
+          request=urllib.request.Request(url+'/api/auth/login',data=body,headers={'Content-Type':'application/json'})
+          with urllib.request.urlopen(request,timeout=15) as response:
+              assert json.load(response).get('data',{}).get('accessToken'),'Staging public login did not return access token'
+          (root/'url.txt').write_text(url+'\n')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write('url='+url+'\n')
+          print('PUBLIC_STAGING_LOGIN_OK',url+'/login')
+          PY
+  verify-external:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      STAGING_PUBLIC_URL: ${{ needs.publish.outputs.url }}
+    steps:
+      - name: Verify staging routing and assets outside the server
+        run: |
+          python3 - <<'PY'
+          import os,urllib.request,urllib.parse,re
+          base=os.environ['STAGING_PUBLIC_URL']
+          with urllib.request.urlopen(base+'/login',timeout=15) as response:
+              assert response.status==200
+              assert response.headers.get('X-ERP-Environment')=='staging'
+              html=response.read().decode()
+          assets=re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.(?:js|css)(?:\?[^"\x27]*)?)',html)
+          local=[a for a in assets if not a.startswith(('http:','https:','//'))]
+          assert local,'Missing frontend assets'
+          for asset in local[:4]:
+              with urllib.request.urlopen(urllib.parse.urljoin(base+'/login',asset),timeout=15) as response:
+                  assert response.status==200
+                  assert 'text/html' not in response.headers.get('Content-Type','')
+                  assert response.read(1024)
+          print('STAGING_EXTERNAL_OK',base+'/login')
+          PY
+  record-staging:
+    needs: [publish, verify-external]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ needs.publish.outputs.url }}
+    steps:
+      - env:
+          STAGING_URL: ${{ needs.publish.outputs.url }}
+        run: echo "Verified isolated staging access $STAGING_URL/login" >> "$GITHUB_STEP_SUMMARY"
