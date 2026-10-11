@@ -1,0 +1,34 @@
+name: Install isolated staging runtime
+on:
+  push:
+    branches: [ops/install-isolated-staging]
+    paths: [ops/staging/install-user-runtime.py, .github/workflows/install-staging-runtime.yml]
+permissions:
+  contents: read
+concurrency:
+  group: erp-install-isolated-staging
+  cancel-in-progress: false
+jobs:
+  install:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install staging services and validate real authentication
+        run: python3 ops/staging/install-user-runtime.py
+      - name: Summarize failure without exposing credentials
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,pathlib,re
+          root=pathlib.Path.home()/'.local/share/brasil-saas-staging'
+          settings=dict(line.split('=',1) for line in (root/'staging.env').read_text().splitlines() if line and not line.startswith('#'))
+          secrets=[v.strip('"') for k,v in settings.items() if any(s in k for s in ['PASSWORD','SECRET','URI'])]
+          for name in ['mongo','redis','rabbit','minio','app']:
+              text=subprocess.run(['journalctl','--user','-u','brasil-saas-staging-'+name,'-n','60','--no-pager'],capture_output=True,text=True).stdout
+              for secret in sorted(secrets,key=len,reverse=True):
+                  if secret: text=text.replace(secret,'[REDACTED]')
+              print('### STAGING',name)
+              print(text)
+          PY
