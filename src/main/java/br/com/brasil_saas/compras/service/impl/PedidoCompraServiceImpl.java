@@ -56,6 +56,9 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
     private final PlanoInspecaoRepository planoInspecaoRepository;
     private final InspecaoRepository inspecaoRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private br.com.brasil_saas.contabilidade.service.EventoContabilService eventoContabil;
+
     @Override
     @Transactional
     public PedidoCompraResponse criar(PedidoCompraRequest request) {
@@ -325,7 +328,21 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         RecebimentoCompra salvo = recebimentoRepository.save(recebimento);
         for (RecebimentoCompraItem item : itens) item.setRecebimentoId(salvo.getId());
         recebimentoItemRepository.saveAll(itens);
+        contabilizarRecebimento(pedido, salvo, valorTotal);
         return salvo;
+    }
+
+    /** Reconhece a compra na contabilidade no recebimento (evento RECEBIMENTO_COMPRA). Sem regra, fica como pendencia e nao bloqueia o recebimento. */
+    private void contabilizarRecebimento(PedidoCompra pedido, RecebimentoCompra recebimento, BigDecimal valor) {
+        if (eventoContabil == null) return;
+        try {
+            eventoContabil.contabilizar(pedido.getEmpresaId(),
+                    br.com.brasil_saas.contabilidade.service.EventoContabilService.EVT_RECEBIMENTO_COMPRA,
+                    "RECEBIMENTO", recebimento.getId(), recebimento.getDataRecebimento(), valor,
+                    "Recebimento " + recebimento.getNumero() + " pedido " + pedido.getNumero());
+        } catch (org.springframework.web.server.ResponseStatusException ex) {
+            if (ex.getStatusCode().value() != 422) throw ex;
+        }
     }
 
     /** Gera inspeção automática se existir plano ativo de tipo RECEBIMENTO (integração QM ↔ Compras). */
