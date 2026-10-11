@@ -31,6 +31,18 @@ class InstallerTest(unittest.TestCase):
                 self.jar(path, scripts, bundle)
                 with self.assertRaises(ValueError): installer.validate_jar(path)
 
+    def test_accepts_graylog_shared_chunks_but_still_requires_main_bundle(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = pathlib.Path(folder) / 'plugin.jar'
+            main = 'plugin.' + installer.PLUGIN + '.hash.js'; shared = '7e0aa67c-31.aaba18c61a2408256005.js'
+            self.jar(path, [main, shared], False)
+            with zipfile.ZipFile(path, 'a') as jar:
+                jar.writestr(main, 'fixture'); jar.writestr(shared, 'fixture')
+            self.assertEqual(len(installer.validate_jar(path)), 64)
+            self.jar(path, [shared], False)
+            with zipfile.ZipFile(path, 'a') as jar: jar.writestr(shared, 'fixture')
+            with self.assertRaises(ValueError): installer.validate_jar(path)
+
     def test_atomic_idempotent_install_and_private_backup(self):
         with tempfile.TemporaryDirectory() as folder:
             directory = pathlib.Path(folder); jar = directory / 'input.jar'; self.jar(jar)

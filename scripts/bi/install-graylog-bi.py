@@ -32,9 +32,13 @@ def validate_jar(path):
         scripts = manifest.get('files', {}).get('js', [])
         if not scripts or not isinstance(scripts, list):
             raise ValueError('JAR sem bundle web')
+        if not any(isinstance(entry, str) and entry.lstrip('/').startswith('plugin.' + PLUGIN + '.') for entry in scripts):
+            raise ValueError('JAR sem bundle principal do plugin Brasil SaaS BI')
         for entry in scripts:
+            if not isinstance(entry, str): raise ValueError('Nome de bundle invalido')
             filename = entry.lstrip('/')
-            if '..' in filename.split('/') or not filename.startswith('plugin.') or filename not in names:
+            # Graylog also emits shared chunks named with its UniqueChunkIdPlugin.
+            if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.js', filename) or filename not in names:
                 raise ValueError('Manifesto aponta para bundle ausente ou externo')
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
