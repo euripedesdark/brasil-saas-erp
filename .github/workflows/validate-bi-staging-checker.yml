@@ -1,0 +1,15 @@
+name: Test isolated staging BI validator
+on:
+  push:
+    branches: [ops/bi-staging-validation, main]
+    paths: ['scripts/bi/*staging-bi.py', '.github/workflows/validate-bi-staging-checker.yml']
+  pull_request:
+    paths: ['scripts/bi/*staging-bi.py', '.github/workflows/validate-bi-staging-checker.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/bi/test-validate-staging-bi.py
