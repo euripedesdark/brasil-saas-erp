@@ -1,0 +1,32 @@
+name: Diagnose bridge startup without exposing credentials
+on:
+  push:
+    branches: [ops/bridge-startup-diagnostic]
+    paths: [.github/workflows/inspect-bridge-startup.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 3
+    steps:
+      - name: Classify startup failure and check local HTTP routes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,urllib.request,socket
+          for name in ['nfse-sp-api.service','nfse-sp-bridge.service','brasil_saas-watchdog.service']:
+              r=subprocess.run(['systemctl','show',name,'-p','ActiveState','-p','SubState','-p','ExecMainStatus','-p','NRestarts'],capture_output=True,text=True)
+              print(name,r.stdout.strip().replace('\n',' | '))
+          r=subprocess.run(['journalctl','-u','nfse-sp-bridge.service','-n','100','--no-pager','-o','cat'],capture_output=True,text=True)
+          text=r.stdout.lower()
+          patterns={'missing_certificate':['certificado não legível'],'missing_password':['nfse_sp_cert_pass não definido'],'missing_bundle':['bundle: command not found','bundle: comando não encontrado'],'missing_gems':['bundler::gemnotfound','could not find','bundle install'],'ruby_load_error':['loaderror','cannot load such file'],'openssl_error':['pkcs12_parse','unsupported','openssl::'],'port_conflict':['address already in use','eaddrinuse'],'permissions':['permission denied','permissão negada']}
+          print('JOURNAL_READ',r.returncode,'HAS_LINES',bool(text.strip()))
+          for label,terms in patterns.items():
+              print('ERROR_CATEGORY',label,any(term in text for term in terms))
+          for port,path in [(4567,'/api/nfse-sp/status'),(4568,'/api/nfse-sp/status'),(4569,'/api/nfse-sp/status'),(8080,'/login'),(18081,'/login')]:
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:%d%s'%(port,path),timeout=4) as response:
+                      print('HTTP',port,path,response.status)
+              except Exception as e: print('HTTP',port,path,type(e).__name__)
+          PY
