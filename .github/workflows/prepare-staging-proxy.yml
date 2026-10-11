@@ -1,0 +1,55 @@
+name: Prepare Nginx staging activation
+on:
+  push:
+    branches: [ops/install-isolated-staging]
+    paths: [ops/staging/activate-nginx80.sh, .github/workflows/prepare-staging-proxy.yml]
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Save reviewed activation command for server administrator
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          TASK_STAGE="$HOME/.local/share/brasil-saas-staging"
+          test -d "$TASK_STAGE"
+          install -m 0700 ops/staging/activate-nginx80.sh "$TASK_STAGE/activate-nginx80.sh"
+          bash -n "$TASK_STAGE/activate-nginx80.sh"
+          echo "ADMIN_COMMAND=sudo bash $TASK_STAGE/activate-nginx80.sh"
+          echo "Staging Nginx activation needs administrator rights; no root permissions were bypassed."
+  test-proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate real Nginx port 80 activation in disposable runner
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y nginx
+          python3 - <<'PY' &
+          import http.server,json
+          class Backend(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body=json.dumps({'status':'UP'}).encode() if self.path=='/actuator/health' else b'<html>Isolated staging</html>'
+                  self.send_response(200); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
+              def log_message(self,*args): pass
+          http.server.HTTPServer(('127.0.0.1',18081),Backend).serve_forever()
+          PY
+          BACKEND_PID=$!
+          trap 'kill "$BACKEND_PID" || true' EXIT
+          sleep 1
+          sudo systemctl start nginx
+          curl --fail --silent http://127.0.0.1/login -o /tmp/prod-before.html || curl --fail --silent http://127.0.0.1/ -o /tmp/prod-before.html
+          # The fixture default host serves a login page so the installer can
+          # verify production was preserved after adding staging's virtual host.
+          echo '<html>Production fixture</html>' | sudo tee /var/www/html/login >/dev/null
+          sudo bash ops/staging/activate-nginx80.sh
+          curl --fail --silent -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login | python3 -c 'import sys; assert "Isolated staging" in sys.stdin.read()'
+          curl --fail --silent http://127.0.0.1/login | python3 -c 'import sys; assert "Production fixture" in sys.stdin.read()'
+          echo 'PASS staging and production enter via port 80 and reach different applications'
