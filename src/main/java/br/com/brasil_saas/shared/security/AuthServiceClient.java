@@ -38,6 +38,8 @@ public class AuthServiceClient {
         try {
             AuthServiceIdentity identity = client.post()
                     .uri(properties.getAuthenticatePath())
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .accept(org.springframework.http.MediaType.APPLICATION_JSON)
                     .body(new LoginRequest(username, password, provider))
                     .retrieve()
                     .body(AuthServiceIdentity.class);
