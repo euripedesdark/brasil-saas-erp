@@ -77,10 +77,12 @@ settings.update({
     'BRASIL_SAAS_BOOTSTRAP_ADMIN_USERNAME': 'staging-admin',
     'BRASIL_SAAS_BOOTSTRAP_ADMIN_PASSWORD': settings['STAGING_ADMIN_PASSWORD'],
     'BRASIL_SAAS_BOOTSTRAP_ADMIN_EMAIL': 'staging-admin@example.invalid',
+    'LOGGING_CONFIG': str(root / 'logback-staging.xml'),
     'SPRING_DATA_MONGODB_AUTO_INDEX_CREATION': 'false',
     'SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP': 'true',
     'SPRING_RABBITMQ_LISTENER_DIRECT_AUTO_STARTUP': 'true',
 })
+private(root / 'logback-staging.xml', '<configuration><appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"><encoder><pattern>%d %-5level %logger{36} - %msg%n</pattern></encoder></appender><root level="INFO"><appender-ref ref="CONSOLE"/></root></configuration>\n')
 private(envfile, ''.join(k + '=' + v + '\n' for k, v in settings.items()))
 private(root / 'staging-access.txt', 'Username: staging-admin\nPassword: ' + settings['STAGING_ADMIN_PASSWORD'] + '\n')
 private(root / 'redis/redis.conf', 'bind 127.0.0.1\nport 16379\nprotected-mode yes\nrequirepass ' + settings['REDIS_PASSWORD'] + '\ndir ' + str(root / 'redis') + '\nmaxmemory 16mb\nmaxmemory-policy allkeys-lru\nappendonly yes\ndaemonize no\n')
