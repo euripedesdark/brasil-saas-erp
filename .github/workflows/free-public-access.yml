@@ -1,0 +1,109 @@
+name: Publish free ERP access
+on:
+  push:
+    branches: [ops/free-public-access]
+    paths: [.github/workflows/free-public-access.yml]
+permissions:
+  contents: read
+concurrency:
+  group: erp-free-public-access
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    outputs:
+      url: ${{ steps.publish.outputs.url }}
+    steps:
+      - name: Start free tunnel to existing ERP
+        id: publish
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1/login -o /tmp/erp-local-login.html
+          TASK_DIR="$HOME/.local/share/brasil-saas-public-access"
+          mkdir -p "$TASK_DIR"
+          chmod 700 "$TASK_DIR"
+          BIN="$TASK_DIR/cloudflared"
+          if ! test -x "$BIN"; then
+            curl --fail --location --silent --show-error --connect-timeout 10 --max-time 120 https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-amd64 -o "$BIN.new"
+            echo "d33ff2d14475178d2012c2c56beba87389ac5ded27649519f198a7d3134a99db  $BIN.new" | sha256sum -c -
+            chmod 700 "$BIN.new"
+            mv "$BIN.new" "$BIN"
+          fi
+          "$BIN" --version
+          export TASK_DIR
+          python3 - <<'PY'
+          import os, pathlib, subprocess, json, time
+          root=pathlib.Path(os.environ['TASK_DIR'])
+          state=root/'state.json'
+          running=False
+          if state.exists():
+              d=json.loads(state.read_text())
+              try:
+                  pid=int(d['pid'])
+                  cmd=pathlib.Path(f'/proc/{pid}/cmdline').read_bytes()
+                  running=str(root/'cloudflared').encode() in cmd and b'tunnel' in cmd
+              except (OSError,KeyError,ValueError): pass
+          if not running:
+              env=os.environ.copy()
+              env.pop('RUNNER_TRACKING_ID',None)
+              log=open(root/'tunnel.log','wb')
+              proc=subprocess.Popen([str(root/'cloudflared'),'tunnel','--no-autoupdate','--url','http://127.0.0.1:80','--protocol','http2','--http-host-header','brasil-saaserp.com','--metrics','127.0.0.1:18493'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+              state.write_text(json.dumps({'pid':proc.pid,'started_at':time.time()}))
+              state.chmod(0o600)
+              print('Tunnel started:',proc.pid)
+          else:
+              print('Existing tunnel reused')
+          PY
+          URL=""
+          for attempt in $(seq 1 60); do
+            URL=$(python3 -c 'import re,os,pathlib; s=(pathlib.Path(os.environ["TASK_DIR"])/"tunnel.log").read_text(errors="replace"); u=re.findall(r"https://[a-z0-9-]+\.trycloudflare\.com",s); print(u[-1] if u else "")')
+            if test -n "$URL" && curl --fail --silent --max-time 5 "$URL/login" -o "$TASK_DIR/public-login.html"; then break; fi
+            sleep 2
+          done
+          test -n "$URL" || { echo "::error::No public URL assigned"; tail -30 "$TASK_DIR/tunnel.log"; exit 1; }
+          curl --fail --silent --show-error --max-time 15 "$URL/login" -o "$TASK_DIR/public-login.html"
+          printf '%s\n' "$URL" > "$TASK_DIR/url.txt"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "PUBLIC_URL=$URL"
+          echo "### Free public ERP access" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL/login" >> "$GITHUB_STEP_SUMMARY"
+          echo "Quick Tunnel: temporary address, changes when restarted; no domain or payment required." >> "$GITHUB_STEP_SUMMARY"
+          echo "Staging not published: isolated environment is not installed." >> "$GITHUB_STEP_SUMMARY"
+  verify-external:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      ERP_PUBLIC_URL: ${{ needs.publish.outputs.url }}
+    steps:
+      - name: Verify login and frontend assets outside the server
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          import urllib.request,urllib.parse,re,os,time
+          base=os.environ['ERP_PUBLIC_URL']
+          for attempt in range(20):
+              try:
+                  with urllib.request.urlopen(base+'/login',timeout=10) as r:
+                      assert r.status==200,r.status
+                      html=r.read().decode()
+                  break
+              except Exception:
+                  if attempt==19: raise
+                  time.sleep(3)
+          assert '<html' in html.lower(), 'Login is not an HTML page'
+          assets=re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.(?:js|css)(?:\?[^"\x27]*)?)',html)
+          local=[a for a in assets if not a.startswith(('http:','https:','//'))]
+          assert local,'No local frontend assets found'
+          for asset in local[:4]:
+              url=urllib.parse.urljoin(base+'/login',asset)
+              with urllib.request.urlopen(url,timeout=15) as r:
+                  assert r.status==200,r.status
+                  assert 'text/html' not in r.headers.get('Content-Type',''), 'Asset returned HTML'
+                  assert r.read(1024),'Empty asset'
+              print('ASSET_OK',url)
+          print('EXTERNAL_LOGIN_OK',base+'/login')
+          PY
