@@ -119,7 +119,7 @@ jobs:
               units=pathlib.Path.home()/'.config/systemd/user'
               units.mkdir(parents=True,exist_ok=True)
               unit=units/'brasil-saas-public-access.service'
-              unit.write_text('[Unit]\\nDescription=Free ERP public access supervisor\\nAfter=network-online.target\\n[Service]\\nExecStart=/usr/bin/python3 '+str(supervisor)+'\\nRestart=always\\nRestartSec=10\\n[Install]\\nWantedBy=default.target\\n')
+              unit.write_text('[Unit]\nDescription=Free ERP public access supervisor\nAfter=network-online.target\n[Service]\nExecStart=/usr/bin/python3 '+str(supervisor)+'\nRestart=always\nRestartSec=10\n[Install]\nWantedBy=default.target\n')
               for args in [('daemon-reload',),('enable','--now',unit.name)]:
                   subprocess.run(['systemctl','--user',*args],env=env,check=True)
               mode='systemd-user'
@@ -130,13 +130,13 @@ jobs:
                   if old.returncode==0 or 'no crontab' in old.stderr.lower():
                       lines=[l for l in old.stdout.splitlines() if '# brasil-saas-public-access' not in l]
                       lines.append('@reboot /usr/bin/python3 '+str(supervisor)+' >> '+str(root/'supervisor.log')+' 2>&1 # brasil-saas-public-access')
-                      subprocess.run(['crontab','-'],input='\\n'.join(lines)+'\\n',text=True,check=True)
+                      subprocess.run(['crontab','-'],input='\n'.join(lines)+'\n',text=True,check=True)
                       mode='cron'
               detached=env.copy()
               detached.pop('RUNNER_TRACKING_ID',None)
               with open(root/'supervisor.log','ab') as log:
                   subprocess.Popen(['/usr/bin/python3',str(supervisor)],env=detached,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-          (root/'persistence.txt').write_text(mode+'\\n')
+          (root/'persistence.txt').write_text(mode+'\n')
           print('PERSISTENCE='+mode)
           PY
   verify-external:
