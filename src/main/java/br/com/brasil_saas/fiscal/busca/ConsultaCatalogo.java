@@ -2,7 +2,6 @@ package br.com.brasil_saas.fiscal.busca;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 

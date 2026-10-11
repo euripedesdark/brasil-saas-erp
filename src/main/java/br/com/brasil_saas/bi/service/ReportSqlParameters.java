@@ -16,7 +16,7 @@ public final class ReportSqlParameters {
         StringBuilder result = new StringBuilder();
         while (matcher.find()) {
             String name = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
-            if (!parameters.containsKey(name)) {
+            if (parameters == null || !parameters.containsKey(name)) {
                 throw new IllegalArgumentException("Parametro de relatorio ausente: " + name);
             }
             matcher.appendReplacement(result, Matcher.quoteReplacement(":" + name));

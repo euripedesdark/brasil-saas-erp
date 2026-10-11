@@ -1,5 +1,6 @@
 package br.com.brasil_saas.bi.service.impl;
 
+import java.util.LinkedHashMap;
 import br.com.brasil_saas.bi.dto.ReportRequest;
 import br.com.brasil_saas.bi.model.Report;
 import br.com.brasil_saas.bi.model.ReportParameter;
@@ -28,7 +29,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;

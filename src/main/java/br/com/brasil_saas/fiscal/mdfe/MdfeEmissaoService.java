@@ -7,7 +7,6 @@ import com.fincatto.documentofiscal.mdfe3.webservices.WSFacade;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;

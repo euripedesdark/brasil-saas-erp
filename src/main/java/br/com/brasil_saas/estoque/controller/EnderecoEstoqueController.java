@@ -1,5 +1,6 @@
 package br.com.brasil_saas.estoque.controller;
 
+import br.com.brasil_saas.estoque.model.Deposito;
 import br.com.brasil_saas.estoque.model.EnderecoEstoque;
 import br.com.brasil_saas.estoque.repository.DepositoRepository;
 import br.com.brasil_saas.estoque.repository.EnderecoEstoqueRepository;

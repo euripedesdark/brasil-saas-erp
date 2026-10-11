@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
-
 import java.time.LocalDate;
 import java.util.List;
 

@@ -3,7 +3,6 @@ package br.com.brasil_saas.shared.security;
 import br.com.brasil_saas.core.config.AdProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
