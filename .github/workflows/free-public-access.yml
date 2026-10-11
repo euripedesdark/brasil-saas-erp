@@ -1,5 +1,6 @@
 name: Publish free ERP access
 on:
+  workflow_dispatch:
   push:
     branches: [ops/free-public-access]
     paths: [.github/workflows/free-public-access.yml]
@@ -71,6 +72,73 @@ jobs:
           echo "$URL/login" >> "$GITHUB_STEP_SUMMARY"
           echo "Quick Tunnel: temporary address, changes when restarted; no domain or payment required." >> "$GITHUB_STEP_SUMMARY"
           echo "Staging not published: isolated environment is not installed." >> "$GITHUB_STEP_SUMMARY"
+      - name: Keep free tunnel running under the server user
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export TASK_DIR="$HOME/.local/share/brasil-saas-public-access"
+          python3 - <<'PY'
+          import os,pathlib,subprocess,json
+          root=pathlib.Path(os.environ['TASK_DIR'])
+          supervisor=root/'supervisor.py'
+          supervisor.write_text("""import pathlib,os,json,subprocess,time,re,fcntl
+          root=pathlib.Path(__file__).resolve().parent
+          lock=open(root/'supervisor.lock','w')
+          try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+          except BlockingIOError: raise SystemExit(0)
+          while True:
+              running=False
+              try:
+                  pid=int(json.loads((root/'state.json').read_text())['pid'])
+                  cmd=pathlib.Path(f'/proc/{pid}/cmdline').read_bytes()
+                  running=str(root/'cloudflared').encode() in cmd and b'tunnel' in cmd
+              except (OSError,ValueError,KeyError): pass
+              if not running:
+                  env=os.environ.copy()
+                  env.pop('RUNNER_TRACKING_ID',None)
+                  with open(root/'tunnel.log','wb') as log:
+                      proc=subprocess.Popen([str(root/'cloudflared'),'tunnel','--no-autoupdate','--url','http://127.0.0.1:80','--protocol','http2','--http-host-header','brasil-saaserp.com','--metrics','127.0.0.1:18493'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+                  (root/'state.json').write_text(json.dumps({'pid':proc.pid,'started_at':time.time()}))
+                  (root/'state.json').chmod(0o600)
+              try:
+                  urls=re.findall(r'https://[a-z0-9-]+\\.trycloudflare\\.com',(root/'tunnel.log').read_text(errors='replace'))
+                  if urls: (root/'url.txt').write_text(urls[-1]+'\\n')
+              except OSError: pass
+              time.sleep(10)
+          """)
+          compile(supervisor.read_text(),str(supervisor),'exec')
+          supervisor.chmod(0o700)
+          env=os.environ.copy()
+          uid=os.getuid()
+          if pathlib.Path(f'/run/user/{uid}/bus').exists():
+              env['XDG_RUNTIME_DIR']=f'/run/user/{uid}'
+              env['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{uid}/bus'
+          manager=subprocess.run(['systemctl','--user','show-environment'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0
+          mode='current-session'
+          if manager:
+              units=pathlib.Path.home()/'.config/systemd/user'
+              units.mkdir(parents=True,exist_ok=True)
+              unit=units/'brasil-saas-public-access.service'
+              unit.write_text('[Unit]\nDescription=Free ERP public access supervisor\nAfter=network-online.target\n[Service]\nExecStart=/usr/bin/python3 '+str(supervisor)+'\nRestart=always\nRestartSec=10\n[Install]\nWantedBy=default.target\n')
+              for args in [('daemon-reload',),('enable','--now',unit.name)]:
+                  subprocess.run(['systemctl','--user',*args],env=env,check=True)
+              mode='systemd-user'
+          else:
+              import shutil
+              if shutil.which('crontab'):
+                  old=subprocess.run(['crontab','-l'],capture_output=True,text=True)
+                  if old.returncode==0 or 'no crontab' in old.stderr.lower():
+                      lines=[l for l in old.stdout.splitlines() if '# brasil-saas-public-access' not in l]
+                      lines.append('@reboot /usr/bin/python3 '+str(supervisor)+' >> '+str(root/'supervisor.log')+' 2>&1 # brasil-saas-public-access')
+                      subprocess.run(['crontab','-'],input='\n'.join(lines)+'\n',text=True,check=True)
+                      mode='cron'
+              detached=env.copy()
+              detached.pop('RUNNER_TRACKING_ID',None)
+              with open(root/'supervisor.log','ab') as log:
+                  subprocess.Popen(['/usr/bin/python3',str(supervisor)],env=detached,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+          (root/'persistence.txt').write_text(mode+'\n')
+          print('PERSISTENCE='+mode)
+          PY
   verify-external:
     needs: publish
     runs-on: ubuntu-latest
@@ -107,3 +175,16 @@ jobs:
               print('ASSET_OK',url)
           print('EXTERNAL_LOGIN_OK',base+'/login')
           PY
+  record-public-access:
+    needs: [publish, verify-external]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ needs.publish.outputs.url }}
+    steps:
+      - name: Record verified public access
+        env:
+          PUBLIC_URL: ${{ needs.publish.outputs.url }}
+        run: |
+          echo "Verified ERP access: $PUBLIC_URL/login" >> "$GITHUB_STEP_SUMMARY"
+          echo "Temporary free tunnel; not a permanent hostname." >> "$GITHUB_STEP_SUMMARY"
