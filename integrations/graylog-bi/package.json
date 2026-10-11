@@ -1,0 +1,9 @@
+{
+  "name": "brasil-saas-graylog-bi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Indicadores seletivos do Brasil SaaS ERP no Graylog",
+  "scripts": {
+    "build": "webpack --config webpack.config.cjs"
+  }
+}

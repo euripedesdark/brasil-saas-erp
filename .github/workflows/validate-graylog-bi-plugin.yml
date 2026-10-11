@@ -1,0 +1,51 @@
+name: Validate Graylog BI query extension
+on:
+  push:
+    branches: [main, feat/bi-graylog-query-adapter]
+    paths: ['integrations/graylog-bi/**', 'scripts/bi/**', 'src/main/resources/static/react/**', '.github/workflows/validate-graylog-bi-plugin.yml']
+  pull_request:
+    paths: ['integrations/graylog-bi/**', 'scripts/bi/**', 'src/main/resources/static/react/**', '.github/workflows/validate-graylog-bi-plugin.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: graylog-bi-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Validate authenticated query protocol and installer
+        run: |
+          node --test src/main/resources/static/react/graylog-bi-bridge.test.mjs
+          python3 scripts/bi/test-install-graylog-bi.py
+          python3 scripts/bi/test-configure-graylog.py
+      - name: Build plugin against pinned Graylog 7.1.9 sources
+        run: python3 scripts/bi/build-graylog-bi.py
+      - name: Validate packaged web resources
+        run: |
+          python3 - <<'PY'
+          import importlib.util, pathlib
+          spec = importlib.util.spec_from_file_location('installer', 'scripts/bi/install-graylog-bi.py')
+          module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+          path = pathlib.Path('integrations/graylog-bi/target/brasil-saas-graylog-bi-1.0.0.jar')
+          print('Plugin SHA256:', module.validate_jar(path))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: brasil-saas-graylog-bi-7.1.9
+          path: integrations/graylog-bi/target/brasil-saas-graylog-bi-1.0.0.jar
+          if-no-files-found: error
+          retention-days: 14
