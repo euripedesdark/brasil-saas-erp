@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=euripedes
-WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP/src/main/resources/microservices/nfse-sp-bridge
+WorkingDirectory=/home/euripedes/brasil-saas-erp/src/main/resources/microservices/nfse-sp-bridge
 ExecStart=/usr/bin/bundle exec ruby app.rb
 Restart=always
 Environment=NFSE_SP_CERT_PATH=/etc/brasil-saas/certs/sp_cert.p12
