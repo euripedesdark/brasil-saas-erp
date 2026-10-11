@@ -1,4 +1,4 @@
-name: Inspect isolated staging installation
+name: Inspect staging startup failure
 on:
   push:
     branches: [ops/install-isolated-staging]
@@ -10,40 +10,22 @@ jobs:
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 4
     steps:
-      - name: Inspect available isolation and proxy permissions
-        shell: bash
+      - name: Read sanitized staging startup logs
         run: |
-          set -u
-          echo '### Runtime tools'
-          for tool in java psql initdb pg_ctl postgres podman docker nginx; do command -v "$tool" || true; done
-          echo '### User service manager'
-          export XDG_RUNTIME_DIR="/run/user/$(id -u)"
-          export DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
-          systemctl --user is-active default.target || true
-          loginctl show-user "$(id -un)" -p Linger || true
-          echo '### Resources'
-          free -m
-          df -h "$HOME"
-          echo '### Container runtime access'
-          if command -v podman >/dev/null; then podman info --format '{{.Host.Security.Rootless}}' 2>/dev/null || true; fi
-          if command -v docker >/dev/null; then docker info --format '{{.ServerVersion}}' 2>/dev/null || true; fi
-          echo '### Paths (no credential contents)'
           python3 - <<'PY'
-          import os,pathlib
-          for f in ['/etc/nginx','/etc/nginx/conf.d','/etc/nginx/default.d','/etc/nginx/nginx.conf','/opt/brasil-saas-erp','/opt/brasil-saas-erp-deploy','/usr/pgsql-18/bin','/usr/pgsql-17/bin','/usr/lib/postgresql']:
-              print(f,'exists=',os.path.exists(f),'read=',os.access(f,os.R_OK),'write=',os.access(f,os.W_OK))
-          for root in ['/opt/brasil-saas-erp','/opt/brasil-saas-erp-deploy']:
-              try:
-                  for p in pathlib.Path(root).glob('*.jar'): print('JAR',p,'bytes=',p.stat().st_size,'read=',os.access(p,os.R_OK))
-              except OSError: pass
-          for root in ['/usr/lib/postgresql','/usr/pgsql-18/bin','/usr/pgsql-17/bin']:
-              try:
-                  for p in pathlib.Path(root).rglob('initdb'): print('INITDB',p)
-              except OSError: pass
+          import os,pathlib,subprocess,re
+          os.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'
+          os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
+          root=pathlib.Path.home()/'.local/share/brasil-saas-staging'
+          settings=dict(l.split('=',1) for l in (root/'staging.env').read_text().splitlines() if '=' in l)
+          for component in ['app','postgres']:
+              s=subprocess.run(['journalctl','--user','-u',f'brasil-saas-staging-{component}.service','--since','2026-10-11 07:48:00','--no-pager','-n','3000'],capture_output=True,text=True).stdout
+              for k,v in settings.items():
+                  if v and any(x in k for x in ['PASSWORD','SECRET','URI']): s=s.replace(v,'[REDACTED]')
+              s=re.sub(r'(generated security password:).*',r'\1 [REDACTED]',s)
+              print('###',component)
+              lines=s.splitlines()
+              if component=='app':
+                  lines=[l for l in lines if any(x in l for x in ['ERROR','WARN','Caused by','Exception','Flyway','Migrat','schema','Hikari','Started','Starting']) and 'Pool - Starting' not in l]
+              print('\n'.join(lines[-250:]))
           PY
-          echo '### PostgreSQL current user privileges (no application data)'
-          if command -v psql >/dev/null; then
-            PGCONNECT_TIMEOUT=5 psql -X -d postgres -Atc 'select current_user, rolcreatedb, rolsuper from pg_roles where rolname=current_user' 2>/dev/null || true
-          fi
-          echo '### Dedicated staging port'
-          ss -ltn '( sport = :18081 or sport = :15432 or sport = :16379 or sport = :27018 or sport = :15673 )'
