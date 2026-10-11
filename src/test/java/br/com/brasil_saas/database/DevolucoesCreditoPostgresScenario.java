@@ -55,6 +55,9 @@ final class DevolucoesCreditoPostgresScenario {
         var retorno=venda.solicitar(empresa,pedidoVendaId,"Teste sintetico",Map.of(empresa,BigDecimal.ONE));
         assertEquals(empresa,retorno.getClienteId()); assertNotNull(retorno.getNumero());
         venda.decidir(empresa,null,retorno.getId(),true);venda.receber(empresa,retorno.getId());session.flush();
+        // Uma unidade de quatro, a R$25: a devolucao reduz o recebivel de R$100 para R$75.
+        var pedidoAjustado = pedidosVenda.findByIdAndEmpresaId(pedidoVendaId, empresa).orElseThrow();
+        igual("75", titulosVenda.findById(pedidoAjustado.getTituloId()).orElseThrow().getValorSaldo());
         igual("9",saldos.findForUpdate(empresa,empresa,empresa).orElseThrow().getQuantidade());
         assertThrows(ResponseStatusException.class,()->venda.receber(empresa,retorno.getId()));
         assertThrows(ResponseStatusException.class,()->venda.solicitar(empresa,pedidoVendaId,"Excesso",Map.of(empresa,new BigDecimal("4"))));
@@ -93,7 +96,7 @@ final class DevolucoesCreditoPostgresScenario {
         credito.definirLimite(empresa,empresa,new BigDecimal("1000"));
         session.flush();
         var analise=credito.analisar(empresa,empresa);
-        igual("100",(BigDecimal)analise.get("emAberto"));igual("900",(BigDecimal)analise.get("disponivel"));
+        igual("75",(BigDecimal)analise.get("emAberto"));igual("925",(BigDecimal)analise.get("disponivel"));
         assertEquals("OK",analise.get("situacao"));
         assertTrue(clientes.findForUpdate(empresa,900002L).isEmpty());
     }

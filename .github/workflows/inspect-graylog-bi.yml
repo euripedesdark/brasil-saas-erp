@@ -40,7 +40,7 @@ jobs:
           for path in ['/api/', '/api/system/lbstatus']:
               request = urllib.request.Request('http://127.0.0.1:9000' + path, headers={'Accept':'application/json'})
               try:
-                  response = urllib.request.urlopen(request, timeout=5)
+                  response = urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=5)
               except urllib.error.HTTPError as error:
                   response = error
               except (urllib.error.URLError, TimeoutError):
