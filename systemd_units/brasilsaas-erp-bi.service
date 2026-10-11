@@ -4,7 +4,7 @@ After=network.target postgresql.service braslcloud-erp-core.service
 
 [Service]
 User=euripedes
-WorkingDirectory=/home/euripedes/OneDrive/python/projetos-leno/JAVA/BRASIL-SAAS-ERP
+WorkingDirectory=/home/euripedes/brasil-saas-erp
 ExecStart=/usr/bin/java -jar modules/bi/target/brasil-saas-erp-bi-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 Restart=always
 RestartSec=10
