@@ -15,6 +15,17 @@ export default function ResumoBI() {
     const [resumo, setResumo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
+    const [graylog, setGraylog] = useState(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        setGraylog(null);
+        apiFetch(`${ApiConfig.BASE_URL}/api/bi/integracao/graylog`, { signal: controller.signal })
+            .then(async response => response.ok ? response.json() : null)
+            .then(body => { if (!controller.signal.aborted) setGraylog(body?.data); })
+            .catch(() => {});
+        return () => controller.abort();
+    }, [user?.empresaId]);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -35,6 +46,10 @@ export default function ResumoBI() {
 
     return <section className="bi-overview" aria-labelledby="bi-overview-title" aria-busy={loading}>
         <h2 id="bi-overview-title">{t('biOverview.title')}</h2>
+        {graylog?.configured && <p>
+            <a href={graylog.webUrl} target="_blank" rel="noopener noreferrer">{t('biOverview.openGraylog')}</a>
+            {!graylog.presentationReady && <span> — {t('biOverview.graylogPending')}</span>}
+        </p>}
         <form className="bi-overview-filters" onSubmit={event => { event.preventDefault(); setPeriodo({ inicio, fim }); }}>
             <label>{t('biOverview.start')}<input type="date" required value={inicio} max={fim} onChange={event => setInicio(event.target.value)} /></label>
             <label>{t('biOverview.end')}<input type="date" required value={fim} min={inicio} onChange={event => setFim(event.target.value)} /></label>

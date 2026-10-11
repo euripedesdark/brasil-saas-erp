@@ -28,5 +28,7 @@
     "abertas": "Órdenes abiertas",
     "concluidas": "Órdenes concluidas",
     "valor_concluido": "Valor de órdenes concluidas"
-  }
+  },
+  "openGraylog": "Abrir Graylog",
+  "graylogPending": "Conexión configurada; paneles integrados en preparación."
 }

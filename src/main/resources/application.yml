@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:/etc/brasil-saas/bi-graylog.properties
   application:
     name: brasil-saas-erp
   profiles:

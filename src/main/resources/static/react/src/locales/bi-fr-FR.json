@@ -28,5 +28,7 @@
     "abertas": "Ordres ouverts",
     "concluidas": "Ordres terminés",
     "valor_concluido": "Valeur des ordres terminés"
-  }
+  },
+  "openGraylog": "Ouvrir Graylog",
+  "graylogPending": "Connexion configurée ; tableaux de bord intégrés en préparation."
 }
