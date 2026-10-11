@@ -61,6 +61,9 @@ for attempt in $(seq 1 10); do
 done
 [ "$VERIFIED" = true ]
 curl --fail --silent --show-error --max-time 10 http://127.0.0.1/login -o /dev/null
+if id -u euripedes >/dev/null 2>&1; then
+    loginctl enable-linger euripedes
+fi
 trap - ERR
 rm -f "$BACKUP" "$HEADERS"
 echo 'Staging e producao validados pelo Nginx na porta 80.'
