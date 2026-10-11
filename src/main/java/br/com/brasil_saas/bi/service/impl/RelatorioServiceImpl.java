@@ -1,5 +1,9 @@
 package br.com.brasil_saas.bi.service.impl;
 
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Row;
 import br.com.brasil_saas.bi.dto.RelatorioRequest;
 import br.com.brasil_saas.bi.model.Relatorio;
 import br.com.brasil_saas.bi.repository.RelatorioRepository;
@@ -19,7 +23,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;

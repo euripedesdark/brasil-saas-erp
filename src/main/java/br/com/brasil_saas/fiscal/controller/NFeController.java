@@ -1,5 +1,6 @@
 package br.com.brasil_saas.fiscal.controller;
 
+import br.com.brasil_saas.fiscal.model.Nfe;
 import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
@@ -12,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.Map;
 
 @RestController

@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.time.LocalDateTime;

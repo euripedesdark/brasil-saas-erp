@@ -1,5 +1,6 @@
 package br.com.brasil_saas.cadastro.controller;
 
+import org.springframework.http.HttpStatus;
 import br.com.brasil_saas.cadastro.model.Cliente;
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
 import br.com.brasil_saas.shared.dto.ImagemDto;
@@ -16,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.util.Optional;
 

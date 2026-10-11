@@ -1,5 +1,6 @@
 package br.com.brasil_saas.compras.model;
 
+import java.util.*;
 import br.com.brasil_saas.shared.model.TenantEntity;
 import jakarta.persistence.*;
 import lombok.*;
