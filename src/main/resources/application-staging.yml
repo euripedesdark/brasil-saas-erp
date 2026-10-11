@@ -1,5 +1,4 @@
-# Staging no mesmo host, banco PostgreSQL, MongoDB e armazenamento MinIO da produção.
-# Não execute migrações no staging: o schema compartilhado é atualizado pelo deploy principal.
+# Staging isolado: nao apontar para banco, bucket, IAM/AD ou URL publica de producao.
 server:
   port: ${SERVER_PORT:8081}
   error:
@@ -30,7 +29,7 @@ spring:
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER}
     password: ${RABBIT_PASSWORD}
-    virtual-host: ${RABBIT_VHOST:/}
+    virtual-host: ${RABBIT_VHOST:/staging}
   flyway:
     enabled: false
 
@@ -45,7 +44,7 @@ app:
     url: ${MINIO_URL}
     access-key: ${MINIO_ACCESS_KEY}
     secret-key: ${MINIO_SECRET_KEY}
-    bucket: brasil-saas-prod
+    bucket: ${MINIO_BUCKET:brasil-saas-staging}
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:86400000}
@@ -55,12 +54,10 @@ app:
     model: ${IA_MODEL:gpt-4o-mini}
     embedding-model: ${IA_EMBEDDING_MODEL:text-embedding-3-small}
 
-# Mesmo banco e arquivos da produção; apenas a porta HTTP é diferente.
-# AD/IAM permanecem como definidos no ambiente até validação da rota de staging.
 brasil-saas:
   auth-service:
-    enabled: ${BRASIL_SAAS_AUTH_SERVICE_ENABLED:true}
-    base-url: ${BRASIL_SAAS_AUTH_SERVICE_URL:http://localhost:8181}
+    enabled: ${BRASIL_SAAS_AUTH_SERVICE_ENABLED:false}
+    base-url: ${BRASIL_SAAS_AUTH_SERVICE_URL:http://127.0.0.1:8181}
   ad:
     enabled: ${BRASIL_SAAS_AD_ENABLED:false}
 
