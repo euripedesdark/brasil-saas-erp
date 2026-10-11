@@ -1,0 +1,48 @@
+name: Read-only public domain diagnostic (temporary)
+
+on:
+  push:
+    branches:
+      - diagnostic/public-domain-check-20261011
+
+permissions: {}
+
+jobs:
+  probe-registry:
+    name: Verify .com registry and authoritative DNS
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Domain registration, delegation, and HTTP probes
+        shell: bash
+        run: |
+          set -u
+          echo "== Official Verisign COM RDAP lookup =="
+          curl --noproxy '*' -sS -o /tmp/brasil-rdap-response.json \
+            --connect-timeout 5 --max-time 15 \
+            -w 'RDAP_HTTP=%{http_code}\n' \
+            'https://rdap.verisign.com/com/v1/domain/brasil-saaserp.com' || true
+          python3 - <<'PY'
+          import json
+          try:
+              d=json.load(open("/tmp/brasil-rdap-response.json"))
+              print("RDAP_NAME:",d.get("ldhName"))
+              print("RDAP_STATUS:",d.get("status"))
+              print("RDAP_NAMESERVERS:",[n.get("ldhName") for n in d.get("nameservers",[])])
+              print("RDAP_ERROR:",d.get("errorCode"),d.get("title"),d.get("description"))
+          except Exception as exc:
+              print("RDAP_PARSE_UNAVAILABLE",type(exc).__name__)
+          PY
+
+          echo "== Verify delegation at .com TLD authoritative server =="
+          dig +time=3 +tries=1 +norecurse +noall +comments +answer +authority \
+            @a.gtld-servers.net brasil-saaserp.com NS || true
+
+          echo "== Public DNS via two resolvers =="
+          for resolver in 1.1.1.1 8.8.8.8; do
+            for host in brasil-saaserp.com staging.brasil-saaserp.com; do
+              echo "RESOLVER=${resolver} HOST=${host}"
+              dig +time=2 +tries=1 +noall +comments +answer +authority @"${resolver}" "${host}" A || true
+            done
+          done
+          echo "External-only diagnostic; no changes made."
