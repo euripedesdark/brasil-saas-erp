@@ -63,3 +63,15 @@ npm test e npm run build passaram. Build Vite alertou sobre bundles grandes.
 O Maven completo local nao executou por falta de dependencias no cache; CI sera
 usado para confirmar compilacao completa. Build/testes da base #188 passaram,
 mas a revisao OpenRouter dessa base retornou HTTP 429 (limite gratuito).
+
+Descoberta no runner dc-erp: graylog-server e graylog-datanode 7.1.9 instalados;
+servico graylog-server ativo. Arquivos de configuracao nao legiveis pelo runner.
+A primeira consulta HTTP local retornou 403; repetir sem proxy de ambiente antes
+de concluir que a API recusa o acesso. Nenhuma credencial foi lida ou impressa.
+
+CI PostgreSQL 18 aplicou V197 e validou as migrations sem reaplica-las. O cenario
+posterior de credito tinha expectativa anterior a integracao financeira de devolucoes:
+um pedido de R$100 com devolucao de uma de quatro unidades a R$25 passa a saldo R$75,
+portanto o credito disponivel de um limite R$1000 e R$925. A expectativa foi alinhada
+a esse contrato, com verificacao explicita do saldo apos a devolucao; regra de negocio
+nao foi alterada. Nova execucao completa do cenario ainda deve confirmar o resultado.
