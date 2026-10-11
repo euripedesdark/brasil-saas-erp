@@ -1,7 +1,7 @@
 name: Inspect installed Graylog for BI integration
 on:
   push:
-    branches: [feat/bi-four-domains]
+    branches: [feat/bi-four-domains, feat/bi-graylog-query-adapter]
     paths: [.github/workflows/inspect-graylog-bi.yml]
   workflow_dispatch:
 permissions:
@@ -28,7 +28,7 @@ jobs:
           run(['dpkg-query', '-W', '-f=${Package} ${Version}\n', 'graylog-server', 'graylog-datanode', 'opensearch'])
           for filename in ['/etc/graylog/server/server.conf', '/etc/graylog-server/server.conf']:
               try:
-                  for line in pathlib.Path(filename).read_text().splitlines():
+                  for line in pathlib.Path(filename).read_text(encoding='latin-1').splitlines():
                       if line.strip().startswith('#') or '=' not in line: continue
                       key, value = line.split('=', 1)
                       if key.strip() in {'http_bind_address', 'http_external_uri'}:
@@ -38,7 +38,7 @@ jobs:
               except (PermissionError, FileNotFoundError):
                   print(filename, 'not readable')
           for path in ['/api/', '/api/system/lbstatus']:
-              request = urllib.request.Request('http://127.0.0.1:9000' + path, headers={'Accept':'application/json'})
+              request = urllib.request.Request('http://127.0.0.1:9002' + path, headers={'Accept':'application/json'})
               try:
                   response = urllib.request.build_opener(urllib.request.ProxyHandler({})).open(request, timeout=5)
               except urllib.error.HTTPError as error:

@@ -30,5 +30,12 @@
     "valor_concluido": "Completed service order value"
   },
   "openGraylog": "Open Graylog",
-  "graylogPending": "Connection configured; integrated dashboards are in preparation."
+  "graylogPending": "Extension availability is checked when opening the indicators.",
+  "graylogBi": "Indicators in Graylog",
+  "graylogStatus": {
+    "connecting": "Connecting to the BI extension. Sign in to Graylog if prompted.",
+    "ready": "Extension connected. Queries use your current ERP session.",
+    "blocked": "The browser blocked the window. Allow pop-ups for this site.",
+    "unavailable": "Unable to connect to the extension. Check the plugin installation and Graylog access."
+  }
 }

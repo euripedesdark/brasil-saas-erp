@@ -69,7 +69,7 @@ def discover(config_file=None):
     unreadable = []
     for path in dict.fromkeys(paths):
         try:
-            lines = path.read_text().splitlines()
+            lines = path.read_text(encoding='latin-1').splitlines()
         except PermissionError:
             unreadable.append(str(path)); continue
         except FileNotFoundError:

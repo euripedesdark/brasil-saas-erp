@@ -30,5 +30,12 @@
     "valor_concluido": "Valor de órdenes concluidas"
   },
   "openGraylog": "Abrir Graylog",
-  "graylogPending": "Conexión configurada; paneles integrados en preparación."
+  "graylogPending": "La disponibilidad de la extensión se comprueba al abrir los indicadores.",
+  "graylogBi": "Indicadores en Graylog",
+  "graylogStatus": {
+    "connecting": "Conectando con la extensión BI. Inicie sesión en Graylog si se solicita.",
+    "ready": "Extensión conectada. Las consultas usan su sesión actual del ERP.",
+    "blocked": "El navegador bloqueó la ventana. Permita ventanas emergentes para este sitio.",
+    "unavailable": "No se pudo conectar con la extensión. Compruebe la instalación del plugin y el acceso a Graylog."
+  }
 }
