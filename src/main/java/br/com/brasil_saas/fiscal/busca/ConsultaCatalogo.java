@@ -42,7 +42,7 @@ public class ConsultaCatalogo {
      */
     public List<Registro> porCodigo(final String tabelaFisica, final String codigoNormalizado) {
         return jdbc.query(
-                "SELECT DISTINCT codigo, descricao FROM " + tabelaFisica
+                "SELECT DISTINCT codigo, descricao FROM " + tabelaPermitida(tabelaFisica)
                         + " WHERE fiscal_normaliza_codigo(codigo) = ?"
                         + " OR fiscal_normaliza_codigo(codigo) LIKE ?"
                         + " ORDER BY codigo LIMIT 30",
@@ -53,10 +53,19 @@ public class ConsultaCatalogo {
     /** Código oficial exato, sem normalizar: é a junção com a palavra-chave. */
     public Optional<Registro> porCodigoExato(final String tabelaFisica, final String codigoOficial) {
         final List<Registro> r = jdbc.query(
-                "SELECT DISTINCT codigo, descricao FROM " + tabelaFisica
+                "SELECT DISTINCT codigo, descricao FROM " + tabelaPermitida(tabelaFisica)
                         + " WHERE codigo = ? ORDER BY codigo LIMIT 1",
                 (rs, n) -> new Registro(rs.getString(1), rs.getString(2)),
                 codigoOficial);
         return r.stream().findFirst();
     }
+    private static String tabelaPermitida(String tabela) {
+        return switch (tabela) {
+            case "bc_fis_ncm" -> "bc_fis_ncm";
+            case "bc_fis_issqn" -> "bc_fis_issqn";
+            case "bc_fis_cfop" -> "bc_fis_cfop";
+            default -> throw new IllegalArgumentException("Catalogo fiscal invalido");
+        };
+    }
+
 }

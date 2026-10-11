@@ -108,7 +108,7 @@ public class CteOperacaoService {
             out.put("chaveAcesso", documento.getChaveAcesso());
             out.put("cStat", info == null ? null : info.getCodigoStatus());
             out.put("xMotivo", info == null ? null : info.getMotivo());
-            if (info != null && "135".equals(info.getCodigoStatus())) {
+            if (info != null && Integer.valueOf(135).equals(info.getCodigoStatus())) {
                 documento.setStatus("CANCELADO");
                 repository.save(documento);
             }

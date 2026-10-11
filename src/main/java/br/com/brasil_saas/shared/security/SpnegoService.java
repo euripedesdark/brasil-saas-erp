@@ -70,9 +70,8 @@ public class SpnegoService {
 
         // JAAS montado em memória. O keytab é um arquivo, e um arquivo de
         // configuração JAAS seria mais um segredo no disco, sem ganho nenhum.
-        Configuration.setConfiguration(new KeytabConfiguration(adProps));
         try {
-            LoginContext lc = new LoginContext(null, null, new KeytabCallbackHandler(adProps), null);
+            LoginContext lc = new LoginContext("BrasilSaasKerberos", null, new KeytabCallbackHandler(adProps), new KeytabConfiguration(adProps));
             lc.login();
             Subject subject = lc.getSubject();
             if (subject.getPrincipals().isEmpty()) {

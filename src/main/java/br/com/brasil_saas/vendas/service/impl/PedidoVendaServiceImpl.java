@@ -215,7 +215,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
             funcionarioRepository.findById(pedido.getVendedorId()).ifPresent(func -> {
                 if ("VENDEDOR".equals(func.getTipoColaborador())) {
                     BigDecimal percentual = calcularPercentualComissao(pedido.getEmpresaId(), func.getId(), pedido.getValorTotal());
-                    BigDecimal valorComissao = pedido.getValorTotal().multiply(percentual).divide(new BigDecimal("100"));
+                    BigDecimal valorComissao = pedido.getValorTotal().multiply(percentual).movePointLeft(2);
                     Comissao comissao = new Comissao();
                     comissao.setEmpresaId(pedido.getEmpresaId());
                     comissao.setFuncionarioId(func.getId());
@@ -352,7 +352,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                     comissao.setPedidoId(pedido.getId());
                     comissao.setValorVenda(totalFaturado);
                     comissao.setPercentual(percentual);
-                    comissao.setValorComissao(totalFaturado.multiply(percentual).divide(new BigDecimal("100")));
+                    comissao.setValorComissao(totalFaturado.multiply(percentual).movePointLeft(2));
                     comissao.setStatus("PENDENTE");
                     comissaoRepository.save(comissao);
                 }

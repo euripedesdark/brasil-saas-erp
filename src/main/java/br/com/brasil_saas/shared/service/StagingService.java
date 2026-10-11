@@ -73,10 +73,10 @@ public class StagingService {
                 : arquivo.getOriginalFilename();
         // Fixa o nome do usuario: nao confiar em caminho vindo do cliente
         String seguro = original.replaceAll("[^A-Za-z0-9._-]", "_");
-        String destino = prefixo + "-" + LocalDateTime.now().format(SUFIXO_TEMPO)
+        String destino = prefixoSeguro(prefixo) + "-" + LocalDateTime.now().format(SUFIXO_TEMPO)
                 + "-" + UUID.randomUUID().toString().substring(0, 8) + "-" + seguro;
 
-        Path caminho = raiz.resolve(destino);
+        Path caminho = validarCaminho(raiz.resolve(destino));
         Files.createDirectories(raiz);
         try (InputStream in = arquivo.getInputStream()) {
             Files.copy(in, caminho, StandardCopyOption.REPLACE_EXISTING);
@@ -87,9 +87,9 @@ public class StagingService {
     /** Versao para migracao em lote, a partir de um arquivo ja existente em disco. */
     public Path copiarPara(Path origem, String prefixo) throws IOException {
         String nome = origem.getFileName().toString();
-        String destino = prefixo + "-" + LocalDateTime.now().format(SUFIXO_TEMPO)
+        String destino = prefixoSeguro(prefixo) + "-" + LocalDateTime.now().format(SUFIXO_TEMPO)
                 + "-" + UUID.randomUUID().toString().substring(0, 8) + "-" + nome;
-        Path caminho = raiz.resolve(destino);
+        Path caminho = validarCaminho(raiz.resolve(destino));
         Files.createDirectories(raiz);
         Files.copy(origem, caminho, StandardCopyOption.REPLACE_EXISTING);
         return caminho;
@@ -97,17 +97,17 @@ public class StagingService {
 
     /** Le de volta o conteudo staged. */
     public byte[] ler(Path caminho) throws IOException {
-        return Files.readAllBytes(caminho);
+        return Files.readAllBytes(validarCaminho(caminho));
     }
 
     public long tamanho(Path caminho) throws IOException {
-        return Files.size(caminho);
+        return Files.size(validarCaminho(caminho));
     }
 
     /** Etapa 3a: deu certo, o temporario pode sumir. */
     public void confirmar(Path caminho) {
         try {
-            Files.deleteIfExists(caminho);
+            Files.deleteIfExists(validarCaminho(caminho));
         } catch (IOException e) {
             log.warn("Nao consegui remover o temporario {}: {}", caminho, e.toString());
         }
@@ -117,6 +117,23 @@ public class StagingService {
      * Temporarios que sobraram de envios que nao chegaram ao Mongo.
      * Permite reenviar em lote depois que o banco voltar.
      */
+    private static String prefixoSeguro(String prefixo) {
+        if (prefixo == null || !prefixo.matches("[A-Za-z0-9_-]{1,80}")) {
+            throw new IllegalArgumentException("Prefixo de arquivo invalido");
+        }
+        return prefixo;
+    }
+
+    private Path validarCaminho(Path caminho) throws IOException {
+        Path normalizado = caminho.toAbsolutePath().normalize();
+        if (!normalizado.startsWith(raiz) || normalizado.equals(raiz)
+                || Files.isSymbolicLink(normalizado)
+                || !normalizado.getParent().toRealPath().startsWith(raiz.toRealPath())) {
+            throw new IllegalArgumentException("Arquivo fora da area de staging");
+        }
+        return normalizado;
+    }
+
     public List<Path> pendentes() {
         if (!Files.isDirectory(raiz)) return List.of();
         try (Stream<Path> s = Files.list(raiz)) {

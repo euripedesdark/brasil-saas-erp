@@ -28,7 +28,7 @@ public class EsocialService {
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(dados, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
 
-            if (response.getStatusCode() == HttpStatus.OK) {
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 return (String) response.getBody().get("recibo");
             }
             return "Erro: " + response.getStatusCode();

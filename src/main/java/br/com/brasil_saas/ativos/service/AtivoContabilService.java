@@ -200,7 +200,7 @@ public class AtivoContabilService {
 
     public static BigDecimal cotaDoPeriodo(AtivoImobilizado a, YearMonth periodo) {
         LocalDate inicio = a.getDataInicioDepreciacao() != null ? a.getDataInicioDepreciacao() : a.getDataAquisicao();
-        if (inicio == null || a.getVidaUtilMeses() == null) return BigDecimal.ZERO.setScale(2);
+        if (inicio == null || a.getVidaUtilMeses() == null) return BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);
         return DepreciacaoCalculadora.cota(a.getMetodoDepreciacao(), baseDepreciavel(a), nz(a.getValorDepreciado()),
                 a.getVidaUtilMeses(), a.getTaxaAnual(), DepreciacaoCalculadora.indiceMes(inicio, periodo));
     }

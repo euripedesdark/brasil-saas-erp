@@ -82,7 +82,7 @@ public class OrdemServicoServiceImpl implements OrdemServicoService {
 
                     // B. Mão de obra por serviço (percentual do total da OS)
                     if (func.getPercentualComissao() != null && func.getPercentualComissao().compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal comissaoServico = os.getValorTotal().multiply(func.getPercentualComissao()).divide(new BigDecimal("100"));
+                        BigDecimal comissaoServico = os.getValorTotal().multiply(func.getPercentualComissao()).movePointLeft(2);
                         valorTrabalho = valorTrabalho.add(comissaoServico);
                     }
 
