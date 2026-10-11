@@ -1,0 +1,39 @@
+name: Read-only public domain diagnostic (temporary)
+
+on:
+  push:
+    branches:
+      - diagnostic/public-domain-check-20261011
+
+permissions: {}
+
+jobs:
+  probe-external:
+    name: Probe public DNS, HTTP, HTTPS (no secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect DNS and public endpoints from external GitHub runner
+        shell: bash
+        run: |
+          set -u
+          echo "== Public external probes: 2026-10-11 =="
+          for host in brasil-saaserp.com staging.brasil-saaserp.com; do
+            echo "::group::${host}"
+            for typ in NS A AAAA CNAME; do
+              echo "DNS ${host} ${typ}:"
+              if command -v dig >/dev/null; then
+                dig +time=2 +tries=1 +noall +comments +answer "${host}" "${typ}" | tail -n 12 || true
+              else
+                getent ahosts "${host}" | head -n 4 || true
+              fi
+            done
+            for endpoint in "http://${host}/login" "https://${host}/login"; do
+              echo "HTTP probe ${endpoint}"
+              curl --noproxy '*' -sS -o /dev/null --connect-timeout 5 --max-time 12 \
+                -w 'status=%{http_code} remote_ip=%{remote_ip} final_url=%{url_effective} ssl_verify=%{ssl_verify_result}\n' \
+                "${endpoint}" || echo "probe_failed"
+            done
+            echo "::endgroup::"
+          done
+          echo "Read-only diagnostics complete; no services or DNS changed."
