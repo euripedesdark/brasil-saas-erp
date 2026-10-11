@@ -47,3 +47,53 @@ jobs:
                                   print(str(p),line.strip())
                       except OSError: pass
           PY
+  validate-proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Nginx in disposable test runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y nginx
+          sudo useradd --system --no-create-home nginx || true
+      - name: Validate syntax and environment routing
+        shell: bash
+        run: |
+          sudo nginx -t -c "$GITHUB_WORKSPACE/nginx.conf"
+          python3 - <<'PY'
+          import http.server, threading, tempfile, pathlib, subprocess, urllib.request, urllib.error, json, time
+          class Backend(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  body=json.dumps(dict(port=self.server.server_port,path=self.path,auth=self.headers.get('Authorization'),tenant=self.headers.get('X-Empresa-Id'))).encode()
+                  self.send_response(200); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
+              def log_message(self,*args): pass
+          servers=[]
+          for port in (8080,8081):
+              server=http.server.ThreadingHTTPServer(('127.0.0.1',port),Backend)
+              threading.Thread(target=server.serve_forever,daemon=True).start()
+              servers.append(server)
+          with tempfile.TemporaryDirectory() as tmp:
+              config=pathlib.Path('nginx.conf').read_text().replace('user  nginx;','').replace('listen 80 default_server;','listen 18080 default_server;').replace('listen [::]:80 default_server;','listen [::]:18080 default_server;').replace('/var/log/nginx/error.log',tmp+'/error.log').replace('/var/log/nginx/access.log',tmp+'/access.log').replace('/var/run/nginx.pid',tmp+'/nginx.pid')
+              path=pathlib.Path(tmp)/'nginx.conf'; path.write_text(config)
+              proc=subprocess.Popen(['nginx','-c',str(path),'-g','daemon off;'])
+              def request(host):
+                  req=urllib.request.Request('http://127.0.0.1:18080/api/example?x=1',headers={'Host':host,'Authorization':'Bearer synthetic-test','X-Empresa-Id':'123'})
+                  with urllib.request.urlopen(req,timeout=5) as response: return json.load(response)
+              try:
+                  for _ in range(30):
+                      try: request('localhost'); break
+                      except OSError: time.sleep(.1)
+                  for host,port in [('brasil-saaserp.com',8080),('staging.brasil-saaserp.com',8081),('localhost',8080)]:
+                      got=request(host)
+                      assert got==dict(port=port,path='/api/example?x=1',auth='Bearer synthetic-test',tenant='123'),got
+                      print(host,'OK',got)
+                  servers[1].shutdown(); servers[1].server_close()
+                  try: request('staging.brasil-saaserp.com'); raise AssertionError('Staging fell back to production')
+                  except urllib.error.HTTPError as exc: assert exc.code==502,exc.code
+                  assert request('brasil-saaserp.com')['port']==8080
+                  print('Staging unavailable: 502; production remains reachable')
+              finally:
+                  proc.terminate(); proc.wait(timeout=5)
+                  for server in servers: server.shutdown(); server.server_close()
+          PY
