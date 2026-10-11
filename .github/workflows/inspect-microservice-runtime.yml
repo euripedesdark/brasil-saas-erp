@@ -27,6 +27,7 @@ jobs:
                       paths=re.findall(r'[^\s;"{}]+\.(?:jar|rb|sh)',line)
                       safe.append('ArtifactPaths='+','.join(paths))
                       safe.append('ArtifactExists='+','.join(str(pathlib.Path(p).exists()) for p in paths))
+                      safe.append('ReplacementArtifactExists='+','.join(str(pathlib.Path(p.replace('/BrasilCloudERP/','/brasil-saas-erp/')).exists()) for p in paths))
                   else: safe.append(line)
               print('UNIT',name,' | '.join(safe))
           for port in [4567,4568,4569,4570,9292,8081,8082,8083]:
