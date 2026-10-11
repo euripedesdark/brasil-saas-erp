@@ -1,5 +1,5 @@
 [Unit]
-Description=Brasil SaaS ERP - STAGING (Spring Boot, port 8081)
+Description=Brasil SaaS ERP - STAGING (Spring Boot, port 18081)
 After=network-online.target postgresql.service mongod.service redis-server.service rabbitmq-server.service
 Wants=network-online.target
 
@@ -10,7 +10,7 @@ Group=euripedes
 WorkingDirectory=/opt/brasil-saas-erp/staging
 EnvironmentFile=/etc/brasil-saas/staging.env
 Environment=SPRING_PROFILES_ACTIVE=staging
-Environment=SERVER_PORT=8081
+Environment=SERVER_PORT=18081
 Environment=BRASIL_SAAS_CERTS_DIR=/etc/brasil-saas/pki
 Environment="JAVA_OPTS=-Xms256m -Xmx1536m -XX:+UseG1GC"
 ExecStart=/usr/bin/env bash -lc 'exec java $JAVA_OPTS -jar /opt/brasil-saas-erp/staging/app.jar'
