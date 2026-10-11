@@ -16,25 +16,10 @@ jobs:
           import os,pathlib,subprocess,urllib.request,urllib.parse,re,json,hashlib
           home=pathlib.Path.home()
           candidates=[]
-          for base in [home,pathlib.Path('/opt'),pathlib.Path('/srv'),pathlib.Path('/var/www')]:
-              for folder,dirs,files in os.walk(base):
-                  dirs[:]=[d for d in dirs if d not in ['node_modules','.git','.cache','postgres','mongo','rabbitmq','minio']]
-                  if len(pathlib.Path(folder).relative_to(base).parts)>8: dirs[:]=[];continue
-                  if 'stag' in folder.lower() or ('pom.xml' in files and 'brasil' in folder.lower()):
-                      if any(f in files for f in ['pom.xml','package.json','app.jar']) or 'stag' in pathlib.Path(folder).name.lower():
-                          print('FOUND',folder)
-                          candidates.append(pathlib.Path(folder))
-          for folder in candidates:
-              for name in ['pom.xml','package.json','vite.config.js','vite.config.ts']:
-                  p=folder/name
-                  if p.exists():
-                      print('BUILD_CONFIG',p)
-                      s=p.read_text(errors='replace')
-                      if name=='package.json': print(json.dumps(json.loads(s).get('scripts',{})))
-                      else:
-                          print('\n'.join(l for l in s.splitlines() if any(k in l for k in ['base:','staging','profile','artifactId','finalName','context-path']) and not any(k in l.lower() for k in ['password','secret','token'])))
-              r=subprocess.run(['git','-C',str(folder),'rev-parse','--show-toplevel','HEAD'],capture_output=True,text=True)
-              if r.returncode==0: print('GIT',r.stdout.strip())
+          for folder in [home/'staging',home/'.local/share/brasil-saas-staging/staging',home/'brasil-saas-erp/staging']:
+              print('DIRECTORY',folder)
+              if folder.exists():
+                  for p in sorted(folder.iterdir()): print('ENTRY',p.name,'dir' if p.is_dir() else 'file')
           os.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'
           os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'
           print(subprocess.run(['systemctl','--user','show','brasil-saas-staging-app','-p','ActiveState','-p','ExecStart','-p','WorkingDirectory'],capture_output=True,text=True).stdout)
@@ -49,7 +34,7 @@ jobs:
                   with urllib.request.urlopen(req,timeout=10) as r:
                       html=r.read().decode()
                       print('HTTP',label,r.status,r.url,'environment',r.headers.get('X-ERP-Environment'))
-                      for asset in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\\.(?:js|css))',html)[:4]:
+                      for asset in re.findall(r'(?:src|href)=["\x27]([^"\x27]+\.(?:js|css))',html)[:4]:
                           u=urllib.parse.urljoin(r.url,asset)
                           try:
                               with urllib.request.urlopen(urllib.request.Request(u,headers={'Host':host} if host else {}),timeout=10) as a: print('ASSET',label,u,a.status,a.headers.get('Content-Type'))
