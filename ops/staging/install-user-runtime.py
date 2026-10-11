@@ -150,7 +150,9 @@ authenv = {
     'AUTH_PG_SSL_MODE': 'disable', 'AUTH_PG_CREDENTIAL_SSL_MODE': 'disable',
     'AUTH_PG_SSL_ROOT_CERT': '', 'AUTH_PG_SSL_CERT': '', 'AUTH_PG_SSL_KEY': '',
     'AUTH_LDAP_URL': 'ldaps://127.0.0.1:10636', 'AUTH_LDAP_BASE': 'dc=staging,dc=invalid',
-    'AUTH_LDAP_USER_DN': '', 'AUTH_LDAP_PASSWORD': '', 'AUTH_LDAP_USER_SEARCH_BASE': '',
+    'AUTH_LDAP_USER_DN': 'cn=unavailable,dc=staging,dc=invalid',
+    'AUTH_LDAP_PASSWORD': settings['STAGING_AUTH_TOKEN_SECRET'],
+    'AUTH_LDAP_USER_SEARCH_BASE': 'ou=unavailable',
     'AUTH_TOKEN_SECRET': settings['STAGING_AUTH_TOKEN_SECRET'], 'AUTH_TOKEN_ISSUER': 'auth-service-staging',
     'MANAGEMENT_HEALTH_LDAP_ENABLED': 'false',
 }
