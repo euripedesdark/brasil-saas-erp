@@ -1,0 +1,41 @@
+name: Inspect ERP publication prerequisites
+on:
+  push:
+    branches: [fix/staging-host-routing]
+    paths: [.github/workflows/inspect-publication-prerequisites.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 3
+    steps:
+      - name: Inspect allowed administration and staging listener
+        shell: bash
+        run: |
+          set -u
+          echo '### Privilege availability (no mutation)'
+          if sudo -n true >/dev/null 2>&1; then echo 'sudo available'; else echo 'sudo unavailable'; fi
+          if sudo -n nginx -t >/dev/null 2>&1; then echo 'nginx validation permitted'; else echo 'nginx validation not permitted'; fi
+          echo '### Listeners'
+          ss -ltnp '( sport = :8081 or sport = :18081 )'
+          for svc in brasil-saas-erp-staging brasilsaas-erp-cadastro cloudflared; do
+            systemctl show "$svc" -p LoadState -p ActiveState -p FragmentPath --no-pager
+          done
+          echo '### Application identity at 8081 (HTTP status only)'
+          for path in /actuator/health /api/auth/login /login /; do
+            curl -sS --max-time 5 -o /dev/null -w "$path HTTP=%{http_code}\n" "http://127.0.0.1:8081$path" || true
+          done
+          echo '### Nginx includes and destinations'
+          python3 - <<'PY'
+          import pathlib
+          for p in pathlib.Path('/etc/nginx').rglob('*'):
+              if p.is_file():
+                  try:
+                      for line in p.read_text().splitlines():
+                          if line.strip().startswith(('include ','proxy_pass ','upstream ','server 127.0.0.1:','listen ','server_name ')):
+                              print(p,line.strip())
+                  except OSError: pass
+          PY
+          echo '### Tunnel binary'
+          command -v cloudflared || true
