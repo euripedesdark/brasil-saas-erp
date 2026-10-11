@@ -1,0 +1,59 @@
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import ApiConfig, { apiFetch } from '../../services/ApiConfig';
+import { useAuth } from '../../contexts/AuthContext';
+import './ResumoBI.css';
+
+const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+export default function ResumoBI() {
+    const { t, i18n } = useTranslation();
+    const { user } = useAuth();
+    const [inicio, setInicio] = useState(() => isoDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1)));
+    const [fim, setFim] = useState(() => isoDate(new Date()));
+    const [periodo, setPeriodo] = useState({ inicio, fim });
+    const [resumo, setResumo] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        setLoading(true); setError(false); setResumo(null);
+        apiFetch(`${ApiConfig.BASE_URL}/api/bi/resumo?${new URLSearchParams(periodo)}`, { signal: controller.signal })
+            .then(async response => {
+                if (!response.ok) throw new Error('BI request failed');
+                return response.json();
+            })
+            .then(body => { if (!controller.signal.aborted) setResumo(body.data); })
+            .catch(() => { if (!controller.signal.aborted) setError(true); })
+            .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+        return () => controller.abort();
+    }, [periodo, user?.empresaId]);
+
+    const format = indicador => new Intl.NumberFormat(i18n.resolvedLanguage || 'pt-BR',
+        indicador.unidade === 'BRL' ? { style: 'currency', currency: 'BRL' } : { maximumFractionDigits: 0 }).format(indicador.valor);
+
+    return <section className="bi-overview" aria-labelledby="bi-overview-title" aria-busy={loading}>
+        <h2 id="bi-overview-title">{t('biOverview.title')}</h2>
+        <form className="bi-overview-filters" onSubmit={event => { event.preventDefault(); setPeriodo({ inicio, fim }); }}>
+            <label>{t('biOverview.start')}<input type="date" required value={inicio} max={fim} onChange={event => setInicio(event.target.value)} /></label>
+            <label>{t('biOverview.end')}<input type="date" required value={fim} min={inicio} onChange={event => setFim(event.target.value)} /></label>
+            <button type="submit" disabled={loading}>{t('biOverview.refresh')}</button>
+        </form>
+        <p>{t('biOverview.periodHelp')}</p>
+        {loading && <p role="status">{t('biOverview.loading')}</p>}
+        {error && <div role="alert"><p>{t('biOverview.error')}</p><button onClick={() => setPeriodo({ inicio, fim })}>{t('biOverview.retry')}</button></div>}
+        {resumo && <div className="bi-overview-grid">
+            {resumo.areas.map(area => <article key={area.codigo} className="bi-overview-card">
+                <h3>{t(`biOverview.areas.${area.codigo}`)}</h3>
+                <p className="bi-overview-value">{format(area.indicadores[0])}</p>
+                <p>{t(`biOverview.metrics.${area.indicadores[0].codigo}`)}</p>
+                <details><summary>{t('biOverview.details')}</summary>
+                    <dl>{area.indicadores.slice(1).map(indicador => <React.Fragment key={indicador.codigo}>
+                        <dt>{t(`biOverview.metrics.${indicador.codigo}`)}</dt><dd>{format(indicador)}</dd>
+                    </React.Fragment>)}</dl>
+                </details>
+            </article>)}
+        </div>}
+    </section>;
+}

@@ -18,6 +18,7 @@ import { Message } from 'primereact/message';
 import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import './BI.css';
+import ResumoBI from './ResumoBI';
 
 export const BI = () => {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ export const BI = () => {
     const [dialogVisible, setDialogVisible] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [managementOpen, setManagementOpen] = useState(false);
     
     const [novoDashboard, setNovoDashboard] = useState({
         id: null,
@@ -76,9 +78,10 @@ export const BI = () => {
     });
 
     useEffect(() => {
+        if (!managementOpen) return;
         fetchDashboards();
         fetchIndicadores();
-    }, []);
+    }, [managementOpen, user?.empresaId]);
 
     const fetchDashboards = async () => {
         setLoading(true);
@@ -343,6 +346,9 @@ export const BI = () => {
     return (
         <div className="bi-enterprise-container">
             <Toast ref={toast} />
+            <ResumoBI />
+            <details onToggle={event => setManagementOpen(event.currentTarget.open)}>
+            <summary>{t('biOverview.management')}</summary>
             
             <Card title="Business Intelligence - Brasil SaaS ERP" className="bi-main-card">
                 <div className="bi-header-actions mb-4 flex justify-content-between align-items-center">
@@ -532,6 +538,7 @@ export const BI = () => {
                     </div>
                 </div>
             </Dialog>
+            </details>
         </div>
     );
 };

@@ -1,0 +1,32 @@
+{
+  "title": "Vue d’ensemble BI",
+  "start": "Début",
+  "end": "Fin",
+  "refresh": "Actualiser",
+  "loading": "Chargement des indicateurs…",
+  "error": "Impossible de consulter les indicateurs. Vérifiez la période (366 jours maximum) et la disponibilité du BI.",
+  "retry": "Réessayer",
+  "details": "Voir les indicateurs",
+  "management": "Gérer les tableaux de bord et rapports",
+  "periodHelp": "Finances : échéances de la période et soldes actuels. Production et ventes : ordres commencés et commandes émises pendant la période. Services : ouverts par date d’ouverture, terminés par date de clôture.",
+  "areas": {
+    "financeiro": "Finances",
+    "producao": "Production",
+    "vendas": "Ventes",
+    "servicos": "Services"
+  },
+  "metrics": {
+    "a_receber": "À recevoir",
+    "a_pagar": "À payer",
+    "receber_vencido": "Créances échues",
+    "ordens": "Ordres de la période",
+    "finalizadas": "Ordres terminés",
+    "em_processo": "En cours",
+    "pedidos": "Commandes de la période",
+    "valor_pedidos": "Valeur des commandes",
+    "ticket_medio": "Valeur moyenne des commandes",
+    "abertas": "Ordres ouverts",
+    "concluidas": "Ordres terminés",
+    "valor_concluido": "Valeur des ordres terminés"
+  }
+}

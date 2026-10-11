@@ -1,0 +1,11 @@
+.bi-overview { margin-bottom: 1.5rem; }
+.bi-overview-filters { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; }
+.bi-overview-filters label { display: grid; gap: .4rem; }
+.bi-overview input, .bi-overview button { font: inherit; padding: .6rem; border-radius: .4rem; }
+.bi-overview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.bi-overview-card { background: var(--surface-card, white); color: var(--text-color, #243247); border: 1px solid var(--surface-border, #dfe5ed); border-radius: .75rem; padding: 1.2rem; }
+.bi-overview-value { font-size: 1.8rem; font-weight: 700; overflow-wrap: anywhere; }
+.bi-overview summary { cursor: pointer; }
+.bi-overview dd { margin: .3rem 0 1rem; font-weight: 600; }
+@media (max-width: 1000px) { .bi-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 550px) { .bi-overview-grid { grid-template-columns: 1fr; } }

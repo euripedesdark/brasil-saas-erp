@@ -104,6 +104,16 @@ for (const [language, expected] of Object.entries(requiredTranslations)) {
   }
 }
 
+const biSource = flatten(JSON.parse(fs.readFileSync(path.join(localeDir, 'bi-pt-BR.json'), 'utf8')));
+for (const language of languages) {
+  const biTarget = flatten(JSON.parse(fs.readFileSync(path.join(localeDir, 'bi-' + language + '.json'), 'utf8')));
+  if (JSON.stringify(Object.keys(biSource).sort()) !== JSON.stringify(Object.keys(biTarget).sort())) {
+    fail(language + ' BI translation keys differ');
+  }
+  if (Object.values(biTarget).some(value => !value.trim())) fail(language + ' has empty BI translations');
+  else ok(language + ' BI translations are complete');
+}
+
 if (failures) {
   console.error('i18n locale test failed: ' + failures + ' failure(s).');
   process.exit(1);
