@@ -1,0 +1,81 @@
+name: Prepare validated BI package and inspect staging
+on:
+  push:
+    branches: [ops/bi-staging-validation]
+    paths: ['.github/workflows/prepare-bi-staging.yml', 'scripts/bi/validate-staging-bi.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  prepare:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download tested Graylog plugin from main build
+        uses: actions/download-artifact@v4
+        with:
+          name: brasil-saas-graylog-bi-7.1.9
+          run-id: 38179676389
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: euripedesdark/brasil-saas-erp
+          path: ${{ runner.temp }}/brasil-saas-bi-plugin
+      - name: Prepare local installer without installing or restarting services
+        env:
+          PLUGIN_SOURCE: ${{ runner.temp }}/brasil-saas-bi-plugin
+        run: |
+          python3 - <<'PY'
+          import pathlib, os, shutil, importlib.util, subprocess
+          root = pathlib.Path.home() / '.local/share/brasil-saas-bi-ready'
+          scripts = root / 'scripts/bi'
+          target = root / 'integrations/graylog-bi/target'
+          for path in [root, scripts, target]: path.mkdir(parents=True, exist_ok=True); path.chmod(0o700)
+          for name in ['install-graylog-bi.py', 'configure-graylog.py', 'validate-staging-bi.py']:
+              path = scripts / name
+              if path.is_symlink(): raise RuntimeError('Installer destination cannot be a symlink')
+              shutil.copyfile(pathlib.Path('scripts/bi') / name, path); path.chmod(0o700)
+          source = pathlib.Path(os.environ['PLUGIN_SOURCE']) / 'brasil-saas-graylog-bi-1.0.0.jar'
+          spec = importlib.util.spec_from_file_location('installer', scripts / 'install-graylog-bi.py')
+          installer = importlib.util.module_from_spec(spec); spec.loader.exec_module(installer)
+          digest = installer.validate_jar(source)
+          destination = target / source.name
+          if destination.is_symlink(): raise RuntimeError('Plugin destination cannot be a symlink')
+          shutil.copyfile(source, destination); destination.chmod(0o600)
+          launcher = root / 'activate-bi.sh'
+          if launcher.is_symlink(): raise RuntimeError('Launcher destination cannot be a symlink')
+          launcher.write_text('#!/usr/bin/env bash\nset -Eeuo pipefail\n'
+              + 'test "$(id -u)" = 0 || { echo "Execute com sudo bash."; exit 1; }\n'
+              + 'python3 "' + str(scripts / 'install-graylog-bi.py') + '" --web-url http://192.168.2.10:9002/ --apply --restart\n'
+              + 'python3 "' + str(scripts / 'configure-graylog.py') + '" --web-url http://192.168.2.10:9002/ --apply --login\n')
+          launcher.chmod(0o700)
+          subprocess.run(['bash', '-n', str(launcher)], check=True)
+          print('VALIDATED_PLUGIN_SHA256', digest)
+          print('LOCAL_INSTALL_COMMAND: sudo bash', launcher)
+          print('Package prepared. No service restarted or system configuration changed.')
+          PY
+      - name: Inspect staging and dedicated deployment state without reading logs or secrets
+        run: |
+          python3 - <<'PY'
+          import pathlib, os, subprocess, json
+          os.environ['XDG_RUNTIME_DIR'] = '/run/user/' + str(os.getuid())
+          os.environ['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=' + os.environ['XDG_RUNTIME_DIR'] + '/bus'
+          def state(unit, user=False):
+              args = ['systemctl'] + (['--user'] if user else []) + ['show', unit, '-p', 'ActiveState', '-p', 'SubState', '-p', 'ExecMainStatus']
+              result = subprocess.run(args, capture_output=True, text=True, timeout=10)
+              print(unit, result.stdout.strip())
+          state('brasil-saas-staging-app.service', True)
+          state('graylog-server.service')
+          units = subprocess.run(['systemctl', 'list-unit-files', '--no-legend', '--no-pager'], capture_output=True, text=True, timeout=10).stdout
+          for line in units.splitlines():
+              name = line.split()[0]
+              if 'deploy' in name and ('brasil' in name or 'erp' in name) and name.endswith(('.service', '.path')): state(name)
+          marker = pathlib.Path('/opt/brasil-saas-erp-deploy/deploy.status')
+          try: confirmed = marker.read_text().strip() == '5993889899cda16498960743df679e077052d423'
+          except OSError: confirmed = False
+          print('MAIN_DEPLOY_MARKER_CONFIRMED', confirmed)
+          PY
+      - name: Validate actual authenticated staging BI without printing business data
+        run: python3 scripts/bi/validate-staging-bi.py
