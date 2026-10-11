@@ -16,6 +16,8 @@ jobs:
           import os,pathlib,subprocess,urllib.request,urllib.parse,re,json,hashlib
           home=pathlib.Path.home()
           candidates=[]
+          for p in (home/'brasil-saas-erp').iterdir(): print('SOURCE_ENTRY',p.name)
+          for p in (home/'brasil-saas-erp').glob('*/package.json'): print('PACKAGE',p, p.read_text()[:4000])
           for folder in [home/'staging',home/'.local/share/brasil-saas-staging/staging',home/'brasil-saas-erp/staging']:
               print('DIRECTORY',folder)
               if folder.exists():
