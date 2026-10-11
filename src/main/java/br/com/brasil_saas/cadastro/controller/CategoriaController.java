@@ -1,5 +1,7 @@
 package br.com.brasil_saas.cadastro.controller;
 
+import br.com.brasil_saas.shared.security.AuthenticatedUser;
+
 import br.com.brasil_saas.cadastro.dto.CategoriaRequest;
 import br.com.brasil_saas.cadastro.dto.CategoriaResponse;
 import br.com.brasil_saas.cadastro.service.CategoriaService;

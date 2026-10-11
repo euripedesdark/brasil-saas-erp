@@ -287,9 +287,10 @@ public class AtivoContabilService {
         AtivoImobilizado a = ativoEmUso(empresaId, id);
         BigDecimal percentual = r == null || r.percentual() == null ? CEM : r.percentual();
         if (percentual.signum() <= 0 || percentual.compareTo(CEM) > 0) throw new BusinessException("Percentual de baixa deve estar entre 0 e 100");
+        Long contaContrapartidaId = r == null ? null : r.contaContrapartidaId();
         BigDecimal venda = r == null || r.valorVenda() == null ? BigDecimal.ZERO : r.valorVenda();
         if (venda.signum() < 0) throw new BusinessException("Valor de venda não pode ser negativo");
-        if (venda.signum() > 0 && (r.contaContrapartidaId() == null) && classeDoAtivo(empresaId, a) != null)
+        if (venda.signum() > 0 && (contaContrapartidaId == null) && classeDoAtivo(empresaId, a) != null)
             throw new BusinessException("Informe a conta de contrapartida da venda");
         LocalDate data = r == null || r.data() == null ? LocalDate.now() : r.data();
         boolean total = percentual.compareTo(CEM) == 0;
@@ -329,7 +330,7 @@ public class AtivoContabilService {
             List<Linha> linhas = new ArrayList<>();
             linhas.add(new Linha(c.getContaDepreciacaoAcumuladaId(), null, redutora, BigDecimal.ZERO));
             linhas.add(new Linha(c.getContaAtivoId(), a.getCentroCustoId(), BigDecimal.ZERO, custo));
-            if (venda.signum() > 0) linhas.add(new Linha(r.contaContrapartidaId(), null, venda, BigDecimal.ZERO));
+            if (venda.signum() > 0) linhas.add(new Linha(contaContrapartidaId, null, venda, BigDecimal.ZERO));
             if (resultado.signum() > 0) linhas.add(new Linha(c.getContaGanhoBaixaId(), null, BigDecimal.ZERO, resultado));
             if (resultado.signum() < 0) linhas.add(new Linha(c.getContaPerdaBaixaId(), a.getCentroCustoId(), resultado.negate(), BigDecimal.ZERO));
             m.setLancamentoId(contabilizar(empresaId, data, "Baixa do ativo " + a.getCodigo(), "ATIVO_BAIXA", a.getId(), linhas));

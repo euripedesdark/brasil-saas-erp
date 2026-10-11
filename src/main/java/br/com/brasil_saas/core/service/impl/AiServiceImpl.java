@@ -69,7 +69,9 @@ public class AiServiceImpl implements AiService {
         if (resposta == null || !(resposta.get("content") instanceof List<?> blocos) || blocos.isEmpty()) {
             throw new IllegalStateException("Claude retornou uma resposta vazia");
         }
-        List<Map<String, Object>> content = (List<Map<String, Object>>) blocos;
-        return (String) content.get(0).get("text");
+        if (!(blocos.getFirst() instanceof Map<?, ?> primeiro) || !(primeiro.get("text") instanceof String texto)) {
+            throw new IllegalStateException("Claude retornou conteudo sem texto");
+        }
+        return texto;
     }
 }

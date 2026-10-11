@@ -453,8 +453,8 @@ public class NfseEmissaoService {
             }
 
             resposta = RespostaNfse.ler(resposta);
-            String chaveRetorno = texto(resposta.get("chave_nota_nacional"));
-            if (chaveRetorno != null && !chaveRetorno.isBlank()) {
+            String chaveRetorno = resposta == null ? null : texto(resposta.get("chave_nota_nacional"));
+            if (resposta != null && chaveRetorno != null && !chaveRetorno.isBlank()) {
                 nfse.setChaveNotaNacional(chaveRetorno);
                 String idDps = texto(resposta.get("id_dps"));
                 String protocolo = texto(resposta.get("protocolo"));

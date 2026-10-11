@@ -85,7 +85,7 @@ public class MdfeEmissaoService {
         }
 
         try {
-            WSFacade facade = new WSFacade(configuracoes().comoMDFe());
+            try (WSFacade facade = new WSFacade(configuracoes().comoMDFe())) {
             MDFeConsStatServRet ret = facade.consultaStatus();
 
             long ms = Duration.between(inicio, Instant.now()).toMillis();
@@ -107,6 +107,7 @@ public class MdfeEmissaoService {
 
             return RespostaMdfePadrao.resposta(emOperacao, cStat,
                     ret.getMotivo(), "status", ms, dados);
+            }
         } catch (Exception e) {
             long ms = Duration.between(inicio, Instant.now()).toMillis();
             log.warn("status do MDF-e falhou: {}", e.getMessage());
@@ -130,7 +131,7 @@ public class MdfeEmissaoService {
                     "Certificado A1 nao configurado.", "recibo", 0, Map.of());
         }
         try {
-            WSFacade facade = new WSFacade(configuracoes().comoMDFe());
+            try (WSFacade facade = new WSFacade(configuracoes().comoMDFe())) {
             var ret = facade.consultaRecibo(numeroRecibo);
             long ms = Duration.between(inicio, Instant.now()).toMillis();
 
@@ -148,6 +149,7 @@ public class MdfeEmissaoService {
                     "Retorno bruto da SVRS. Confira cStat e protocolo em 'dados.retorno' "
                             + "antes de considerar o MDF-e autorizado.",
                     "recibo", ms, dados);
+            }
         } catch (Exception e) {
             long ms = Duration.between(inicio, Instant.now()).toMillis();
             log.warn("consulta de recibo falhou: {}", e.getMessage());
