@@ -118,7 +118,7 @@ def main():
         raise ValueError('Instalacao validada apenas para Graylog 7.1.9; versao local diferente ou nao identificada')
     directory = args.plugin_dir
     if directory is None and discovered.get('config_source'):
-        for line in pathlib.Path(discovered['config_source']).read_text().splitlines():
+        for line in pathlib.Path(discovered['config_source']).read_text(encoding='latin-1').splitlines():
             if line.lstrip().startswith('#') or '=' not in line: continue
             key, value = line.split('=', 1)
             if key.strip() == 'plugin_dir': directory = pathlib.Path(value.strip()); break

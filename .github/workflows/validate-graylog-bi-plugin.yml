@@ -37,10 +37,13 @@ jobs:
       - name: Validate packaged web resources
         run: |
           python3 - <<'PY'
-          import importlib.util, pathlib
+          import importlib.util, pathlib, zipfile
           spec = importlib.util.spec_from_file_location('installer', 'scripts/bi/install-graylog-bi.py')
           module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
           path = pathlib.Path('integrations/graylog-bi/target/brasil-saas-graylog-bi-1.0.0.jar')
+          with zipfile.ZipFile(path) as jar:
+              print('Web resources:', [name for name in jar.namelist() if name.endswith(('.module.json', '.js'))])
+              print('Web manifest:', jar.read('plugin.' + module.PLUGIN + '.module.json').decode())
           print('Plugin SHA256:', module.validate_jar(path))
           PY
       - uses: actions/upload-artifact@v4
