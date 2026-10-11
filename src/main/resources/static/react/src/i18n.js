@@ -5,6 +5,10 @@ import ptBR from './locales/pt-BR.json';
 import enUS from './locales/en-US.json';
 import esES from './locales/es-ES.json';
 import frFR from './locales/fr-FR.json';
+import biPT from './locales/bi-pt-BR.json';
+import biEN from './locales/bi-en-US.json';
+import biES from './locales/bi-es-ES.json';
+import biFR from './locales/bi-fr-FR.json';
 
 export const LANGUAGE_STORAGE_KEY = 'brasilclouderp_language';
 export const supportedLanguages = [
@@ -19,10 +23,10 @@ void i18n
     .use(initReactI18next)
     .init({
         resources: {
-            'pt-BR': { translation: ptBR },
-            'en-US': { translation: enUS },
-            'es-ES': { translation: esES },
-            'fr-FR': { translation: frFR }
+            'pt-BR': { translation: { ...ptBR, biOverview: biPT } },
+            'en-US': { translation: { ...enUS, biOverview: biEN } },
+            'es-ES': { translation: { ...esES, biOverview: biES } },
+            'fr-FR': { translation: { ...frFR, biOverview: biFR } }
         },
         fallbackLng: 'pt-BR',
         supportedLngs: supportedLanguages.map(({ code }) => code),

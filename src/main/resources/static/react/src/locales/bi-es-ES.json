@@ -1,0 +1,32 @@
+{
+  "title": "Resumen de BI",
+  "start": "Inicio",
+  "end": "Fin",
+  "refresh": "Actualizar",
+  "loading": "Cargando indicadores…",
+  "error": "No se pudieron consultar los indicadores. Verifique el período (hasta 366 días) y la disponibilidad de BI.",
+  "retry": "Reintentar",
+  "details": "Ver indicadores",
+  "management": "Administrar paneles e informes",
+  "periodHelp": "Finanzas: vencimientos del período y saldos actuales. Producción y ventas: órdenes iniciadas y pedidos emitidos en el período. Servicios: abiertos por apertura, concluidos por cierre.",
+  "areas": {
+    "financeiro": "Finanzas",
+    "producao": "Producción",
+    "vendas": "Ventas",
+    "servicos": "Servicios"
+  },
+  "metrics": {
+    "a_receber": "Por cobrar",
+    "a_pagar": "Por pagar",
+    "receber_vencido": "Cobros vencidos",
+    "ordens": "Órdenes del período",
+    "finalizadas": "Órdenes finalizadas",
+    "em_processo": "En proceso",
+    "pedidos": "Pedidos del período",
+    "valor_pedidos": "Valor de pedidos",
+    "ticket_medio": "Valor medio de pedidos",
+    "abertas": "Órdenes abiertas",
+    "concluidas": "Órdenes concluidas",
+    "valor_concluido": "Valor de órdenes concluidas"
+  }
+}

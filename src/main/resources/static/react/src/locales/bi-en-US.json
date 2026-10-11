@@ -1,0 +1,32 @@
+{
+  "title": "BI overview",
+  "start": "Start",
+  "end": "End",
+  "refresh": "Refresh",
+  "loading": "Loading indicators…",
+  "error": "Unable to load indicators. Check the period (up to 366 days) and BI availability.",
+  "retry": "Try again",
+  "details": "View indicators",
+  "management": "Manage dashboards and reports",
+  "periodHelp": "Finance: due dates in the period and current balances. Production and sales: orders started and issued in the period. Services: open orders by opening date, completed orders by closing date.",
+  "areas": {
+    "financeiro": "Finance",
+    "producao": "Production",
+    "vendas": "Sales",
+    "servicos": "Services"
+  },
+  "metrics": {
+    "a_receber": "Receivables",
+    "a_pagar": "Payables",
+    "receber_vencido": "Overdue receivables",
+    "ordens": "Orders in period",
+    "finalizadas": "Completed orders",
+    "em_processo": "In progress",
+    "pedidos": "Orders in period",
+    "valor_pedidos": "Order value",
+    "ticket_medio": "Average order value",
+    "abertas": "Open service orders",
+    "concluidas": "Completed service orders",
+    "valor_concluido": "Completed service order value"
+  }
+}
