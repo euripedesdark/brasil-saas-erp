@@ -43,6 +43,35 @@ def check_login():
         assert response.status == 200
         assert '<html' in response.read().decode().lower()
 
+def validate_authentication():
+    payload = json.dumps({'username': 'staging-admin', 'password': settings['STAGING_ADMIN_PASSWORD'], 'provider': 'POSTGRES'}).encode()
+    request = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=payload, headers={'Content-Type': 'application/json'})
+    with urllib.request.urlopen(request, timeout=10) as response:
+        login = json.load(response)
+        assert login.get('data', {}).get('accessToken'), 'No access token returned'
+    invalid = json.dumps({'username': 'staging-admin', 'password': secrets.token_urlsafe(36), 'provider': 'POSTGRES'}).encode()
+    rejected = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=invalid, headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(rejected, timeout=10):
+            raise RuntimeError('Staging accepted an invalid password')
+    except urllib.error.HTTPError as error:
+        assert error.code == 422, error.code
+        rejection = json.load(error)
+        assert any(item.get('code') == 'INVALID_CREDENTIALS' for item in rejection.get('errors', [])), 'Wrong password did not return INVALID_CREDENTIALS'
+
+# A second installation must not budget memory for services already running.
+existing_names = ['brasil-saas-staging-' + name + '.service'
+                  for name in ['postgres', 'mongo', 'redis', 'rabbit', 'minio', 'app', 'mail', 'auth']]
+active = subprocess.run(['systemctl', '--user', 'is-active', '--quiet', *existing_names],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+if active.returncode == 0:
+    check_login()
+    with urllib.request.urlopen('http://127.0.0.1:18081/actuator/health', timeout=10) as response:
+        assert json.load(response)['status'] == 'UP', 'Existing staging is unhealthy'
+    validate_authentication()
+    print('STAGING_ALREADY_RUNNING; HEALTH_UP; LOGIN_AND_PASSWORD_REJECTION_OK; NO_REINSTALL')
+    raise SystemExit(0)
+
 required = {name: shutil.which(name) for name in ['mongod', 'mongosh', 'redis-server', 'rabbitmq-server', 'minio', 'java']}
 if not all(required.values()):
     raise RuntimeError('Missing runtime tools: ' + ', '.join(k for k, v in required.items() if not v))
@@ -222,20 +251,7 @@ try:
             time.sleep(3)
     else:
         raise RuntimeError('Staging application did not become healthy')
-    payload = json.dumps({'username': 'staging-admin', 'password': settings['STAGING_ADMIN_PASSWORD'], 'provider': 'POSTGRES'}).encode()
-    request = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=payload, headers={'Content-Type': 'application/json'})
-    with urllib.request.urlopen(request, timeout=10) as response:
-        login = json.load(response)
-        assert login.get('data', {}).get('accessToken'), 'No access token returned'
-    invalid = json.dumps({'username': 'staging-admin', 'password': secrets.token_urlsafe(36), 'provider': 'POSTGRES'}).encode()
-    rejected = urllib.request.Request('http://127.0.0.1:18081/api/auth/login', data=invalid, headers={'Content-Type': 'application/json'})
-    try:
-        with urllib.request.urlopen(rejected, timeout=10):
-            raise RuntimeError('Staging accepted an invalid password')
-    except urllib.error.HTTPError as error:
-        assert error.code == 422, error.code
-        rejection = json.load(error)
-        assert any(item.get('code') == 'INVALID_CREDENTIALS' for item in rejection.get('errors', [])), 'Wrong password did not return INVALID_CREDENTIALS'
+    validate_authentication()
     for name in names:
         run(['systemctl', '--user', 'enable', name], stdout=subprocess.DEVNULL)
     print('STAGING_HEALTH_UP; LOGIN_AND_AUTH_OK; ISOLATED_DEPENDENCIES_OK')
