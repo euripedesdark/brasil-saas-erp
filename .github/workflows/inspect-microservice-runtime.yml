@@ -20,15 +20,16 @@ jobs:
           units=cmd(['systemctl','list-unit-files','--type=service','--no-legend','--no-pager'])
           names=[l.split()[0] for l in units.splitlines() if re.search(r'nfse|cnab|boleto|esocial|avatar|brasil.*watchdog',l,re.I)]
           for name in names:
-              out=cmd(['systemctl','show',name,'-p','ActiveState','-p','UnitFileState','-p','WorkingDirectory','-p','FragmentPath','-p','ExecStart'])
+              out=cmd(['systemctl','show',name,'-p','ActiveState','-p','UnitFileState','-p','WorkingDirectory','-p','FragmentPath','-p','NRestarts','-p','ExecMainStatus','-p','Result','-p','ExecStart'])
               safe=[]
               for line in out.splitlines():
                   if line.startswith('ExecStart='):
                       paths=re.findall(r'[^\s;"{}]+\.(?:jar|rb|sh)',line)
                       safe.append('ArtifactPaths='+','.join(paths))
+                      safe.append('ArtifactExists='+','.join(str(pathlib.Path(p).exists()) for p in paths))
                   else: safe.append(line)
               print('UNIT',name,' | '.join(safe))
-          for port in [4567,4568,4569,4570,9292,8082,8083]:
+          for port in [4567,4568,4569,4570,9292,8081,8082,8083]:
               with socket.socket() as s:
                   s.settimeout(1); print('PORT',port,'OPEN' if s.connect_ex(('127.0.0.1',port))==0 else 'CLOSED')
           for port in [4567,4568,4569]:
@@ -37,6 +38,15 @@ jobs:
                       data=json.load(r)
                       print('NFSE_STATUS',port,r.status,{k:data[k] for k in ['sucesso','certificado_configurado','senha_configurada','leiaute_xsd'] if k in data})
               except Exception as e: print('NFSE_STATUS',port,type(e).__name__)
+          for base in [pathlib.Path.home()/'BrasilCloudERP',pathlib.Path.home()/'brasil-saas-erp']:
+              print('SOURCE_ROOT',base,base.exists())
+          for p in pathlib.Path('/proc').iterdir():
+              if not p.name.isdigit(): continue
+              try:
+                  args=(p/'cmdline').read_bytes().decode(errors='replace').split(chr(0))
+                  if args and 'java' in pathlib.Path(args[0]).name:
+                      print('JAVA_ARTIFACT',p.name,[a for a in args if a.endswith('.jar')])
+              except OSError: pass
           for root in [pathlib.Path('/opt'),pathlib.Path.home()/'brasil-saas-erp/src/main/resources/microservices']:
               if root.exists():
                   for p in root.iterdir():
