@@ -64,7 +64,7 @@ jobs:
               time.sleep(2)
           else: raise RuntimeError('Staging public access did not become ready')
           settings=dict(line.split('=',1) for line in (stage/'staging.env').read_text().splitlines() if line and not line.startswith('#'))
-          body=json.dumps({'username':'staging-admin','password':settings['STAGING_ADMIN_PASSWORD']}).encode()
+          body=json.dumps({'username':'staging-admin','password':settings['STAGING_ADMIN_PASSWORD'],'provider':'POSTGRES'}).encode()
           request=urllib.request.Request(url+'/api/auth/login',data=body,headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(request,timeout=15) as response:
               assert json.load(response).get('data',{}).get('accessToken'),'Staging public login did not return access token'
