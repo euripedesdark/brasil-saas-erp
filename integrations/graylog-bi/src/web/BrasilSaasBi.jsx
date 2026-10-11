@@ -25,6 +25,7 @@ export default function BrasilSaasBi() {
     const [areas, setAreas] = useState({});
     const [busy, setBusy] = useState({});
     const [errors, setErrors] = useState({});
+    const [applied, setApplied] = useState(null);
 
     useEffect(() => {
         const parameters = new URLSearchParams(window.location.hash.slice(1));
@@ -39,10 +40,15 @@ export default function BrasilSaasBi() {
         const parent = window.opener;
         const connection = createBiClient({ parent, origin, nonce,
             send: (data, targetOrigin) => parent.postMessage(data, targetOrigin),
-            onReady: () => setReady(true),
+            onReady: () => {
+                setReady(true);
+                const loading = {};
+                BI_AREAS.forEach(area => { if (connection.query(area, inicio, fim)) loading[area] = true; });
+                setBusy(loading); setApplied({ inicio, fim });
+            },
             onResult: (area, result) => { setAreas(previous => ({ ...previous, [area]: result.areas[0] })); setBusy(previous => ({ ...previous, [area]: false })); },
             onError: area => { setErrors(previous => ({ ...previous, [area]: true })); setBusy(previous => ({ ...previous, [area]: false })); },
-            onClosed: () => { setReady(false); setAreas({}); setErrors({}); setBusy({}); },
+            onClosed: () => { setReady(false); setAreas({}); setErrors({}); setBusy({}); setApplied(null); },
         });
         client.current = connection;
         const receive = event => connection.receive(event);
@@ -59,6 +65,7 @@ export default function BrasilSaasBi() {
         const loading = {};
         selected.forEach(area => { if (client.current?.query(area, inicio, fim)) loading[area] = true; });
         setBusy(loading);
+        setApplied({ inicio, fim });
     };
     const format = indicator => new Intl.NumberFormat(navigator.language, indicator.unidade === 'BRL'
         ? { style: 'currency', currency: 'BRL' } : { maximumFractionDigits: 0 }).format(Number(indicator.valor));
@@ -66,7 +73,6 @@ export default function BrasilSaasBi() {
     return <section style={{ padding: 24 }} aria-labelledby="brasil-saas-bi-title">
         <h1 id="brasil-saas-bi-title">{text.title}</h1>
         <p>{help[language]}</p>
-        {!ready && <p role="status">{text.graylogStatus.connecting}</p>}
         <form onSubmit={refresh}>
             <fieldset disabled={!ready || Object.values(busy).some(Boolean)}>
                 <legend>{text.title}</legend>
@@ -82,6 +88,7 @@ export default function BrasilSaasBi() {
             </fieldset>
         </form>
         <p>{text.periodHelp}</p>
+        {applied && <p>{text.start}: {applied.inicio} — {text.end}: {applied.fim}</p>}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
             {selected.map(area => <article key={area} style={{ border: '1px solid #aaa', padding: 16, borderRadius: 8 }} aria-busy={!!busy[area]}>
                 <h2>{text.areas[area]}</h2>
