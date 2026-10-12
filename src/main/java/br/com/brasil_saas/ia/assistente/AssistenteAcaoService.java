@@ -216,31 +216,30 @@ public class AssistenteAcaoService {
         boolean temServicos = valServicos.compareTo(BigDecimal.ZERO) > 0;
 
         if (temServicos && !temProdutos) {
-            // Operação de NFS-e Municipal
+            // Só serviço → NFS-e municipal
             return tratarEmissaoNfse(pedido, pedidoNumero, clienteNome, valServicos, empresaId);
-        } else if (temProdutos && !temServicos) {
-            // Operação de NF-e Estadual (Mercadorias)
-            return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
-        } else {
-            // Operação com ambos ou padrão de mercadorias
-            if (temProdutos && temServicos) {
-                return new ComandoResponse(
-                        "ACAO",
-                        "AVISO",
-                        "Pedido com Itens Mistos (Produto + Serviço)",
-                        "O pedido #" + pedidoNumero + " possui tanto produtos (R$ " + valProdutos + ") quanto serviços (R$ " + valServicos + "). " +
-                        "No Brasil, itens de produto são emitidos via NF-e estadual (SEFAZ) e serviços via NFS-e municipal (Prefeitura). " +
-                        "Acesse as telas de emissão para transmitir cada documento.",
-                        "/fiscal/nfe",
-                        "Fiscal > Documentos Fiscais",
-                        "Acessar Emissão Fiscal",
-                        Map.of("pedidoId", pedido.getId(), "produtos", valProdutos, "servicos", valServicos)
-                );
-            } else {
-                // Caso ambos sejam zero ou não preenchidos no cabeçalho, assume NF-e de produto padrão
-                return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
-            }
         }
+        if (temProdutos && !temServicos) {
+            // Só produto → NF-e estadual
+            return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
+        }
+        if (temProdutos) {
+            // Misto (produto + serviço): orienta emissão dos dois documentos
+            return new ComandoResponse(
+                    "ACAO",
+                    "AVISO",
+                    "Pedido com Itens Mistos (Produto + Serviço)",
+                    "O pedido #" + pedidoNumero + " possui tanto produtos (R$ " + valProdutos + ") quanto serviços (R$ " + valServicos + "). " +
+                    "No Brasil, itens de produto são emitidos via NF-e estadual (SEFAZ) e serviços via NFS-e municipal (Prefeitura). " +
+                    "Acesse as telas de emissão para transmitir cada documento.",
+                    "/fiscal/nfe",
+                    "Fiscal > Documentos Fiscais",
+                    "Acessar Emissão Fiscal",
+                    Map.of("pedidoId", pedido.getId(), "produtos", valProdutos, "servicos", valServicos)
+            );
+        }
+        // Sem valores de produto/serviço no cabeçalho → assume NF-e padrão
+        return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
     }
 
     private ComandoResponse tratarEmissaoNfe(PedidoVenda pedido, String pedidoNumero, String clienteNome,

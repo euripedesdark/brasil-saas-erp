@@ -8,3 +8,15 @@ profile:
   name: qodana.recommended
 include:
   - name: CheckDependencyLicenses
+
+# Ruído durante desenvolvimento do módulo de IA:
+# - Header customizado X-Empresa-Id usado em todos os controllers do assistente
+# - Inspeção de header HTTP desconhece headers de negócio do ERP
+exclude:
+  - name: UastIncorrectHttpHeaderInspection
+    paths:
+      - src/main/java/br/com/brasil_saas/ia
+  - name: SpringBootAdditionalConfig
+    paths:
+      - src/main/resources/microservices/spring-ai
+
