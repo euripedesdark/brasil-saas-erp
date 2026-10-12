@@ -5,11 +5,8 @@ import br.com.brasil_saas.bi.dto.KpiResponse;
 import br.com.brasil_saas.bi.model.Kpi;
 import br.com.brasil_saas.bi.repository.KpiRepository;
 import br.com.brasil_saas.bi.service.KpiService;
-import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.web.PageResponse;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +20,6 @@ import java.util.stream.Collectors;
 public class KpiServiceImpl implements KpiService {
 
     private final KpiRepository kpiRepository;
-    private final EntityManager entityManager;
 
     @Override
     @Transactional
@@ -148,18 +144,16 @@ public class KpiServiceImpl implements KpiService {
             return 0;
         }
         
-        try {
-            if (kpi.getQueryFormula().toUpperCase().startsWith("SELECT")) {
-                ReportSqlParameters.validate(kpi.getQueryFormula());
-                Query query = entityManager.createNativeQuery(kpi.getQueryFormula());
-                query.setMaxResults(1);
-                return query.getSingleResult();
-            } else {
-                return evaluateFormula(kpi.getQueryFormula(), empresaId);
-            }
-        } catch (Exception e) {
-            return 0;
+        // Templates de indicadores devem ser implementados por consultas JPA
+        // previamente aprovadas e sempre limitadas por empresaId.
+        // Nunca executar texto SQL configuravel com credenciais do ERP.
+        String formula = kpi.getQueryFormula().strip();
+        if (formula.regionMatches(true, 0, "SELECT", 0, 6)
+                || formula.regionMatches(true, 0, "WITH", 0, 4)) {
+            throw new IllegalArgumentException(
+                    "Consulta SQL livre de KPI desabilitada; configure um indicador aprovado");
         }
+        return evaluateFormula(formula, empresaId);
     }
 
     private Object evaluateFormula(String formula, Long empresaId) {
