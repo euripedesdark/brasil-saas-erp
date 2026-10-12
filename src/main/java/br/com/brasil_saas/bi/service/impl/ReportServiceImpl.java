@@ -115,7 +115,8 @@ public class ReportServiceImpl implements ReportService {
 
         Map<String, Object> effectiveParameters = new java.util.LinkedHashMap<>();
         if (parameters != null) effectiveParameters.putAll(parameters);
-        effectiveParameters.putIfAbsent("empresaId", empresaId);
+        // O tenant autenticado sempre prevalece sobre parametros do cliente.
+        effectiveParameters.put("empresaId", empresaId);
         QueryData data = executeQuery(report.getQuerySql(), effectiveParameters);
         return switch (normalizedType) {
             case "PDF" -> generatePdf(data, report);

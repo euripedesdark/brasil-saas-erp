@@ -3,7 +3,10 @@ package br.com.brasil_saas.fiscal.busca;
 import br.com.brasil_saas.fiscal.repository.CfopRepository;
 import br.com.brasil_saas.fiscal.repository.IssqnRepository;
 import br.com.brasil_saas.fiscal.repository.NcmRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import java.util.ArrayList;
+import java.util.function.Function;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,16 +15,7 @@ import java.util.Optional;
 /**
  * Consulta aos três cadastros fiscais, de uma vez e pela mesma porta.
  *
- * <p><b>Por que JPA e não os repositories separados antes.</b> A busca é
- * transversal: os três catálogos têm formatos de chave diferentes
- * ({@code 22030000}, {@code 01.07.01.000}, {@code 5102}) e o único predicado em
- * comum é "o código normalizado começa com isto". Cada catálogo tem seu
- * repository JPA; a normalização usa a mesma função
- * {@code fiscal_normaliza_codigo} do banco via JPQL {@code FUNCTION}, com
- * parâmetros vinculados — sem concatenação de entrada do usuário em SQL.
- *
- * <p>Os nomes de tabela não vêm de fora: são os três literais do enum
- * {@code Catalogo}. Não há concatenação de entrada do usuário em SQL.
+ * A consulta usa repositories Spring Data JPA; a normalização ocorre em Java.
  */
 @Repository
 public class ConsultaCatalogo {
@@ -43,24 +37,45 @@ public class ConsultaCatalogo {
     }
 
     /**
-     * Códigos cujo formato normalizado casa exatamente, ou começa com, o termo.
-     * A comparação usa {@code fiscal_normaliza_codigo} do banco — a mesma regra
-     * de {@link NormalizacaoFiscal#codigo(String)}, verificada em teste.
+     * Busca usando apenas Spring Data JPA para paginação e Java para normalização.
+     * Mantém a ordem por código e interrompe a leitura após 30 resultados.
+     * Sem SQL nativo, funções de banco ou alterações de schema.
      */
     public List<Registro> porCodigo(final String tabelaFisica, final String codigoNormalizado) {
-        String prefixo = codigoNormalizado + "%";
+        if (codigoNormalizado == null || codigoNormalizado.isEmpty()) {
+            return List.of();
+        }
         return switch (catalogo(tabelaFisica)) {
-            case NCM -> ncmRepository
-                    .buscarPorCodigoNormalizado(codigoNormalizado, prefixo, PageRequest.of(0, 30))
-                    .stream().map(n -> new Registro(n.getCodigo(), n.getDescricao())).toList();
-            case ISSQN -> issqnRepository
-                    .buscarPorCodigoNormalizado(codigoNormalizado, prefixo, PageRequest.of(0, 30))
-                    .stream().map(i -> new Registro(i.getCodigo(), i.getDescricao()))
-                    .distinct().toList();
-            case CFOP -> cfopRepository
-                    .buscarPorCodigoNormalizado(codigoNormalizado, prefixo, PageRequest.of(0, 30))
-                    .stream().map(c -> new Registro(c.getCodigo(), c.getDescricao())).toList();
+            case NCM -> buscarPaginado(ncmRepository::findAllByOrderByCodigo,
+                    n -> new Registro(n.getCodigo(), n.getDescricao()), codigoNormalizado);
+            case ISSQN -> buscarPaginado(issqnRepository::findAllByOrderByCodigo,
+                    i -> new Registro(i.getCodigo(), i.getDescricao()), codigoNormalizado)
+                    .stream().distinct().toList();
+            case CFOP -> buscarPaginado(cfopRepository::findAllByOrderByCodigo,
+                    f -> new Registro(f.getCodigo(), f.getDescricao()), codigoNormalizado);
         };
+    }
+
+    private static <T> List<Registro> buscarPaginado(
+            final Function<PageRequest, Page<T>> carregar,
+            final Function<T, Registro> mapear,
+            final String codigoNormalizado) {
+        final List<Registro> encontrados = new ArrayList<>(30);
+        int pagina = 0;
+        Page<T> lote;
+        do {
+            lote = carregar.apply(PageRequest.of(pagina++, 200));
+            for (T entidade : lote.getContent()) {
+                Registro registro = mapear.apply(entidade);
+                if (NormalizacaoFiscal.codigo(registro.codigo()).startsWith(codigoNormalizado)) {
+                    encontrados.add(registro);
+                    if (encontrados.size() == 30) {
+                        return encontrados;
+                    }
+                }
+            }
+        } while (lote.hasNext());
+        return encontrados;
     }
 
     /** Código oficial exato, sem normalizar: é a junção com a palavra-chave. */
