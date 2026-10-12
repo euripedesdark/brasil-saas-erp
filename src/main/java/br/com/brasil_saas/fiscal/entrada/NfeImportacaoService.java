@@ -184,8 +184,8 @@ public class NfeImportacaoService {
         }
 
         // --- chave ja registrada ---------------------------------------
-        if (!l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
+        if (l.chave() != null && nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isPresent()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
         if (l.chave() == null) {
@@ -352,8 +352,8 @@ public class NfeImportacaoService {
 
     private Confirmado confirmar(Long empresaId, NfeXmlReader.Leitura l, Long pessoaId,
                                  boolean criarProdutos) {
-        if (!l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
+        if (l.chave() != null && nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isPresent()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
 
@@ -480,7 +480,7 @@ public class NfeImportacaoService {
     private String codigoLivre(Long empresaId, String cProd, String ean) {
         String base = cProd != null && !cProd.isBlank() ? cProd
                 : (ean != null ? "EAN" + ean : null);
-        if (!base == null) return null;
+        if (base == null) return null;
         String codigo = base;
         int n = 2;
         while (produtoRepo.findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(codigo).isEmpty()) {
