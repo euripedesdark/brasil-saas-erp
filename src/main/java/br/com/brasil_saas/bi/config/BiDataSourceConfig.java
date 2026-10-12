@@ -20,12 +20,12 @@ public class BiDataSourceConfig {
     public BiReadClient biReadClient(org.springframework.core.env.Environment environment) {
         String url = required(environment, "bi.datasource.url");
         String username = required(environment, "bi.datasource.username");
-        String password = required(environment, "bi.datasource.password");
+        String password = environment.getProperty("bi.datasource.password");
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
         config.setUsername(username);
-        config.setPassword(password);
+        if (password != null && !password.isBlank()) config.setPassword(password);
         config.setPoolName("brasil-saas-bi-reader");
         config.setMaximumPoolSize(5);
         config.setMinimumIdle(0);
