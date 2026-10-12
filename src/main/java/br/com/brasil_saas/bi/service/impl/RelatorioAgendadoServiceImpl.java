@@ -217,7 +217,8 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
             case "TRIMESTRAL" -> agora.plusMonths(3);
             case "ANUAL" -> agora.plusYears(1);
             case "CUSTOM" -> agora.plusDays(agendado.getIntervaloDias() != null ? agendado.getIntervaloDias() : 1);
-            case "DIARIO", default -> agora.plusDays(1);
+            // DIARIO e qualquer valor desconhecido: +1 dia
+            default -> agora.plusDays(1);
         };
     }
 
