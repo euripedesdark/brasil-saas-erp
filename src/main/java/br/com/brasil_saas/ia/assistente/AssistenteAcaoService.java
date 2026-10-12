@@ -43,7 +43,6 @@ public class AssistenteAcaoService {
     private final Optional<NFeService> nfeService;
     private final Optional<NfseEmissaoService> nfseEmissaoService;
 
-    @Autowired
     public AssistenteAcaoService(
             CatalogoNavegacaoService catalogoNavegacao,
             PedidoVendaRepository pedidoVendaRepository,
@@ -164,12 +163,16 @@ public class AssistenteAcaoService {
         }
 
         if (pedidoOpt.isEmpty()) {
-            // Tenta procurar pelo campo numero do pedido
-            List<PedidoVenda> pedidosEmpresa = pedidoVendaRepository.findByEmpresaIdOrderByDataEmissaoDesc(empresaId);
-            pedidoOpt = pedidosEmpresa.stream()
-                    .filter(p -> idOuNumeroStr.equalsIgnoreCase(p.getNumero()) ||
-                                 (p.getNumero() != null && p.getNumero().endsWith(idOuNumeroStr)))
-                    .findFirst();
+            // Busca direta pelo número do pedido (evita carregar toda a lista em memória)
+            pedidoOpt = pedidoVendaRepository.findByEmpresaIdAndNumero(empresaId, idOuNumeroStr);
+            if (pedidoOpt.isEmpty()) {
+                // Fallback limitado: match por sufixo em pedidos recentes (máx 200)
+                List<PedidoVenda> recentes = pedidoVendaRepository.findByEmpresaIdOrderByDataEmissaoDesc(empresaId);
+                pedidoOpt = recentes.stream()
+                        .limit(200)
+                        .filter(p -> p.getNumero() != null && p.getNumero().endsWith(idOuNumeroStr))
+                        .findFirst();
+            }
         }
 
         if (pedidoOpt.isEmpty()) {
@@ -267,7 +270,8 @@ public class AssistenteAcaoService {
                         "Ver Notas Fiscais",
                         extras
                 );
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
+                // Falhas de validação SEFAZ / certificado / regras do NFeService
                 log.warn("Tentativa de emissão de NF-e para pedido {}: {}", pedidoNumero, e.getMessage());
                 return new ComandoResponse(
                         "ACAO",

@@ -30,6 +30,12 @@ public interface PedidoVendaRepository extends JpaRepository<PedidoVenda, Long> 
 
     Optional<PedidoVenda> findByIdAndEmpresaId(Long id, Long empresaId);
 
+    /**
+     * Busca pedido pelo número (campo de negócio) da empresa.
+     * Evita carregar toda a lista de pedidos em memória só para localizar um número.
+     */
+    Optional<PedidoVenda> findByEmpresaIdAndNumero(Long empresaId, String numero);
+
     List<PedidoVenda> findByEmpresaIdOrderByDataEmissaoDesc(Long empresaId);
 
     List<PedidoVenda> findByEmpresaIdAndStatus(Long empresaId, String status);

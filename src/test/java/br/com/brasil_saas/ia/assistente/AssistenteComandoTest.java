@@ -70,6 +70,8 @@ class AssistenteComandoTest {
     @Test
     void testExecutarAcaoPedidoNaoEncontrado() {
         when(pedidoVendaRepository.findByIdAndEmpresaId(999L, 1L)).thenReturn(Optional.empty());
+        when(pedidoVendaRepository.findByEmpresaIdAndNumero(1L, "999")).thenReturn(Optional.empty());
+        when(pedidoVendaRepository.findByEmpresaIdOrderByDataEmissaoDesc(1L)).thenReturn(java.util.Collections.emptyList());
 
         var resposta = acaoService.processar("emita a nota fiscal do pedido 999", "ACAO", 1L, "euripedes");
         assertEquals("ACAO", resposta.modo());
