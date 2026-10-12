@@ -8,4 +8,5 @@ public interface WkfInstanceRepository extends JpaRepository<WkfInstance, Long> 
     List<WkfInstance> findByEmpresaIdAndDeletedAtIsNull(Long empresaId);
     List<WkfInstance> findByEmpresaIdAndStatusAndDeletedAtIsNull(Long empresaId, String status);
     List<WkfInstance> findByEmpresaIdAndEntidadeTipoAndEntidadeIdAndDeletedAtIsNull(Long empresaId, String tipo, Long entidadeId);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

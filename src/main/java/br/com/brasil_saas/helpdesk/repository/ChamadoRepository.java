@@ -11,4 +11,5 @@ public interface ChamadoRepository extends JpaRepository<Chamado, Long> {
     List<Chamado> findByEmpresaIdAndStatusAndDeletedAtIsNullOrderByIdDesc(Long empresaId, String status);
     Optional<Chamado> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     long countByEmpresaIdAndStatusAndDeletedAtIsNull(Long empresaId, String status);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }
