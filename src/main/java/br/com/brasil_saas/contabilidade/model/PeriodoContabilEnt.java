@@ -78,4 +78,18 @@ public class PeriodoContabilEnt {
             uuid = UUID.randomUUID();
         }
     }
+
+    public java.util.Map<String, Object> toMap() {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("id", getId()); m.put("uuid", getUuid()); m.put("empresa_id", getEmpresaId());
+        m.put("competencia", getCompetencia()); m.put("status", getStatus());
+        m.put("fechamento_financeiro", getFechamentoFinanceiro());
+        m.put("fechamento_fiscal", getFechamentoFiscal());
+        m.put("fechamento_contabil", getFechamentoContabil());
+        m.put("observacao", getObservacao());
+        m.put("fechado_em", getFechadoEm()); m.put("fechado_por", getFechadoPor());
+        m.put("created_at", getCreatedAt()); m.put("updated_at", getUpdatedAt());
+        m.put("created_by", getCreatedBy()); m.put("updated_by", getUpdatedBy());
+        return m;
+    }
 }

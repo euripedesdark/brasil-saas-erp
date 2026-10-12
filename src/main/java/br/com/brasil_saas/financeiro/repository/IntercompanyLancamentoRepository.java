@@ -15,6 +15,8 @@ public interface IntercompanyLancamentoRepository extends JpaRepository<Intercom
 
     Optional<IntercompanyLancamento> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
 
+    List<IntercompanyLancamento> findByEmpresaIdAndDeletedAtIsNullOrderByIdDesc(Long empresaId);
+
     @Query("SELECT i FROM IntercompanyLancamento i WHERE i.empresaId = :parceira "
             + "AND i.empresaParceiraId = :empresaId AND i.numero = :numero AND i.deletedAt IS NULL "
             + "AND (i.competencia = :competencia OR (i.competencia IS NULL AND :competencia IS NULL))")
