@@ -11,6 +11,6 @@ import lombok.Setter;
 public class Papel extends TenantEntity {
     @Column(length = 50, nullable = false)
     private String nome; // CLIENTE, FORNECEDOR, TRANSPORTADORA...
-    @Column(length = 255)
+    @Column
     private String descricao;
 }

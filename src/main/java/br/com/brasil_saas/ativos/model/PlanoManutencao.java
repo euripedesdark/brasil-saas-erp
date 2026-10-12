@@ -12,7 +12,7 @@ import java.time.LocalDate;
 public class PlanoManutencao extends TenantEntity {
     @Column(name="ativo_id",nullable=false) private Long ativoId;
     @Column(nullable=false,length=30) private String codigo;
-    @Column(nullable=false,length=255) private String descricao;
+    @Column(nullable=false) private String descricao;
     @Column(name="tipo_ciclo",nullable=false,length=20) private String tipoCiclo="TEMPO";
     @Column(name="intervalo_dias") private Integer intervaloDias;
     @Column(name="intervalo_contador",precision=15,scale=2) private BigDecimal intervaloContador;

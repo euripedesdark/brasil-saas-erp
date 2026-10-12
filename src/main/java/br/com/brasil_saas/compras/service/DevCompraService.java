@@ -133,7 +133,7 @@ public class DevCompraService {
     @Transactional
     public DevCompra cancelar(Long empresaId, Long id) {
         DevCompra d = bloqueada(empresaId, id);
-        if ("SOLICITADA".equals(d.getStatus()) == false) throw new BusinessException("Somente devolucao SOLICITADA pode ser cancelada");
+        if (!"SOLICITADA".equals(d.getStatus())) throw new BusinessException("Somente devolucao SOLICITADA pode ser cancelada");
         d.setStatus("CANCELADA");
         return devolucoes.save(d);
     }

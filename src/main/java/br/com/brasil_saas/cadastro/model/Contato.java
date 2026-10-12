@@ -20,6 +20,6 @@ public class Contato extends TenantEntity {
     private String email;
     @Column(length = 20)
     private String telefone;
-    @Column(length = 255)
+    @Column
     private String observacao;
 }

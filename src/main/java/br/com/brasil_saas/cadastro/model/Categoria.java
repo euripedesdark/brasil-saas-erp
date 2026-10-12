@@ -13,7 +13,7 @@ import java.util.List;
 public class Categoria extends TenantEntity {
     @Column(length = 100, nullable = false)
     private String nome;
-    @Column(length = 255)
+    @Column
     private String descricao;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_pai_id")

@@ -81,7 +81,7 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao decidir(Long empresaId, Long userId, Long id, boolean aprovar) {
         VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
-        if ("SOLICITADA".equals(d.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao ja decidida");
+        if (!"SOLICITADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao ja decidida");
         d.setStatus(aprovar ? "APROVADA" : "REJEITADA");
         d.setDecididaPor(userId);
         d.setDecididaEm(LocalDateTime.now());
@@ -89,7 +89,7 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao receber(Long empresaId, Long id) {
         VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
-        if ("APROVADA".equals(d.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprove antes de receber");
+        if (!"APROVADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprove antes de receber");
         Long depId = depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
                 .or(() -> depositos.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nenhum deposito ativo para receber devolucao")).getId();

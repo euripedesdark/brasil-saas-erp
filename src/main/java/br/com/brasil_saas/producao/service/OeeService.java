@@ -21,7 +21,7 @@ public class OeeService {
         if (ate == null) ate = LocalDate.now();
         BigDecimal capDia = BigDecimal.ZERO;
         for (CentroTrabalho c : centros.findByEmpresaIdAndDeletedAtIsNullOrderByCodigo(empresaId)) {
-            if (Boolean.TRUE.equals(c.getAtivo()) == false) continue;
+            if (!Boolean.TRUE.equals(c.getAtivo())) continue;
             capDia = capDia.add(c.getCapacidadeHorasDia() == null ? BigDecimal.ZERO : c.getCapacidadeHorasDia());
         }
         Map<LocalDate, BigDecimal[]> porDia = new TreeMap<>();

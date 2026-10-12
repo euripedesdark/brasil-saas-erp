@@ -261,7 +261,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
             for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate))
                 for (CtbPartida pt : partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(l.getId(), empresaId)) {
                     String codigo = contas.findByIdAndEmpresaIdAndDeletedAtIsNull(pt.getContaId(), empresaId).map(PlanoContas::getCodigo).orElse("");
-                    if (codigo.startsWith("3") == false) continue;
+                    if (!codigo.startsWith("3")) continue;
                     receitas = receitas.add(pt.getCredito() == null ? java.math.BigDecimal.ZERO : pt.getCredito());
                     custos = custos.add(pt.getDebito() == null ? java.math.BigDecimal.ZERO : pt.getDebito());
                 }

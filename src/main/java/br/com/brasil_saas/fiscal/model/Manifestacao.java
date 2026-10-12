@@ -26,7 +26,7 @@ public class Manifestacao {
     @Column(length = 30, nullable = false)
     private String tipo;
 
-    @Column(length = 255)
+    @Column
     private String justificativa;
 
     @Column(length = 50)

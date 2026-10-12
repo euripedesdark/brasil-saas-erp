@@ -60,7 +60,7 @@ public class EcdService {
                 }
             }
             for (PlanoContas c : plano) {
-                if ("A".equals(c.getTipo()) == false) continue;
+                if (!"A".equals(c.getTipo())) continue;
                 BigDecimal[] ant = acumulado.getOrDefault(c.getId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
                 BigDecimal[] m = mov.getOrDefault(c.getId(), new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO});
                 BigDecimal sldIni = ant[0].subtract(ant[1]);
@@ -78,7 +78,7 @@ public class EcdService {
             for (CtbPartida pt : pts) {
                 PlanoContas c = porId.get(pt.getContaId());
                 boolean deb = nz(pt.getDebito()).signum() > 0;
-                String hist = pt.getHistorico() != null && pt.getHistorico().isBlank() == false ? pt.getHistorico() : l.getHistorico();
+                String hist = pt.getHistorico() != null && !pt.getHistorico().isBlank() ? pt.getHistorico() : l.getHistorico();
                 arq.add(lin("I250", c == null ? "SEM_CONTA" : c.getCodigo(), null, moeda(deb ? pt.getDebito() : pt.getCredito()), deb ? "D" : "C", null, null, hist));
             }
         }

@@ -12,7 +12,7 @@ import java.time.LocalDate;
 public class TabelaPreco extends TenantEntity {
     @Column(nullable=false, length=100) private String nome;
     @Column(length=30) private String codigo;
-    @Column(length=255) private String descricao;
+    @Column private String descricao;
     @Column(length=3, nullable=false) private String moeda = "BRL";
     @Column(name="vigencia_inicio") private LocalDate vigenciaInicio;
     @Column(name="vigencia_fim") private LocalDate vigenciaFim;

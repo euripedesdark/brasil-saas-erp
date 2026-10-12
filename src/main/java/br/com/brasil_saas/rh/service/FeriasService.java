@@ -27,13 +27,13 @@ public class FeriasService {
     @Transactional
     public Ferias programar(Long empresaId, Long funcionarioId, LocalDate inicio, Integer dias, String observacao) {
         Funcionario f = funcionarios.findById(funcionarioId).filter(x -> empresaId.equals(x.getEmpresaId())).orElseThrow(() -> new ResourceNotFoundException("funcionario", String.valueOf(funcionarioId)));
-        if (Boolean.TRUE.equals(f.getAtivo()) == false) throw new BusinessException("Funcionario inativo");
+        if (!Boolean.TRUE.equals(f.getAtivo())) throw new BusinessException("Funcionario inativo");
         if (dias == null || dias < 10 || dias > 30) throw new BusinessException("Ferias de 10 a 30 dias");
         if (inicio == null) throw new BusinessException("Data de inicio obrigatoria");
         LocalDate fim = inicio.plusDays(dias - 1);
         for (Ferias e : ferias.findByEmpresaIdAndFuncionarioIdAndDeletedAtIsNullOrderByDataInicioDesc(empresaId, funcionarioId)) {
             if ("CANCELADA".equals(e.getStatus())) continue;
-            if (inicio.isAfter(e.getDataFim()) == false && fim.isBefore(e.getDataInicio()) == false) throw new BusinessException("Sobrepoe ferias de " + e.getDataInicio() + " a " + e.getDataFim());
+            if (!inicio.isAfter(e.getDataFim()) && !fim.isBefore(e.getDataInicio())) throw new BusinessException("Sobrepoe ferias de " + e.getDataInicio() + " a " + e.getDataFim());
         }
         Ferias n = new Ferias();
         n.setEmpresaId(empresaId);
@@ -48,7 +48,7 @@ public class FeriasService {
     @Transactional
     public Ferias gozar(Long empresaId, Long id, Long folhaId) {
         Ferias e = ferias.findById(id).filter(x -> empresaId.equals(x.getEmpresaId())).orElseThrow(() -> new ResourceNotFoundException("ferias", String.valueOf(id)));
-        if ("PROGRAMADA".equals(e.getStatus()) == false) throw new BusinessException("Somente ferias PROGRAMADA pode ser gozada");
+        if (!"PROGRAMADA".equals(e.getStatus())) throw new BusinessException("Somente ferias PROGRAMADA pode ser gozada");
         FolhaPagamento folha = folhas.findById(folhaId).filter(x -> empresaId.equals(x.getEmpresaId())).orElseThrow(() -> new ResourceNotFoundException("folha", String.valueOf(folhaId)));
         if ("PAGA".equals(folha.getStatus()) || "CANCELADA".equals(folha.getStatus())) throw new BusinessException("Folha fechada");
         Funcionario f = funcionarios.findById(e.getFuncionarioId()).orElseThrow(() -> new ResourceNotFoundException("funcionario", String.valueOf(e.getFuncionarioId())));
@@ -68,7 +68,7 @@ public class FeriasService {
     @Transactional
     public Ferias cancelar(Long empresaId, Long id) {
         Ferias e = ferias.findById(id).filter(x -> empresaId.equals(x.getEmpresaId())).orElseThrow(() -> new ResourceNotFoundException("ferias", String.valueOf(id)));
-        if ("PROGRAMADA".equals(e.getStatus()) == false) throw new BusinessException("Somente ferias PROGRAMADA pode ser cancelada");
+        if (!"PROGRAMADA".equals(e.getStatus())) throw new BusinessException("Somente ferias PROGRAMADA pode ser cancelada");
         e.setStatus("CANCELADA");
         return ferias.save(e);
     }

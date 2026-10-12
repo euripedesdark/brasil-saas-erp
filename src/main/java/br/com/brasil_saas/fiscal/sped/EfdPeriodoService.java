@@ -47,7 +47,7 @@ public class EfdPeriodoService {
         List<Nfe> notas = new ArrayList<>();
         notas.addAll(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(empresaId, "S", de, ate));
         notas.addAll(nfes.findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(empresaId, "E", de, ate));
-        notas = notas.stream().filter(n -> cancelada(n.getStatus()) == false).sorted((a, b) -> b.getDataEmissao().compareTo(a.getDataEmissao())).toList();
+        notas = notas.stream().filter(n -> !cancelada(n.getStatus())).sorted((a, b) -> b.getDataEmissao().compareTo(a.getDataEmissao())).toList();
         if (notas.isEmpty()) throw new BusinessException("Sem documentos fiscais no periodo");
         EfdIcms documento = new EfdIcms();
         Bloco0 b0 = new Bloco0();
@@ -57,7 +57,7 @@ public class EfdPeriodoService {
         Map<Long, String> partes = new LinkedHashMap<>();
         Map<String, NfeItem> prods = new LinkedHashMap<>();
         for (Nfe n : notas) {
-            if (n.getPessoaId() != null && partes.containsKey(n.getPessoaId()) == false) {
+            if (n.getPessoaId() != null && !partes.containsKey(n.getPessoaId())) {
                 Pessoa p = pessoas.findById(n.getPessoaId()).filter(x -> empresaId.equals(x.getEmpresaId())).orElse(null);
                 if (p != null) {
                     String cod = "P" + p.getId();
@@ -67,7 +67,7 @@ public class EfdPeriodoService {
                 }
             }
             for (NfeItem it : itens.findByNfeIdOrderByNumeroItem(n.getId())) {
-                String cod = it.getCodigoProduto() != null && it.getCodigoProduto().isBlank() == false ? it.getCodigoProduto() : "PROD-" + it.getProdutoId();
+                String cod = it.getCodigoProduto() != null && !it.getCodigoProduto().isBlank() ? it.getCodigoProduto() : "PROD-" + it.getProdutoId();
                 prods.putIfAbsent(cod, it);
             }
         }
@@ -157,7 +157,7 @@ public class EfdPeriodoService {
             for (NfeItem it : itens.findByNfeIdOrderByNumeroItem(n.getId())) {
                 RegistroC170 i170 = new RegistroC170();
                 i170.setNum_item(it.getNumeroItem() == null ? null : String.valueOf(it.getNumeroItem()));
-                i170.setCod_item(it.getCodigoProduto() != null && it.getCodigoProduto().isBlank() == false ? it.getCodigoProduto() : "PROD-" + it.getProdutoId());
+                i170.setCod_item(it.getCodigoProduto() != null && !it.getCodigoProduto().isBlank() ? it.getCodigoProduto() : "PROD-" + it.getProdutoId());
                 i170.setQtd(it.getQuantidade() == null ? null : it.getQuantidade().toPlainString());
                 i170.setUnid(it.getUnidade());
                 i170.setVl_item(moeda(it.getValorTotal()));

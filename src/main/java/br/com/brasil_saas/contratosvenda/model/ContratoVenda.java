@@ -18,7 +18,7 @@ public class ContratoVenda extends TenantEntity {
     private String numero;
     @Column(name = "cliente_id", nullable = false)
     private Long clienteId;
-    @Column(name = "descricao", length = 255, nullable = false)
+    @Column(name = "descricao", nullable = false)
     private String titulo;
     @Column(length = 30, nullable = false)
     private String status = "RASCUNHO";

@@ -21,7 +21,7 @@ public class MpsService {
         return repo.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
     }
     @Transactional public List<MpsItem> gerar(Long empresaId, String periodo) {
-        if (periodo == null || periodo.matches("\\d{4}-\\d{2}") == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo AAAA-MM obrigatorio");
+        if (periodo == null || !periodo.matches("\\d{4}-\\d{2}")) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo AAAA-MM obrigatorio");
         int ano = Integer.parseInt(periodo.substring(0, 4));
         int mes = Integer.parseInt(periodo.substring(5, 7));
         LocalDate ini = LocalDate.of(ano, mes, 1);
@@ -34,7 +34,7 @@ public class MpsService {
         }
         Map<Long, BigDecimal> demanda = new LinkedHashMap<>();
         for (var p : pedidos.findByEmpresaIdAndPeriodo(empresaId, ini, fim)) {
-            if ("ABERTO".equals(p.getStatus()) == false) continue;
+            if (!"ABERTO".equals(p.getStatus())) continue;
             if (p.getItens() == null) continue;
             for (var it : p.getItens()) {
                 if (it.getProdutoId() == null) continue;

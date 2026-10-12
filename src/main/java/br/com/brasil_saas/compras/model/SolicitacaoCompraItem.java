@@ -23,5 +23,5 @@ public class SolicitacaoCompraItem extends TenantEntity {
     private Long solicitacaoIdRef;
     @Column(name="produto_id",nullable=false) private Long produtoId;
     @Column(nullable=false,precision=15,scale=4) private BigDecimal quantidade;
-    @Column(length=255) private String observacao;
+    @Column private String observacao;
 }

@@ -6,7 +6,7 @@ import java.math.BigDecimal; import java.time.LocalDate;
 public class LancamentoContabil extends AuditableEntity {
     @Column(name="data_lancamento", nullable=false) private LocalDate dataLancamento;
     @Column(name="periodo_contabil_id") private Long periodoContabilId;
-    @Column(name="descricao_historico", length=255, nullable=false) private String descricaoHistorico;
+    @Column(name="descricao_historico", nullable=false) private String descricaoHistorico;
     @Column(name="valor_total", precision=15, scale=2, nullable=false) private BigDecimal valorTotal;
     @Column(length=50) private String origem;
     @Column(name="id_origem") private Long idOrigem;

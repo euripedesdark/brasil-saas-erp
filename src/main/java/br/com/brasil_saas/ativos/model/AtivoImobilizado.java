@@ -11,10 +11,10 @@ import java.time.LocalDate;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class AtivoImobilizado extends TenantEntity {
     @Column(nullable=false,length=50) private String codigo;
-    @Column(nullable=false,length=255) private String descricao;
+    @Column(nullable=false) private String descricao;
     @Column(length=100) private String classe;
     @Column(name="numero_serie",length=100) private String numeroSerie;
-    @Column(length=255) private String localizacao;
+    @Column private String localizacao;
     @Column(name="responsavel_id") private Long responsavelId;
     @Column(name="data_aquisicao") private LocalDate dataAquisicao;
     @Column(name="valor_aquisicao",precision=15,scale=2,nullable=false) private BigDecimal valorAquisicao=BigDecimal.ZERO;

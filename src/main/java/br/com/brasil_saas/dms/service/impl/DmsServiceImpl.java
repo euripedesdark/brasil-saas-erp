@@ -33,8 +33,8 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override public List<DmsDocumento> documentos(Long empresaId, String categoria, String status) {
         List<DmsDocumento> base = documentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
-        if (categoria != null && "".equals(categoria) == false) base = base.stream().filter(d -> categoria.equals(d.getCategoria())).toList();
-        if (status != null && "".equals(status) == false) base = base.stream().filter(d -> status.equals(d.getStatus())).toList();
+        if (categoria != null && !"".equals(categoria)) base = base.stream().filter(d -> categoria.equals(d.getCategoria())).toList();
+        if (status != null && !"".equals(status)) base = base.stream().filter(d -> status.equals(d.getStatus())).toList();
         return base;
     }
     @Override @Transactional public DmsDocumento salvar(Long empresaId, DmsDocumento d) {
@@ -108,7 +108,7 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override @Transactional public DmsAprovacao decidir(Long empresaId, Long userId, Long aprovacaoId, boolean aprovar, String comentario) {
         DmsAprovacao a = exigir(aprovacoes.findByIdAndEmpresaIdAndDeletedAtIsNull(aprovacaoId, empresaId), "Aprovacao inexistente");
-        if ("PENDENTE".equals(a.getStatus()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprovacao ja decidida");
+        if (!"PENDENTE".equals(a.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprovacao ja decidida");
         a.setStatus(aprovar ? "APROVADA" : "REJEITADA");
         a.setDecididoPor(userId);
         a.setDecididoEm(LocalDateTime.now());

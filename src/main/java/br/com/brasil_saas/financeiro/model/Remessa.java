@@ -62,7 +62,7 @@ public class Remessa {
     @Column(name = "documento_hash", length = 64)
     private String documentoHash;
 
-    @Column(name = "nome_arquivo", length = 255)
+    @Column(name = "nome_arquivo")
     private String nomeArquivo;
 
     @Column(name = "criado_em", insertable = false, updatable = false)

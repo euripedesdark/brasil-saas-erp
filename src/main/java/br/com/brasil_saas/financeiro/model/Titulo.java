@@ -19,7 +19,7 @@ public class Titulo extends AuditableEntity {
     @JdbcTypeCode(Types.CHAR)
     @Column(nullable = false, length = 1) private String tipo;
     @Column(name = "numero_documento", length = 100) private String numeroDocumento;
-    @Column(nullable = false, length = 255) private String descricao;
+    @Column(nullable = false) private String descricao;
     @Column(name = "pessoa_id") private Long pessoaId;
     @Column(name = "valor_original", nullable = false, precision = 15, scale = 2) private BigDecimal valorOriginal;
     @Column(name = "valor_saldo", nullable = false, precision = 15, scale = 2) private BigDecimal valorSaldo;

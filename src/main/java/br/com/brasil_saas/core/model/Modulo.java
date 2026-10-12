@@ -29,7 +29,7 @@ public class Modulo {
     @Column(name = "nome", length = 100, nullable = false)
     private String nome;
 
-    @Column(name = "descricao", length = 255)
+    @Column(name = "descricao")
     private String descricao;
 
     @Column(name = "icone", length = 50)

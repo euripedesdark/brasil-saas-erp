@@ -17,5 +17,5 @@ public class AlocacaoCapacidade extends TenantEntity {
     @Column(name = "ordem_producao_id") private Long ordemProducaoId;
     @Column(name = "operacao_roteiro_id") private Long operacaoRoteiroId;
     @Column(nullable = false, length = 20) private String origem = "OP";
-    @Column(length = 255) private String observacao;
+    @Column private String observacao;
 }

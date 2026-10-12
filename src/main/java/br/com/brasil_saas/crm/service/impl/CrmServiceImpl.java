@@ -98,7 +98,7 @@ public class CrmServiceImpl implements CrmService {
     }
     @Override @Transactional public java.util.Map<String, Object> gerarPedido(Long empresaId, Long leadId, Long clienteId) {
         CrmLead l = exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(leadId, empresaId), "Lead inexistente");
-        if ("ABERTO".equals(l.getStatus()) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Lead nao esta aberto");
+        if (!"ABERTO".equals(l.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Lead nao esta aberto");
         PedidoVendaRequest req = new PedidoVendaRequest(empresaId, clienteId, null, "PEDIDO", "ABERTO", java.time.LocalDate.now(), null, null, null, java.math.BigDecimal.ZERO, null, "CRM", "Lead #" + l.getId() + " " + (l.getNome() == null ? "" : l.getNome()), java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, java.util.List.of());
         PedidoVendaResponse pv = pedidos.criar(req.comEmpresaDa(empresaId));
         l.setEtapa("FECHAMENTO");

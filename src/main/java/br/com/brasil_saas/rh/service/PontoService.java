@@ -23,8 +23,8 @@ public class PontoService {
     }
     private void exigirAtivo(Long empresaId, Long funcionarioId) {
         Funcionario f = exigir(funcionarios.findById(funcionarioId), "Funcionario inexistente");
-        if (f.getEmpresaId() == null || f.getEmpresaId().equals(empresaId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionario de outra empresa");
-        if (Boolean.TRUE.equals(f.getAtivo()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Funcionario inativo");
+        if (f.getEmpresaId() == null || !f.getEmpresaId().equals(empresaId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionario de outra empresa");
+        if (!Boolean.TRUE.equals(f.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Funcionario inativo");
     }
     public List<Ponto> espelho(Long empresaId, Long funcionarioId, Integer ano, Integer mes) {
         exigirAtivo(empresaId, funcionarioId);

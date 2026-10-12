@@ -7,5 +7,5 @@ public class OsApontamento extends TenantEntity {
     @Column(name="usuario_id", nullable=false) private Long usuarioId;
     @Column(name="data_apontamento", nullable=false) private LocalDateTime dataApontamento;
     @Column(nullable=false, precision=7, scale=2) private BigDecimal horas;
-    @Column(length=255) private String descricao;
+    @Column private String descricao;
 }

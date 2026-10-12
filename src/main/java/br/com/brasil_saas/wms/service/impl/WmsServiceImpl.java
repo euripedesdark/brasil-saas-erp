@@ -68,9 +68,9 @@ public class WmsServiceImpl implements WmsService {
             .filter(r -> "RESERVADA".equals(r.getStatus()) && depositoId.equals(r.getDepositoId()) && r.getProdutoId() != null && r.getQuantidade() != null && r.getQuantidade().signum() > 0).toList();
         java.util.Set<Long> emOnda = new java.util.HashSet<>();
         for (WmsOndaItem i : itens.findByEmpresaIdAndDeletedAtIsNull(empresaId)) {
-            if ("RESERVA".equals(i.getOrigemTipo()) && i.getOrigemId() != null && "SEPARADO".equals(i.getStatus()) == false) emOnda.add(i.getOrigemId());
+            if ("RESERVA".equals(i.getOrigemTipo()) && i.getOrigemId() != null && !"SEPARADO".equals(i.getStatus())) emOnda.add(i.getOrigemId());
         }
-        List<ReservaEstoque> novas = rs.stream().filter(r -> emOnda.contains(r.getId()) == false).toList();
+        List<ReservaEstoque> novas = rs.stream().filter(r -> !emOnda.contains(r.getId())).toList();
         if (novas.isEmpty()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem reservas pendentes no deposito");
         WmsOnda o = new WmsOnda();
         o.setDepositoId(depositoId);

@@ -17,7 +17,7 @@ public class FluxoCaixaService {
         LocalDate hoje = LocalDate.now();
         Map<Long, BigDecimal[]> semanas = new TreeMap<>();
         for (Titulo t : titulos.findByEmpresaIdAndDeletedAtIsNullOrderByDataVencimento(empresaId)) {
-            if ("ABERTO".equals(t.getStatus()) == false && "PARCIAL".equals(t.getStatus()) == false) continue;
+            if (!"ABERTO".equals(t.getStatus()) && !"PARCIAL".equals(t.getStatus())) continue;
             if (t.getDataVencimento() == null) continue;
             long diff = ChronoUnit.DAYS.between(hoje, t.getDataVencimento());
             if (diff < 0 || diff > dias) continue;

@@ -179,7 +179,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         if (!"ABERTO".equals(pedido.getStatus()) || !"PEDIDO".equalsIgnoreCase(pedido.getTipo())) {
             throw new BusinessException("Somente pedidos ABERTOS podem ser faturados");
         }
-        if (forcar == false) validarCredito(pedido);
+        if (!forcar) validarCredito(pedido);
 
         baixarEstoqueDoPedido(pedido);
 
@@ -236,7 +236,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
     @Transactional
     public Map<String, Object> abrirPosVenda(Long id, Long empresaId, Long usuarioId, String motivo, String equipamento) {
         PedidoVenda pedido = pedidoBloqueado(id, empresaId);
-        if ("FATURADO".equals(pedido.getStatus()) == false) throw new BusinessException("Somente pedido faturado gera pos-venda");
+        if (!"FATURADO".equals(pedido.getStatus())) throw new BusinessException("Somente pedido faturado gera pos-venda");
         if (motivo == null || motivo.isBlank()) throw new BusinessException("Motivo obrigatorio");
         var os = osService.abrir(empresaId, usuarioId, new OrdemServicoService.AberturaReq(pedido.getClienteId(), equipamento == null || equipamento.isBlank() ? "Pos-venda pedido " + pedido.getNumero() : equipamento, "Pos-venda do pedido " + pedido.getNumero() + ": " + motivo, null));
         Map<String, Object> m = new LinkedHashMap<>();
@@ -283,7 +283,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
             limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
             for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, cli.getPessoa().getId())) {
                 if (!"R".equals(x.getTipo())) continue;
-                if ("ABERTO".equals(x.getStatus()) == false && "PARCIAL".equals(x.getStatus()) == false) continue;
+                if (!"ABERTO".equals(x.getStatus()) && !"PARCIAL".equals(x.getStatus())) continue;
                 emAberto = emAberto.add(x.getValorSaldo() == null ? java.math.BigDecimal.ZERO : x.getValorSaldo());
             }
         }

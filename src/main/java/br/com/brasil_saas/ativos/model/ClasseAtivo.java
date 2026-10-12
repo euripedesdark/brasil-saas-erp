@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Getter @Setter @NoArgsConstructor
 public class ClasseAtivo extends TenantEntity {
     @Column(nullable=false,length=30) private String codigo;
-    @Column(nullable=false,length=255) private String descricao;
+    @Column(nullable=false) private String descricao;
     @Column(name="metodo_depreciacao",nullable=false,length=30) private String metodoDepreciacao="LINEAR";
     @Column(name="vida_util_meses") private Integer vidaUtilMeses;
     @Column(name="taxa_anual",precision=7,scale=4) private BigDecimal taxaAnual;

@@ -43,7 +43,7 @@ public class ObrigacaoService {
         final String comp = competencia;
         List<Map<String, Object>> out = new ArrayList<>();
         for (FisObrigacao o : repo.findByEmpresaIdAndDeletedAtIsNull(empresaId)) {
-            if (Boolean.TRUE.equals(o.getAtiva()) == false) continue;
+            if (!Boolean.TRUE.equals(o.getAtiva())) continue;
             var ent = entregas.findByObrigacaoIdAndEmpresaIdAndCompetenciaAndDeletedAtIsNull(o.getId(), empresaId, comp);
             String status = ent.map(FisObrigacaoEntrega::getStatus).orElse("PENDENTE");
             LocalDate venc = null;

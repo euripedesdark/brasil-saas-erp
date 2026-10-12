@@ -36,7 +36,7 @@ public class RetornoBancario {
     @Column(name = "tipo", length = 10, nullable = false)
     private String tipo = "cnab240";
 
-    @Column(name = "nome_arquivo", length = 255)
+    @Column(name = "nome_arquivo")
     private String nomeArquivo;
 
     @Column(name = "data_arquivo")

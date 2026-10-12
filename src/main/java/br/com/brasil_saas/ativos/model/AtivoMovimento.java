@@ -22,8 +22,8 @@ public class AtivoMovimento extends TenantEntity {
     @Column(name="lancamento_id") private Long lancamentoId;
     @Column(name="centro_custo_origem_id") private Long centroCustoOrigemId;
     @Column(name="centro_custo_destino_id") private Long centroCustoDestinoId;
-    @Column(name="localizacao_origem",length=255) private String localizacaoOrigem;
-    @Column(name="localizacao_destino",length=255) private String localizacaoDestino;
+    @Column(name="localizacao_origem") private String localizacaoOrigem;
+    @Column(name="localizacao_destino") private String localizacaoDestino;
     @Column(name="responsavel_origem_id") private Long responsavelOrigemId;
     @Column(name="responsavel_destino_id") private Long responsavelDestinoId;
     @Column(length=60) private String documento;

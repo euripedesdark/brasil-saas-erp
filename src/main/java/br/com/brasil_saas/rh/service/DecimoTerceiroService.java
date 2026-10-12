@@ -20,7 +20,7 @@ public class DecimoTerceiroService {
         if (parcela != 1 && parcela != 2) throw new BusinessException("Parcela invalida, use 1 ou 2");
         String competencia = "13/" + ano;
         FolhaPagamento folha = folhas.findByEmpresaIdOrderByCompetenciaDesc(empresaId).stream()
-                .filter(f -> competencia.equals(f.getCompetencia()) && "CANCELADA".equals(f.getStatus()) == false)
+                .filter(f -> competencia.equals(f.getCompetencia()) && !"CANCELADA".equals(f.getStatus()))
                 .findFirst().orElse(null);
         if (folha == null) {
             folha = new FolhaPagamento();

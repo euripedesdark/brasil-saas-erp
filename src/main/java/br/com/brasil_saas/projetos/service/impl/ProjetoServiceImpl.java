@@ -78,7 +78,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjEtapa avancarEtapa(Long empresaId, Long projetoId, Long etapaId, Integer pct) {
         exigirProjeto(empresaId, projetoId);
         PrjEtapa e = exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(etapaId, empresaId), "Etapa inexistente");
-        if (e.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Etapa de outro projeto");
+        if (!e.getProjetoId().equals(projetoId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Etapa de outro projeto");
         int p = Math.min(100, Math.max(0, pct == null ? 0 : pct));
         if(p>0) dependenciaService.validarAvanco(empresaId,projetoId,etapaId);
         e.setConcluidaEm(p==100?(e.getConcluidaEm()==null?LocalDateTime.now():e.getConcluidaEm()):null);
@@ -94,7 +94,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     }
     @Override @Transactional public PrjMovimento lancarMovimento(Long empresaId, Long projetoId, PrjMovimento m) {
         exigirProjeto(empresaId, projetoId);
-        if ("CUSTO".equals(m.getTipo()) == false && "RECEITA".equals(m.getTipo()) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
+        if (!"CUSTO".equals(m.getTipo()) && !"RECEITA".equals(m.getTipo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
         if (m.getEtapaId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
         m.setId(null);
         m.setEmpresaId(empresaId);
@@ -132,8 +132,8 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjMudanca decidirMudanca(Long empresaId, Long userId, Long projetoId, Long mudancaId, boolean aprovar) {
         exigirProjeto(empresaId, projetoId);
         PrjMudanca m = exigir(mudancas.findByIdAndEmpresaIdAndDeletedAtIsNull(mudancaId, empresaId), "Mudanca inexistente");
-        if (m.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
-        if ("SOLICITADA".equals(m.getStatus()) == false) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
+        if (!m.getProjetoId().equals(projetoId)) throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
+        if (!"SOLICITADA".equals(m.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
         WkfDefinition d = workflow.definitions(empresaId).stream().filter(x -> "MUDANCA_PROJETO".equals(x.getEntidadeAlvo()) && Boolean.TRUE.equals(x.getAtivo())).findFirst().orElseGet(() -> {
             WkfDefinition n = new WkfDefinition();
             n.setCodigo("PRJ-MUDANCA");
@@ -182,7 +182,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     private PrjFaturamento faturarComNfse(Long empresaId, Long projetoId, Long faturamentoId, Long servicoId, Long clienteId) {
         exigirProjeto(empresaId, projetoId);
         PrjFaturamento f = exigir(faturamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(faturamentoId, empresaId), "Faturamento inexistente");
-        if (f.getProjetoId().equals(projetoId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
+        if (!f.getProjetoId().equals(projetoId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
         if ("FATURADO".equalsIgnoreCase(f.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento já foi realizado");
         if (f.getValor() == null || f.getValor().signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento deve possuir valor positivo");
         Titulo t = new Titulo();
@@ -246,7 +246,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         m.put("margem", receita.subtract(custo));
         java.util.List<java.util.Map<String, Object>> expo = new java.util.ArrayList<>();
         for (PrjRisco r : riscos.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(projetoId, empresaId)) {
-            if ("ABERTO".equals(r.getStatus()) == false) continue;
+            if (!"ABERTO".equals(r.getStatus())) continue;
             int prob = r.getProbabilidade() == null ? 0 : r.getProbabilidade();
             String imp = r.getImpacto() == null ? "" : r.getImpacto().trim().toUpperCase();
             int peso = "BAIXO".equals(imp) ? 1 : "ALTO".equals(imp) ? 3 : "CRITICO".equals(imp) ? 4 : 2;

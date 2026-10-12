@@ -35,9 +35,9 @@ public class PortalServiceImpl implements PortalService {
     }
     @Override @Transactional public PtlAcesso gerar(Long empresaId, Long userId, String tipo, Long pessoaId, Integer diasValidade) {
         List<String> tipos = List.of("CLIENTE", "FORNECEDOR", "FUNCIONARIO");
-        if (tipos.contains(tipo) == false) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo invalido");
+        if (!tipos.contains(tipo)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo invalido");
         Pessoa p = exigir(pessoas.findById(pessoaId), "Pessoa inexistente");
-        if (p.getEmpresaId() == null || p.getEmpresaId().equals(empresaId) == false) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa de outra empresa");
+        if (p.getEmpresaId() == null || !p.getEmpresaId().equals(empresaId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa de outra empresa");
         byte[] b = new byte[24];
         new SecureRandom().nextBytes(b);
         StringBuilder sb = new StringBuilder();
@@ -57,7 +57,7 @@ public class PortalServiceImpl implements PortalService {
     }
     private PtlAcesso exigirToken(String token) {
         PtlAcesso a = exigir(acessos.findByTokenAndDeletedAtIsNull(token), "Token invalido");
-        if (Boolean.TRUE.equals(a.getAtivo()) == false || a.getExpiraEm().isBefore(LocalDateTime.now())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token expirado ou revogado");
+        if (!Boolean.TRUE.equals(a.getAtivo()) || a.getExpiraEm().isBefore(LocalDateTime.now())) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token expirado ou revogado");
         return a;
     }
     @Override @Transactional public Map<String, Object> validar(String token) {
@@ -84,9 +84,9 @@ public class PortalServiceImpl implements PortalService {
         if (verTitulos) {
             List<Map<String, Object>> tit = new ArrayList<>();
             for (Titulo t : titulos.findByEmpresaIdAndDeletedAtIsNullOrderByDataVencimento(empresaId)) {
-                if (a.getPessoaId().equals(t.getPessoaId()) == false) continue;
+                if (!a.getPessoaId().equals(t.getPessoaId())) continue;
                 boolean aberto = "ABERTO".equals(t.getStatus()) || "PARCIAL".equals(t.getStatus());
-                if (aberto == false) continue;
+                if (!aberto) continue;
                 Map<String, Object> x = new LinkedHashMap<>();
                 x.put("id", t.getId());
                 x.put("descricao", t.getDescricao());
@@ -115,7 +115,7 @@ public class PortalServiceImpl implements PortalService {
             var forn = fornecedores.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, a.getPessoaId());
             if (forn.isPresent()) {
                 for (var pc : pedidosCompra.findByEmpresaIdOrderByDataEmissaoDesc(empresaId)) {
-                    if (forn.get().getId().equals(pc.getFornecedorId()) == false) continue;
+                    if (!forn.get().getId().equals(pc.getFornecedorId())) continue;
                     Map<String, Object> x = new LinkedHashMap<>();
                     x.put("id", pc.getId());
                     x.put("status", pc.getStatus() == null ? "" : pc.getStatus());

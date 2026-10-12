@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class ManutencaoMaterial extends TenantEntity {
     @Column(name="manutencao_id",nullable=false) private Long manutencaoId;
     @Column(name="produto_id") private Long produtoId;
-    @Column(nullable=false,length=255) private String descricao;
+    @Column(nullable=false) private String descricao;
     @Column(precision=15,scale=4,nullable=false) private BigDecimal quantidade=BigDecimal.ZERO;
     @Column(name="custo_unitario",precision=15,scale=4,nullable=false) private BigDecimal custoUnitario=BigDecimal.ZERO;
     @Column(name="custo_total",precision=15,scale=2,nullable=false) private BigDecimal custoTotal=BigDecimal.ZERO;

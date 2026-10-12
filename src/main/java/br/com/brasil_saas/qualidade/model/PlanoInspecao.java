@@ -9,7 +9,7 @@ import lombok.*;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class PlanoInspecao extends TenantEntity {
     @Column(nullable=false, length=50) private String codigo;
-    @Column(nullable=false, length=255) private String descricao;
+    @Column(nullable=false) private String descricao;
     @Column(nullable=false, length=30) private String tipo;
     @Column(nullable=false) private Boolean ativo = true;
 }

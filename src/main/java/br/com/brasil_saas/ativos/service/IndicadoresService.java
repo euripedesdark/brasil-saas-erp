@@ -60,7 +60,7 @@ public class IndicadoresService {
             if (falhas.size() <= 1) continue;
             long mtbf = Math.round((double) ChronoUnit.DAYS.between(falhas.get(0), falhas.get(falhas.size() - 1)) / (falhas.size() - 1));
             if (mtbf <= 0) continue;
-            boolean aberta = ms.stream().anyMatch(m -> "PREVENTIVA".equals(m.getTipo()) && "CONCLUIDA".equals(m.getStatus()) == false && "CANCELADA".equals(m.getStatus()) == false);
+            boolean aberta = ms.stream().anyMatch(m -> "PREVENTIVA".equals(m.getTipo()) && !"CONCLUIDA".equals(m.getStatus()) && !"CANCELADA".equals(m.getStatus()));
             if (aberta) continue;
             LocalDate ultima = falhas.get(falhas.size() - 1);
             LocalDate prevista = ultima.plusDays(mtbf);

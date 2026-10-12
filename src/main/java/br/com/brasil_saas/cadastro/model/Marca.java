@@ -11,6 +11,6 @@ import lombok.Setter;
 public class Marca extends TenantEntity {
     @Column(length = 100, nullable = false)
     private String nome;
-    @Column(length = 255)
+    @Column
     private String descricao;
 }

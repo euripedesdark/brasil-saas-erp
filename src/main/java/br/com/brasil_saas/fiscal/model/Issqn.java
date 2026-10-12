@@ -26,7 +26,7 @@ public class Issqn {
     @Column(length = 20, nullable = false, unique = true)
     private String codigo;
 
-    @Column(length = 255, nullable = false)
+    @Column(nullable = false)
     private String descricao;
 
     @Column(name = "aliquota", precision = 7, scale = 4)

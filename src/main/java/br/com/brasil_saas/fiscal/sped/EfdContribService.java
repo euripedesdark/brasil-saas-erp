@@ -127,7 +127,7 @@ public class EfdContribService {
         if (imp == null) throw new BusinessException("Imposto " + sigla + " nao cadastrado");
         Apuracao enc = null; Apuracao aberta = null;
         for (Apuracao a : apuracoes.findByEmpresaIdOrderByCompetenciaDesc(empresaId)) {
-            if (a.getImpostoId().equals(imp.getId()) == false || competencia.equals(a.getCompetencia()) == false) continue;
+            if (!a.getImpostoId().equals(imp.getId()) || !competencia.equals(a.getCompetencia())) continue;
             if ("ENCERRADA".equals(a.getStatus()) || "TRANSMITIDA".equals(a.getStatus())) enc = a;
             else aberta = a;
         }
