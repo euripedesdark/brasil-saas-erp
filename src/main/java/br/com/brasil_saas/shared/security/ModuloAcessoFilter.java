@@ -3,6 +3,7 @@ package br.com.brasil_saas.shared.security;
 import java.io.IOException;
 import java.util.Set;
 
+import org.springframework.lang.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -91,9 +92,7 @@ public class ModuloAcessoFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain) throws ServletException, IOException {
 
         // Como veio na URL e' o que a mensagem de erro mostra: e' com essa
         // grafia que o nome aparece no @RequestMapping, que e' onde se procura

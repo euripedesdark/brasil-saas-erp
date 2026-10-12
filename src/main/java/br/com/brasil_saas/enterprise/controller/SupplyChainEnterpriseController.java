@@ -68,7 +68,7 @@ public class SupplyChainEnterpriseController {
  @PreAuthorize("hasAuthority('plm:escrita')")
  public Map<String,Object> enviarParaAprovacao(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable Long id){
   ensure("select count(*) from brasil_saas.bc_plm_mudanca where id=? and empresa_id=? and status in ('ABERTA','EM_DESENVOLVIMENTO')",id,u.getEmpresaId(),"Mudança não está disponível para aprovação");
-  int efeitos=jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId());
+  int efeitos=java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId())).orElse(0);
   if(efeitos==0) throw new IllegalStateException("A mudança precisa ter pelo menos um efeito de engenharia antes da aprovação");
   jdbc.update("update brasil_saas.bc_plm_mudanca set status='EM_APROVACAO',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
   jdbc.update("insert into brasil_saas.bc_plm_aprovacao(empresa_id,mudanca_id,etapa,aprovador_id,decisao,obrigatoria) values(?,?,1,null,'PENDENTE',true) on conflict(empresa_id,mudanca_id,etapa) do nothing",u.getEmpresaId(),id);
@@ -95,7 +95,7 @@ public class SupplyChainEnterpriseController {
   String acao=String.valueOf(b.getOrDefault("acao",""));
   Long entidade=longValue(b.get("entidadeId"));
   validarEfeito(u,tipo,acao,entidade);
-  Integer ordem=integerValue(b.get("ordemExecucao"),jdbc.queryForObject("select coalesce(max(ordem_execucao),0)+1 from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId()));
+  Integer ordem=integerValue(b.get("ordemExecucao"),java.util.Optional.ofNullable(jdbc.queryForObject("select coalesce(max(ordem_execucao),0)+1 from brasil_saas.bc_plm_efeito_mudanca where mudanca_id=? and empresa_id=?",Integer.class,id,u.getEmpresaId())).orElse(1));
   jdbc.update("insert into brasil_saas.bc_plm_efeito_mudanca(empresa_id,mudanca_id,entidade_tipo,entidade_id,acao,revisao_anterior,revisao_nova,efetiva_em,status,observacao,ordem_execucao,obrigatorio) values(?,?,?,?,?,?,?,?, 'PENDENTE',?,?,?)",
    u.getEmpresaId(),id,tipo,entidade,acao,b.get("revisaoAnterior"),b.get("revisaoNova"),b.get("efetivaEm"),ordem,b.get("observacao"),b.getOrDefault("obrigatorio",true));
   return Map.of("ok",true,"ordemExecucao",ordem);
@@ -112,7 +112,7 @@ public class SupplyChainEnterpriseController {
    decisao,u.getId(),b.get("observacao"),u.getEmpresaId(),id,etapa);
   if("REJEITADO".equals(decisao)) jdbc.update("update brasil_saas.bc_plm_mudanca set status='REJEITADA',updated_at=now() where id=? and empresa_id=?",id,u.getEmpresaId());
   else {
-   int pendentes=jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_aprovacao where empresa_id=? and mudanca_id=? and obrigatoria=true and decisao='PENDENTE'",Integer.class,u.getEmpresaId(),id);
+   int pendentes=java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_plm_aprovacao where empresa_id=? and mudanca_id=? and obrigatoria=true and decisao='PENDENTE'",Integer.class,u.getEmpresaId(),id)).orElse(0);
    if(pendentes==0) jdbc.update("update brasil_saas.bc_plm_mudanca set status='APROVADA',aprovador_id=?,aprovado_em=now(),updated_at=now() where id=? and empresa_id=?",u.getId(),id,u.getEmpresaId());
   }
   return workflow(u,id);

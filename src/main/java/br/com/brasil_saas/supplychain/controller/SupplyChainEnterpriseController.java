@@ -20,9 +20,9 @@ public class SupplyChainEnterpriseController {
    // localId = deposito. Sem localId, considera todos os depositos da empresa.
    String fl=localId==null?"":" and deposito_id=?";
    Object[] pe=localId==null?new Object[]{e,produtoId}:new Object[]{e,produtoId,localId};
-   java.math.BigDecimal est=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_saldo where empresa_id=? and produto_id=? and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
+   java.math.BigDecimal est=java.util.Objects.requireNonNullElse(jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_saldo where empresa_id=? and produto_id=? and deleted_at is null"+fl,java.math.BigDecimal.class,pe),java.math.BigDecimal.ZERO);
    // Status reais de reserva: RESERVADA e SEPARACAO (nao existe ATIVA).
-   java.math.BigDecimal res=jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('RESERVADA','SEPARACAO') and deleted_at is null"+fl,java.math.BigDecimal.class,pe);
+   java.math.BigDecimal res=java.util.Objects.requireNonNullElse(jdbc.queryForObject("select coalesce(sum(quantidade),0) from brasil_saas.bc_est_reserva where empresa_id=? and produto_id=? and status in ('RESERVADA','SEPARACAO') and deleted_at is null"+fl,java.math.BigDecimal.class,pe),java.math.BigDecimal.ZERO);
    // Entradas futuras: pedidos de compra em aberto com previsao de entrega (pedido nao tem deposito,
    // entao so entram quando o calculo e da empresa toda).
    List<AtpTemporalCalculator.Movimento> entradas=new ArrayList<>();

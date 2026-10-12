@@ -261,7 +261,7 @@ public class RiskTransportEnterpriseController {
         return Map.of("ok",true);
     }
 
-    private void ensure(String sql,Object id,Object empresa,String msg){if(id==null||jdbc.queryForObject(sql,Integer.class,id,empresa)==0)throw new IllegalArgumentException(msg);}
+    private void ensure(String sql,Object id,Object empresa,String msg){if(id==null||java.util.Optional.ofNullable(jdbc.queryForObject(sql,Integer.class,id,empresa)).orElse(0)==0)throw new IllegalArgumentException(msg);}
     private static int intValue(Object v){return v==null?0:Integer.parseInt(v.toString());}
     private static String required(Map<String,Object>b,String k){Object v=b.get(k);if(v==null||v.toString().isBlank())throw new IllegalArgumentException(k+" é obrigatório");return v.toString();}
     private static double number(Object v){return v==null?0:Double.parseDouble(v.toString());}

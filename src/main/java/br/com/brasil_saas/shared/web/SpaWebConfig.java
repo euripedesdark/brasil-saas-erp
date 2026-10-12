@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -23,7 +24,7 @@ import java.io.IOException;
 public class SpaWebConfig implements WebMvcConfigurer {
 
     @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/assets/**")
                 .addResourceLocations("classpath:/static/dist/assets/");
         registry.addResourceHandler("/dist/assets/**")
@@ -34,9 +35,9 @@ public class SpaWebConfig implements WebMvcConfigurer {
     public OncePerRequestFilter spaForwardFilter() {
         return new OncePerRequestFilter() {
             @Override
-            protected void doFilterInternal(HttpServletRequest request,
-                                            HttpServletResponse response,
-                                            FilterChain filterChain)
+            protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                            @NonNull HttpServletResponse response,
+                                            @NonNull FilterChain filterChain)
                     throws ServletException, IOException {
 
                 String uri = request.getRequestURI();
