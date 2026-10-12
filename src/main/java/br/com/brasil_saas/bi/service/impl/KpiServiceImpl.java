@@ -5,6 +5,7 @@ import br.com.brasil_saas.bi.dto.KpiResponse;
 import br.com.brasil_saas.bi.model.Kpi;
 import br.com.brasil_saas.bi.repository.KpiRepository;
 import br.com.brasil_saas.bi.service.KpiService;
+import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.web.PageResponse;
 import jakarta.persistence.EntityManager;
@@ -149,7 +150,9 @@ public class KpiServiceImpl implements KpiService {
         
         try {
             if (kpi.getQueryFormula().toUpperCase().startsWith("SELECT")) {
+                ReportSqlParameters.validate(kpi.getQueryFormula());
                 Query query = entityManager.createNativeQuery(kpi.getQueryFormula());
+                query.setMaxResults(1);
                 return query.getSingleResult();
             } else {
                 return evaluateFormula(kpi.getQueryFormula(), empresaId);

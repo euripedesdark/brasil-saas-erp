@@ -6,6 +6,7 @@ import br.com.brasil_saas.bi.model.ReportParameter;
 import br.com.brasil_saas.bi.repository.ReportParameterRepository;
 import br.com.brasil_saas.bi.repository.ReportRepository;
 import br.com.brasil_saas.bi.service.ReportService;
+import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import br.com.brasil_saas.shared.web.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -197,6 +198,7 @@ public class ReportServiceImpl implements ReportService {
 
         Map<String, Object> values = parameters == null ? Map.of() : parameters;
         String normalized = query;
+        ReportSqlParameters.validate(normalized);
         MapSqlParameterSource source = new MapSqlParameterSource();
 
         for (Map.Entry<String, Object> entry : values.entrySet()) {

@@ -20,6 +20,11 @@ public final class ReportSqlParameters {
      * valor bindavel; por isso ele precisa ser validado antes de executar.
      * Valores variaveis continuam sendo enviados separadamente ao JDBC.
      */
+    /** Valida que o SQL e somente-leitura (SELECT/WITH, sem escrita, sem encadeamento). */
+    public static void validate(String sql) {
+        validateReadOnly(sql);
+    }
+
     private static void validateReadOnly(String sql) {
         if (sql == null || sql.isBlank()) {
             throw new IllegalArgumentException("SQL do relatorio vazio");

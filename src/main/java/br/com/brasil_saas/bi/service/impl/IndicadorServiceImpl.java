@@ -4,6 +4,7 @@ import br.com.brasil_saas.bi.dto.IndicadorRequest;
 import br.com.brasil_saas.bi.model.Indicador;
 import br.com.brasil_saas.bi.repository.IndicadorRepository;
 import br.com.brasil_saas.bi.service.IndicadorService;
+import br.com.brasil_saas.bi.service.ReportSqlParameters;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -193,6 +194,7 @@ public class IndicadorServiceImpl implements IndicadorService {
         try {
             // Se for uma query SQL
             if (formula.trim().toUpperCase().startsWith("SELECT")) {
+                ReportSqlParameters.validate(formula);
                 List<Map<String, Object>> resultados = jdbcTemplate.queryForList(formula, empresaId);
                 if (!resultados.isEmpty() && resultados.get(0).containsKey("valor")) {
                     Object valorObj = resultados.get(0).get("valor");
