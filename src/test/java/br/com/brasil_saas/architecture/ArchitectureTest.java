@@ -5,6 +5,7 @@ import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
 import org.junit.jupiter.api.BeforeAll;
+import com.tngtech.archunit.library.freeze.FreezingArchRule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,7 @@ class ArchitectureTest {
                 .should().resideInAPackage("..controller..")
                 .because("controllers HTTP ficam em pacotes controller");
 
-        rule.check(classes);
+        FreezingArchRule.freeze(rule).check(classes);
     }
 
     @Test
@@ -59,7 +60,7 @@ class ArchitectureTest {
                 .should().resideInAPackage("..repository..")
                 .because("repositórios JPA ficam em pacotes repository");
 
-        rule.check(classes);
+        FreezingArchRule.freeze(rule).check(classes);
     }
 
     // -------------------------------------------------------------------------
