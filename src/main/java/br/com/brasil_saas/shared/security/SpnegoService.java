@@ -59,9 +59,8 @@ public class SpnegoService {
             return null;
         }
 
-        byte[] tiquete;
         try {
-            tiquete = Base64.getDecoder().decode(tokenBruto.trim());
+            Base64.getDecoder().decode(tokenBruto.trim());
         } catch (IllegalArgumentException e) {
             log.debug("Token Negotiate não é Base64 válido: {}", e.getMessage());
             return null;

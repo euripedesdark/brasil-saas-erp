@@ -18,6 +18,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     private <T> T exigir(java.util.Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(java.util.Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     @Override public List<WkfDefinition> definitions(Long empresaId) {
         return definitions.findByEmpresaIdAndDeletedAtIsNull(empresaId);
     }
@@ -38,7 +41,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         return d;
     }
     @Override public List<WkfStage> stages(Long empresaId, Long definitionId) {
-        exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
+        garantir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
         return stages.findByDefinitionIdAndEmpresaIdAndDeletedAtIsNullOrderByOrdem(definitionId, empresaId);
     }
     @Override @Transactional public WkfInstance abrir(Long empresaId, Long userId, String entidadeTipo, Long entidadeId, Long definitionId, String observacao) {
@@ -91,7 +94,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         return instances.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, status);
     }
     @Override public List<WkfTask> tasks(Long empresaId, Long instanceId) {
-        exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId), "Instancia inexistente");
+        garantir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId), "Instancia inexistente");
         return tasks.findByInstanceIdAndEmpresaIdAndDeletedAtIsNull(instanceId, empresaId);
     }
     @Override public java.util.Optional<WkfInstance> instanciaPara(Long empresaId, String entidadeTipo, Long entidadeId) {

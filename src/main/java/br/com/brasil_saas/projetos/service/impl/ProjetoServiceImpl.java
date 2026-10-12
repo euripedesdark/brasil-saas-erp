@@ -46,6 +46,9 @@ public class ProjetoServiceImpl implements ProjetoService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     private PrjProjeto exigirProjeto(Long empresaId, Long id) {
         return exigir(projetos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Projeto inexistente");
     }

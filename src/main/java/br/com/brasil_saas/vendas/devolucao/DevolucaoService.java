@@ -40,9 +40,12 @@ public class DevolucaoService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     public List<VenDevolucao> listar(Long empresaId) { return devolucoes.findByEmpresaIdAndDeletedAtIsNullOrderByIdDesc(empresaId); }
     public List<VenDevolucaoItem> itens(Long empresaId, Long id) {
-        exigir(devolucoes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Devolucao inexistente");
+        garantir(devolucoes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Devolucao inexistente");
         return itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
     }
     @Transactional public VenDevolucao solicitar(Long empresaId, Long pedidoId, String motivo, Map<Long, BigDecimal> itensQtd) {

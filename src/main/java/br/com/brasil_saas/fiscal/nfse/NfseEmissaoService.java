@@ -223,8 +223,8 @@ public class NfseEmissaoService {
         }
 
         Map<String, Object> resposta;
-        Integer httpStatus = null;
-        Long duracaoMs = null;
+        Integer httpStatus;
+        Long duracaoMs;
         RuntimeException falha = null;
         // ---- 1) registra a intencao ANTES de chamar a prefeitura ----
         Nfse nfse = new Nfse();
@@ -419,8 +419,8 @@ public class NfseEmissaoService {
         // assinado. SP/Rondonopolis continuam no contrato municipal legado.
         if (nacional) {
             Map<String, Object> resposta;
-            Integer httpStatus = null;
-            Long duracaoMs = null;
+            Integer httpStatus;
+            Long duracaoMs;
             RuntimeException falha = null;
             long inicio = System.nanoTime();
             try {
@@ -499,8 +499,8 @@ public class NfseEmissaoService {
         }
 
         Map<String, Object> resposta;
-        Integer httpStatus = null;
-        Long duracaoMs = null;
+        Integer httpStatus;
+        Long duracaoMs;
         RuntimeException falha = null;
         long inicio = System.nanoTime();
         try {

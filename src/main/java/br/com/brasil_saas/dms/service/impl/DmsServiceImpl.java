@@ -23,6 +23,9 @@ public class DmsServiceImpl implements DmsService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     private static String sha256(byte[] b) {
         try {
             byte[] h = MessageDigest.getInstance("SHA-256").digest(b);
@@ -75,7 +78,7 @@ public class DmsServiceImpl implements DmsService {
         return ver;
     }
     @Override public List<DmsVersao> versoes(Long empresaId, Long documentoId) {
-        exigir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId), "Documento inexistente");
+        garantir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId), "Documento inexistente");
         return versoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId);
     }
     @Override public Map<String, Object> download(Long empresaId, Long versaoId) {
@@ -89,7 +92,7 @@ public class DmsServiceImpl implements DmsService {
         return m;
     }
     public byte[] bytes(Long empresaId, Long versaoId) {
-        exigir(versoes.findByIdAndEmpresaIdAndDeletedAtIsNull(versaoId, empresaId), "Versao inexistente");
+        garantir(versoes.findByIdAndEmpresaIdAndDeletedAtIsNull(versaoId, empresaId), "Versao inexistente");
         ImagemDocumento doc = exigir(mongo.findByEmpresaIdAndTipoEntidadeAndEntidadeId(empresaId, "dms-versao", versaoId), "Conteudo indisponivel");
         return doc.getConteudo();
     }
@@ -103,7 +106,7 @@ public class DmsServiceImpl implements DmsService {
         return aprovacoes.save(a);
     }
     @Override public List<DmsAprovacao> aprovacoes(Long empresaId, Long documentoId) {
-        exigir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId), "Documento inexistente");
+        garantir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId), "Documento inexistente");
         return aprovacoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId);
     }
     @Override @Transactional public DmsAprovacao decidir(Long empresaId, Long userId, Long aprovacaoId, boolean aprovar, String comentario) {

@@ -35,6 +35,9 @@ public class WmsServiceImpl implements WmsService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     @Override public List<WmsOnda> ondas(Long empresaId, String status) {
         if (status == null || status.isBlank()) return ondas.findByEmpresaIdAndDeletedAtIsNull(empresaId);
         return ondas.findByEmpresaIdAndStatusAndDeletedAtIsNull(empresaId, status);
@@ -169,7 +172,7 @@ public class WmsServiceImpl implements WmsService {
         return m;
     }
     @Override public List<WmsVolume> volumes(Long empresaId, Long expedicaoId) {
-        exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
+        garantir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
         return volumes.findByExpedicaoIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId);
     }
     @Override @Transactional public WmsVolume criarVolume(Long empresaId, WmsVolume v) {
@@ -216,7 +219,7 @@ public class WmsServiceImpl implements WmsService {
         return volumes.save(v);
     }
     @Override public Map<String, Object> conferir(Long empresaId, Long expedicaoId) {
-        exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
+        garantir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
         Map<Long, BigDecimal> esperado = new LinkedHashMap<>();
         for (ExpedicaoEstoqueItem e : expedicaoItens.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(empresaId, expedicaoId))
             esperado.merge(e.getProdutoId(), e.getQuantidade(), BigDecimal::add);

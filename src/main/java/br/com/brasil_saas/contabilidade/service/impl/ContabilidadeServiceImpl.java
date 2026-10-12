@@ -24,6 +24,9 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     private String periodoDe(LocalDate d) { return String.format("%04d-%02d", d.getYear(), d.getMonthValue()); }
     private void exigirAberto(Long empresaId, String periodo) {
         boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
@@ -54,7 +57,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     }
     @Override @Transactional public CtbPartida addPartida(Long empresaId, Long lancamentoId, CtbPartida p) {
         exigirRascunho(empresaId, lancamentoId);
-        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(p.getContaId(), empresaId), "Conta inexistente");
+        garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(p.getContaId(), empresaId), "Conta inexistente");
         BigDecimal d = p.getDebito() == null ? BigDecimal.ZERO : p.getDebito();
         BigDecimal c = p.getCredito() == null ? BigDecimal.ZERO : p.getCredito();
         validarValoresPartida(d, c);
@@ -65,7 +68,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return partidas.save(p);
     }
     @Override public List<CtbPartida> partidas(Long empresaId, Long lancamentoId) {
-        exigir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(lancamentoId, empresaId), "Lancamento inexistente");
+        garantir(lancamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(lancamentoId, empresaId), "Lancamento inexistente");
         return partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(lancamentoId, empresaId);
     }
     @Override @Transactional public void removerPartida(Long empresaId, Long lancamentoId, Long partidaId) {
@@ -133,7 +136,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
             .toList();
     }
     @Override public List<Map<String, Object>> razao(Long empresaId, Long contaId, LocalDate de, LocalDate ate) {
-        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId), "Conta inexistente");
+        garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId), "Conta inexistente");
         Set<Long> ids = new HashSet<>();
         for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate)) ids.add(l.getId());
         List<Map<String, Object>> out = new ArrayList<>();
@@ -191,8 +194,8 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     }
     @Override @Transactional public CtbLancamento gerarDeTitulo(Long empresaId, Long userId, Long tituloId, Long contaDebitoId, Long contaCreditoId) {
         Titulo t = exigir(titulos.findForUpdate(tituloId, empresaId), "Titulo inexistente");
-        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaDebitoId, empresaId), "Conta debito inexistente");
-        exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
+        garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaDebitoId, empresaId), "Conta debito inexistente");
+        garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
         // O lancamento de emissao usa o valor original; o saldo muda a cada baixa.
         BigDecimal valor = t.getValorOriginal() != null && t.getValorOriginal().signum() > 0 ? t.getValorOriginal() : t.getValorSaldo();
         if (valor == null || valor.signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo sem valor para contabilizar");

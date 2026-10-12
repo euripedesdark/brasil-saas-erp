@@ -90,8 +90,7 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         if (r == null) throw new BusinessException("Dados do lançamento são obrigatórios");
         if (r.partidas() != null) {
             validarPartidas(r.partidas());
-            partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id)
-                .forEach(partidaRepository::delete);
+            partidaRepository.deleteAll(partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id));
             BigDecimal debitos = BigDecimal.ZERO;
             for (PartidaRequest pr : r.partidas()) {
                 LancamentoPartida p = new LancamentoPartida();

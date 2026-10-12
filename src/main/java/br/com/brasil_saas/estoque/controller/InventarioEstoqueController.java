@@ -77,7 +77,7 @@ public class InventarioEstoqueController {
         if(itemRepository.existsMixedScope(id, request.produtoId(), request.loteId(), request.enderecoId())) {
             throw new BusinessException("Não é permitido misturar contagem por depósito com contagem por endereço para o mesmo produto/lote");
         }
-        BigDecimal sistema=BigDecimal.ZERO;
+        BigDecimal sistema;
         if(request.enderecoId()!=null) {
             sistema=movimentacaoRepository.saldosPorEndereco(user.getEmpresaId(),inv.getDepositoId(),request.produtoId(),request.loteId()).stream()
                     .filter(x->request.enderecoId().equals(x.getEnderecoId()))

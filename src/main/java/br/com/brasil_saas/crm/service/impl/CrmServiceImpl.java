@@ -23,6 +23,9 @@ public class CrmServiceImpl implements CrmService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     @Override public List<CrmLead> leads(Long empresaId, String etapa, String status) {
         List<CrmLead> base = (etapa == null || etapa.isBlank()) ? leads.findByEmpresaIdAndDeletedAtIsNull(empresaId) : leads.findByEmpresaIdAndEtapaAndDeletedAtIsNull(empresaId, etapa);
         if (status == null || status.isBlank()) return base;

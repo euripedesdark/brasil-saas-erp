@@ -14,6 +14,9 @@ public class ObrigacaoService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     public List<FisObrigacao> catalogo(Long empresaId) { return repo.findByEmpresaIdAndDeletedAtIsNull(empresaId); }
     @Transactional public FisObrigacao salvar(Long empresaId, FisObrigacao o) {
         o.setId(null);
@@ -61,7 +64,7 @@ public class ObrigacaoService {
         return out;
     }
     @Transactional public FisObrigacaoEntrega entregar(Long empresaId, Long obrigacaoId, String competencia, String protocolo) {
-        exigir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(obrigacaoId, empresaId), "Obrigacao inexistente");
+        garantir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(obrigacaoId, empresaId), "Obrigacao inexistente");
         FisObrigacaoEntrega e = entregas.findByObrigacaoIdAndEmpresaIdAndCompetenciaAndDeletedAtIsNull(obrigacaoId, empresaId, competencia).orElseGet(FisObrigacaoEntrega::new);
         e.setObrigacaoId(obrigacaoId);
         e.setCompetencia(competencia);

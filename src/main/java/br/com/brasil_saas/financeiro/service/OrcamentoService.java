@@ -20,22 +20,25 @@ public class OrcamentoService {
     private <T> T exigir(Optional<T> o, String msg) {
         return o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
     }
+    private void garantir(Optional<?> o, String msg) {
+        o.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, msg));
+    }
     public List<Orcamento> listar(Long empresaId, Integer ano) {
         if (ano == null) return orcamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
         return orcamentos.findByEmpresaIdAndAnoAndDeletedAtIsNull(empresaId, ano);
     }
     @Transactional public Orcamento salvar(Long empresaId, Orcamento o) {
-        if (o.getPlanoContasId() != null) exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(o.getPlanoContasId(), empresaId), "Conta inexistente");
+        if (o.getPlanoContasId() != null) garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(o.getPlanoContasId(), empresaId), "Conta inexistente");
         o.setId(null);
         return orcamentos.save(o);
     }
     @Transactional public void excluir(Long empresaId, Long id) {
         Orcamento o = exigir(orcamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Orcamento inexistente");
-        for (OrcamentoRealizado r : realizados.findByOrcamentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) realizados.delete(r);
+        realizados.deleteAll(realizados.findByOrcamentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId));
         orcamentos.delete(o);
     }
     @Transactional public OrcamentoRealizado lancarRealizado(Long empresaId, Long orcamentoId, Integer mes, BigDecimal valor) {
-        exigir(orcamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(orcamentoId, empresaId), "Orcamento inexistente");
+        garantir(orcamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(orcamentoId, empresaId), "Orcamento inexistente");
         if (mes == null || mes < 1 || mes > 12) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Mes invalido");
         OrcamentoRealizado r = new OrcamentoRealizado();
         r.setOrcamentoId(orcamentoId);
