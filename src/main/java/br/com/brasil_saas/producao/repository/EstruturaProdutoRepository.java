@@ -11,4 +11,5 @@ public interface EstruturaProdutoRepository extends JpaRepository<EstruturaProdu
     Optional<EstruturaProduto> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     Optional<EstruturaProduto> findByEmpresaIdAndProdutoPaiIdAndProdutoFilhoIdAndDeletedAtIsNull(
             Long empresaId, Long produtoPaiId, Long produtoFilhoId);
+    boolean existsByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
 }
