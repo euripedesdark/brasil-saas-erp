@@ -10,7 +10,7 @@ Jasper foi reativado ou que os relatórios foram migrados.
 |---|---|---|
 | core/service/report/PdfGeneratorService.generateReport | OpenPDF, tabela de mapas e resumo | Jasper para relatórios gerenciais não fiscais |
 | core/service/report/PdfGeneratorService.generateOrdemServicoPdf | OpenPDF, detalhes/itens/totais de OS | Jasper, preservando todos os campos |
-| bi/service/impl/RelatorioServiceImpl.exportarPdf | OpenPDF, relatório BI | Jasper após mapear origem segura dos dados |
+| bi/service/impl/RelatorioServiceImpl.gerarPdf | OpenPDF, relatório BI | Jasper após mapear origem segura dos dados |
 | bi/service/impl/ReportServiceImpl.generatePdf | OpenPDF, consulta cadastrada | Jasper após substituir consulta livre por catálogo seguro |
 | PdfGeneratorService.generateNotaFiscalPdf | OpenPDF fiscal simplificado | Preservar |
 | fiscal/nfse/NfsePdfService | OpenPDF fiscal | Preservar |

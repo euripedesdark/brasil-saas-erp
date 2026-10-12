@@ -31,6 +31,7 @@ permissões separados; compartilhar processo não significa compartilhar dados.
 ## Diagnóstico local (somente leitura)
 
 ```bash
+sudo python3 scripts/inspect-shared-services.py
 pgrep -x mongod
 systemctl show mongod graylog-server graylog-datanode -p MainPID -p LoadState -p ActiveState
 systemctl list-units --type=service --all | rg -i 'mongo|graylog|astral|brasil'

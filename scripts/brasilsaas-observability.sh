@@ -111,8 +111,7 @@ setup_graylog() {
     [[ "$reuse_status" == 1 ]] || return "$reuse_status"
     log_error "Graylog ausente. Use o instalador Astral atualizado; este script nao provisiona uma pilha paralela."
     return 1
-
- }
+}
 
 setup_mongodb() {
     local reuse_status=0

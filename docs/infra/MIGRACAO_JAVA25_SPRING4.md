@@ -40,7 +40,7 @@ para validar a migração: ele continua sendo um provisionador de infraestrutura
 - Geradores e scripts antigos de módulos ainda declaram versões antigas;
   não usá-los para regenerar o monólito migrado.
 - CI de integração Graylog: preservar o JDK exigido pelo Graylog, não impor JDK 25
-  ao processo do Graylog. A mudança dos workflows do candidato deve ser revisada.
+  ao processo do Graylog. Workflows cujo nome contém graylog preservam o JDK original; revisar outros jobs mistos.
 
 ## Homologação necessária
 
