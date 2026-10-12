@@ -25,8 +25,7 @@
     {
       "name": "app.jwt.secret",
       "type": "java.lang.String",
-      "description": "Segredo HMAC para assinatura de tokens JWT do ERP.",
-      "sourceType": "br.com.brasil_saas.shared.config.JwtProperties"
+      "description": "Segredo HMAC para assinatura de tokens JWT do ERP."
     },
     {
       "name": "app.jwt.expiration",

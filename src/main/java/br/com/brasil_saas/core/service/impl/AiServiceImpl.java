@@ -48,7 +48,7 @@ public class AiServiceImpl implements AiService {
 
     private String callClaudeApi(String prompt) {
         final String CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
-        final String API_KEY = "YOUR_CLAUDE_API_KEY";
+        final String API_KEY = System.getenv().getOrDefault("ANTHROPIC_API_KEY", "");
         // Implementação real da API do Claude
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

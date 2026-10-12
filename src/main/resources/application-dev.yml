@@ -16,7 +16,7 @@ spring:
           writetimeout: 10000
   data:
     mongodb:
-      uri: "mongodb://admin:${MONGODB_PASSWORD:ALTERE_ME}@localhost:27017/brasil-saas?authSource=admin"
+      uri: "mongodb://admin:${MONGODB_PASSWORD:}@localhost:27017/brasil-saas?authSource=admin"
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
@@ -25,7 +25,7 @@ spring:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER:brasil-saas}
-    password: ${RABBIT_PASSWORD:ALTERE_ME}
+    password: ${RABBIT_PASSWORD:}
     listener:
       simple:
         acknowledge-mode: auto
@@ -104,7 +104,7 @@ brasil-saas:
     diretorio-entrada: ${IMAGENS_ENTRADA_DIR:src/main/resources/static/images}
     monitoramento-intervalo-ms: 5000
   jwt:
-    secret: ${JWT_SECRET:ALTERE_ME_32_BYTES_OU_MAIS}
+    secret: ${JWT_SECRET:}
     expiration-ms: 3600000
     refresh-expiration-ms: 604800000
   fiscal:

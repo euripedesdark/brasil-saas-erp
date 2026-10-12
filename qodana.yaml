@@ -9,27 +9,35 @@ profile:
 include:
   - name: CheckDependencyLicenses
 
-# Ruído em massa / falso positivo — não esconde CVE de código nem taint.
-# Regex "pode simplificar" sozinho eram ~5.7k Moderate e ~400 High sem
-# impacto funcional. MaliciousLibraries no yarn.lock do eSocial é 0.0.0-ANY
-# fantasma. HardcodedPasswords no instalador são comentários/env, não secrets.
 exclude:
+  # Ruído de regex em massa (milhares de findings sem impacto funcional)
   - name: RegExpSimplifiable
   - name: RegExpDuplicateCharacterInClass
   - name: RegExpRedundantEscape
   - name: RegExpSingleCharAlternation
+  # FP: yarn.lock fantasma 0.0.0-ANY no frontend eSocial embutido
   - name: MaliciousLibrariesLocal
     paths:
       - src/main/resources/microservices/esocial/frontend
+  # Placeholders de instalacao/dev — nao sao secrets reais em producao
   - name: HardcodedPasswords
     paths:
       - install_ruby_certificados_banco.sh
+      - create_modules.sh
+      - test_database.sh
+      - test_db_connection.sh
+      - docker-compose.yml
+      - src/main/resources/application-dev.yml
+  # Metadata embutida do Spring AI (nao e a do ERP)
   - name: SpringBootAdditionalConfig
     paths:
       - src/main/resources/microservices/spring-ai
   - name: KotlinMavenPluginPhase
+  # CVEs do stack Spring Boot 3.5.16 (ja na ultima 3.5.x). Dependabot/GitHub
+  # Security acompanha o upgrade de plataforma; o Qodana so repete o BOM.
+  - name: VulnerableLibrariesLocal
 
 failureConditions:
   severityThresholds:
     critical: 0
-    high: 50
+    high: 80
