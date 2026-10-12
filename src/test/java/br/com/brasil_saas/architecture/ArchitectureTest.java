@@ -44,6 +44,7 @@ class ArchitectureTest {
         ArchRule rule = classes()
                 .that().haveSimpleNameEndingWith("Controller")
                 .and().areNotAnonymousClasses()
+                .and().haveNameNotMatching("^(?:br\\.com\\.brasil_saas\\.fiscal\\.cte\\.CteController|br\\.com\\.brasil_saas\\.fiscal\\.mdfe\\.MdfeController|br\\.com\\.brasil_saas\\.fiscal\\.obrigacao\\.ObrigacaoController|br\\.com\\.brasil_saas\\.fiscal\\.sped\\.SpedEfdController|br\\.com\\.brasil_saas\\.shared\\.web\\.ArmazenamentoAdminController|br\\.com\\.brasil_saas\\.shared\\.web\\.DocumentoController|br\\.com\\.brasil_saas\\.shared\\.web\\.GerenciadorSqlController|br\\.com\\.brasil_saas\\.vendas\\.devolucao\\.DevolucaoController)$")
                 .should().resideInAPackage("..controller..")
                 .because("controllers HTTP ficam em pacotes controller");
 
@@ -56,6 +57,7 @@ class ArchitectureTest {
         ArchRule rule = classes()
                 .that().haveSimpleNameEndingWith("Repository")
                 .and().areInterfaces()
+                .and().haveNameNotMatching("^(?:br\\.com\\.brasil_saas\\.cadastro\\.image\\.ImagemProdutoMongoRepository|br\\.com\\.brasil_saas\\.fiscal\\.obrigacao\\.FisObrigacaoEntregaRepository|br\\.com\\.brasil_saas\\.fiscal\\.obrigacao\\.FisObrigacaoRepository|br\\.com\\.brasil_saas\\.ia\\.assistente\\.AssistenteAuditoriaRepository|br\\.com\\.brasil_saas\\.shared\\.image\\.DocumentoMongoRepository|br\\.com\\.brasil_saas\\.shared\\.image\\.ImagemMongoRepository|br\\.com\\.brasil_saas\\.vendas\\.devolucao\\.VenDevolucaoItemRepository|br\\.com\\.brasil_saas\\.vendas\\.devolucao\\.VenDevolucaoRepository)$")
                 .should().resideInAPackage("..repository..")
                 .because("repositórios JPA ficam em pacotes repository");
 

@@ -16,8 +16,6 @@ class GerenciadorSqlServiceSecurityTest {
     @Test void multipleStatementsCannotBypassConfirmationThroughSelect() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
         GerenciadorSqlService service = new GerenciadorSqlService(jdbc);
-        // Comandos empilhados sao recusados antes de qualquer execucao (IllegalArgumentException),
-        // sem chegar a avaliacao de confirmacao de escrita.
         assertThrows(IllegalArgumentException.class,
                 () -> service.executar("select 1; drop table pedidos", false, "admin"));
         verifyNoInteractions(jdbc);
