@@ -372,7 +372,7 @@ public class AssistenteAcaoService {
         // O emissor municipal só existe quando o provedor da prefeitura está
         // configurado; a resposta informa isso e mantém a navegação guiada para
         // a tela de NFS-e, onde os dados do RPS são preenchidos.
-        extras.put("emissaoAutomaticaNfse", nfseEmissaoService.isPresent());
+        extras.put("emissaoAutomaticaNfse", !nfseEmissaoService.isEmpty());
 
         return new ComandoResponse(
                 "ACAO",
