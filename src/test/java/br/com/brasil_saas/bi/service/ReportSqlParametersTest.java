@@ -19,4 +19,13 @@ class ReportSqlParametersTest {
         assertEquals("select :id, :id, 'fixo'",
                 ReportSqlParameters.bind("select {id}, '{id}', 'fixo'", Map.of("id", 1)));
     }
+
+    @Test void reportQueriesCannotModifyDataOrChainStatements() {
+        assertThrows(IllegalArgumentException.class,
+                () -> ReportSqlParameters.bind("delete from pedidos", Map.of()));
+        assertThrows(IllegalArgumentException.class,
+                () -> ReportSqlParameters.bind("select 1; drop table pedidos", Map.of()));
+        assertThrows(IllegalArgumentException.class,
+                () -> ReportSqlParameters.bind("select 1 -- comentario", Map.of()));
+    }
 }
