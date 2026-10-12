@@ -1,7 +1,9 @@
 package br.com.brasil_saas.shared.security;
 
+import br.com.brasil_saas.core.model.Usuario;
+import br.com.brasil_saas.core.repository.EmpresaRepository;
+import br.com.brasil_saas.core.repository.UsuarioRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -27,34 +29,12 @@ import java.util.Set;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private static final String SQL_USER = """
-            SELECT id, username, senha_hash, ativo, empresa_id
-              FROM brasil_saas.bc_core_usuario
-             WHERE username = ? AND deleted_at IS NULL
-            """;
+    private final UsuarioRepository usuarioRepository;
+    private final EmpresaRepository empresaRepository;
 
-    // Mantida sem alteração: authorities dos perfis/permissões já existentes no ERP.
-    private static final String SQL_AUTHORITIES = """
-            SELECT DISTINCT 'ROLE_' || pf.nome
-              FROM brasil_saas.bc_core_usuario_perfil up
-              JOIN brasil_saas.bc_core_perfil pf ON pf.id = up.perfil_id
-             WHERE up.usuario_id = ?
-            UNION
-            SELECT DISTINCT pm.codigo
-              FROM brasil_saas.bc_core_usuario_perfil up
-              JOIN brasil_saas.bc_core_perfil_permissao pp ON pp.perfil_id = up.perfil_id
-              JOIN brasil_saas.bc_core_permissao pm ON pm.id = pp.permissao_id
-             WHERE up.usuario_id = ?
-            """;
-
-    private static final String SQL_EMPRESA_POR_CNPJ = """
-            SELECT id FROM brasil_saas.bc_core_empresa WHERE cnpj = ?
-            """;
-
-    private final JdbcTemplate jdbc;
-
-    public CustomUserDetailsService(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
+    public CustomUserDetailsService(UsuarioRepository usuarioRepository, EmpresaRepository empresaRepository) {
+        this.usuarioRepository = usuarioRepository;
+        this.empresaRepository = empresaRepository;
     }
 
     @Override
@@ -69,40 +49,40 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     public AuthenticatedUser loadUserByUsername(String username, Collection<String> authServiceGroups)
             throws UsernameNotFoundException {
-        List<AuthenticatedUser> users = jdbc.query(SQL_USER, (rs, i) -> {
-            String usuario = rs.getString("username");
-            Set<String> authorities = new LinkedHashSet<>(jdbc.queryForList(SQL_AUTHORITIES, String.class,
-                    rs.getLong("id"), rs.getLong("id")));
+        Usuario user = usuarioRepository.findByUsernameWithAuthorities(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
 
-            Long empresaId = rs.getObject("empresa_id", Long.class);
+        Set<String> authorities = new LinkedHashSet<>();
+        user.getPerfis().forEach(pf -> {
+            if (pf.getNome() != null) authorities.add("ROLE_" + pf.getNome());
+            pf.getPermissoes().forEach(pm -> {
+                if (pm.getCodigo() != null) authorities.add(pm.getCodigo());
+            });
+        });
 
-            Set<String> grupos = new LinkedHashSet<>();
-            if (authServiceGroups != null) {
-                authServiceGroups.stream()
-                        .filter(g -> g != null && !g.isBlank())
-                        .map(g -> g.trim().toLowerCase(Locale.ROOT))
-                        .forEach(grupos::add);
-            }
+        Long empresaId = user.getEmpresaId();
 
-            Long empresaDoAd = empresaDoAd(grupos);
-            if (empresaDoAd != null) {
-                empresaId = empresaDoAd;
-            }
-
-            authorities.addAll(authoritiesDosGrupos(grupos));
-            return new AuthenticatedUser(
-                    rs.getLong("id"),
-                    usuario,
-                    rs.getString("senha_hash"),
-                    rs.getBoolean("ativo"),
-                    empresaId,
-                    authorities.stream().map(SimpleGrantedAuthority::new).toList());
-        }, username);
-
-        if (users.isEmpty()) {
-            throw new UsernameNotFoundException("Usuário não encontrado: " + username);
+        Set<String> grupos = new LinkedHashSet<>();
+        if (authServiceGroups != null) {
+            authServiceGroups.stream()
+                    .filter(g -> g != null && !g.isBlank())
+                    .map(g -> g.trim().toLowerCase(Locale.ROOT))
+                    .forEach(grupos::add);
         }
-        return users.get(0);
+
+        Long empresaDoAd = empresaDoAd(grupos);
+        if (empresaDoAd != null) {
+            empresaId = empresaDoAd;
+        }
+
+        authorities.addAll(authoritiesDosGrupos(grupos));
+        return new AuthenticatedUser(
+                user.getId(),
+                user.getUsername(),
+                user.getSenhaHash(),
+                Boolean.TRUE.equals(user.getAtivo()),
+                empresaId,
+                authorities.stream().map(SimpleGrantedAuthority::new).toList());
     }
 
     /**
@@ -113,9 +93,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         for (String grupo : grupos) {
             if (grupo.startsWith("erp_empresa_")) {
                 String cnpj = grupo.substring("erp_empresa_".length());
-                List<Long> ids = jdbc.queryForList(SQL_EMPRESA_POR_CNPJ, Long.class, cnpj);
-                if (!ids.isEmpty()) {
-                    return ids.get(0);
+                var empresa = empresaRepository.findByCnpj(cnpj);
+                if (empresa.isPresent()) {
+                    return empresa.get().getId();
                 }
                 log.warn("Grupo ERP_EMPRESA_{} aponta para um CNPJ que não existe em bc_core_empresa", cnpj);
             }

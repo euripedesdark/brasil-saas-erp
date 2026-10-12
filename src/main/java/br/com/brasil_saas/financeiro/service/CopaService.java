@@ -4,9 +4,9 @@ import br.com.brasil_saas.cadastro.model.Produto;
 import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import br.com.brasil_saas.vendas.model.ItemPedidoVenda;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
+import br.com.brasil_saas.compras.repository.ItemPedidoCompraRepository;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +29,7 @@ public class CopaService {
 
     private final PedidoVendaRepository pedidoVendaRepository;
     private final ProdutoRepository produtoRepository;
-    private final JdbcTemplate jdbc;
+    private final ItemPedidoCompraRepository itemPedidoCompraRepository;
 
     /** Acumulador de receita e custo, separando o que veio de fonte real. */
     private static final class Acum {
@@ -115,14 +115,11 @@ public class CopaService {
         Map<Long, BigDecimal> medio = new HashMap<>();
         Map<Long, BigDecimal> cadastro = new HashMap<>();
         if (ids.isEmpty()) return new Custos(medio, cadastro);
-        jdbc.query("select i.produto_id, sum(i.quantidade_recebida * i.valor_unitario) / nullif(sum(i.quantidade_recebida), 0) as medio " +
-                        "from brasil_saas.bc_com_pedido_item i join brasil_saas.bc_com_pedido p on p.id = i.pedido_id " +
-                        "where i.empresa_id = ? and i.produto_id is not null and i.quantidade_recebida > 0 " +
-                        "and p.status <> 'CANCELADO' and p.deleted_at is null and i.deleted_at is null group by i.produto_id",
-                rs -> {
-                    BigDecimal v = rs.getBigDecimal("medio");
-                    if (v != null && ids.contains(rs.getLong("produto_id"))) medio.put(rs.getLong("produto_id"), v);
-                }, empresaId);
+        for (ItemPedidoCompraRepository.MediaCompra m : itemPedidoCompraRepository.mediasPonderadas(empresaId)) {
+            if (m.getProdutoId() == null || !ids.contains(m.getProdutoId())) continue;
+            if (m.getSomaQtd() == null || m.getSomaQtd().signum() == 0 || m.getSomaValor() == null) continue;
+            medio.put(m.getProdutoId(), m.getSomaValor().divide(m.getSomaQtd(), 4, RoundingMode.HALF_UP));
+        }
         for (Produto pr : produtoRepository.findAllById(ids)) cadastro.put(pr.getId(), pr.getPrecoCusto());
         return new Custos(medio, cadastro);
     }
