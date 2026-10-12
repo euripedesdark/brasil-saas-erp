@@ -393,7 +393,11 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-            <version>1.0.0</version>
+            <!-- O starter GA do Spring AI 1.0.0 mudou de nome
+                 (spring-ai-starter-model-openai); o artefato ...-spring-boot-starter
+                 so existe ate 1.0.0-M3. Manter o nome atual exige a versao M3,
+                 senao a resolucao de dependencia quebra o build. -->
+            <version>1.0.0-M3</version>
         </dependency>
 
         <!-- ==== UTILITÁRIOS ==== -->
