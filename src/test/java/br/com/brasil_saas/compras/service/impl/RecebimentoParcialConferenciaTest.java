@@ -165,9 +165,7 @@ class RecebimentoParcialConferenciaTest {
         faturado.setValorTotal(new BigDecimal("40.20"));
         var c = conferir("40.20", "0.50");
         assertEquals("APROVADA", c.getStatus());
-        var captor = ArgumentCaptor.forClass(java.util.List.class);
-        verify(itens).saveAll(captor.capture());
-        var linhas = (java.util.List<ConferenciaFaturaCompraItem>) captor.getValue();
+        List<ConferenciaFaturaCompraItem> linhas = capturarItensSalvos();
         assertEquals(1, linhas.size());
         assertTrue(linhas.get(0).getConforme());
         assertEquals(new BigDecimal("0.50"), linhas.get(0).getTolerancia());
@@ -179,10 +177,16 @@ class RecebimentoParcialConferenciaTest {
         faturado.setValorTotal(new BigDecimal("44"));
         var c = conferir("44", "0.50");
         assertEquals("DIVERGENTE", c.getStatus());
-        var captor = ArgumentCaptor.forClass(java.util.List.class);
-        verify(itens).saveAll(captor.capture());
-        var linhas = (java.util.List<ConferenciaFaturaCompraItem>) captor.getValue();
+        List<ConferenciaFaturaCompraItem> linhas = capturarItensSalvos();
         assertTrue(linhas.stream().anyMatch(x -> "PRECO_DIVERGENTE".equals(x.getTipoDivergencia())));
+    }
+
+    /** Centraliza o ArgumentCaptor tipado para nao gerar unchecked em cada teste. */
+    @SuppressWarnings("unchecked")
+    private List<ConferenciaFaturaCompraItem> capturarItensSalvos() {
+        ArgumentCaptor<List<ConferenciaFaturaCompraItem>> captor = ArgumentCaptor.forClass(List.class);
+        verify(itens).saveAll(captor.capture());
+        return captor.getValue();
     }
 
     @Test

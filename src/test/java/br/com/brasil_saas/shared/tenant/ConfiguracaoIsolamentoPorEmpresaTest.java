@@ -37,13 +37,20 @@ import org.yaml.snakeyaml.Yaml;
 class ConfiguracaoIsolamentoPorEmpresaTest {
 
     @SuppressWarnings("unchecked")
+    private static Map<String, Object> asMap(Object value, String caminho) {
+        if (!(value instanceof Map<?, ?> map)) {
+            throw new AssertionError(caminho + " nao e um mapa: " + value);
+        }
+        return (Map<String, Object>) map;
+    }
+
     private static Map<String, Object> hibernateDoYml() throws Exception {
         try (InputStream in = new ClassPathResource("application.yml").getInputStream()) {
-            Map<String, Object> raiz = new Yaml().load(in);
-            Map<String, Object> spring = (Map<String, Object>) raiz.get("spring");
-            Map<String, Object> jpa = (Map<String, Object>) spring.get("jpa");
-            Map<String, Object> properties = (Map<String, Object>) jpa.get("properties");
-            return (Map<String, Object>) properties.get("hibernate");
+            Map<String, Object> raiz = asMap(new Yaml().load(in), "raiz");
+            Map<String, Object> spring = asMap(raiz.get("spring"), "spring");
+            Map<String, Object> jpa = asMap(spring.get("jpa"), "spring.jpa");
+            Map<String, Object> properties = asMap(jpa.get("properties"), "spring.jpa.properties");
+            return asMap(properties.get("hibernate"), "spring.jpa.properties.hibernate");
         }
     }
 
@@ -119,10 +126,10 @@ class ConfiguracaoIsolamentoPorEmpresaTest {
         // em spring.jpa.properties.hibernate. Sao irmaos, nao o mesmo mapa — ler
         // um no lugar do outro da null, e null nao falha: so nao verifica nada.
         try (InputStream in = new ClassPathResource("application.yml").getInputStream()) {
-            Map<String, Object> raiz = new Yaml().load(in);
-            Map<String, Object> spring = (Map<String, Object>) raiz.get("spring");
-            Map<String, Object> jpa = (Map<String, Object>) spring.get("jpa");
-            Map<String, Object> hibernate = (Map<String, Object>) jpa.get("hibernate");
+            Map<String, Object> raiz = asMap(new Yaml().load(in), "raiz");
+            Map<String, Object> spring = asMap(raiz.get("spring"), "spring");
+            Map<String, Object> jpa = asMap(spring.get("jpa"), "spring.jpa");
+            Map<String, Object> hibernate = asMap(jpa.get("hibernate"), "spring.jpa.hibernate");
             assertEquals("validate", hibernate.get("ddl-auto"));
         }
     }
