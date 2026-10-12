@@ -126,6 +126,27 @@ class AssistenteComandoTest {
     }
 
     @Test
+    void testExecutarAcaoPedidoProdutoPedeConfirmacao() {
+        PedidoVenda pedido = new PedidoVenda();
+        pedido.setId(54L);
+        pedido.setNumero("54");
+        pedido.setStatus("ABERTO");
+        pedido.setClienteId(10L);
+        pedido.setValorProdutos(new BigDecimal("1500.00"));
+        pedido.setValorServicos(BigDecimal.ZERO);
+        pedido.setValorTotal(new BigDecimal("1500.00"));
+
+        when(pedidoVendaRepository.findByIdAndEmpresaId(54L, 1L)).thenReturn(Optional.of(pedido));
+        when(clienteRepository.nomeDaPessoaPorClienteId(10L)).thenReturn(Optional.of("Empresa Cliente S/A"));
+
+        // Sem confirmar → só resumo
+        var preview = acaoService.processar("emita a nota fiscal do pedido 54", "ACAO", 1L, "euripedes", false);
+        assertEquals("CONFIRMACAO", preview.status());
+        assertTrue(preview.mensagem().contains("Empresa Cliente S/A"));
+        assertTrue(preview.dadosExtras().containsKey("precisaConfirmacao"));
+    }
+
+    @Test
     void testExecutarAcaoPedidoProdutoEmissaoSucesso() throws Exception {
         PedidoVenda pedido = new PedidoVenda();
         pedido.setId(54L);
@@ -140,7 +161,8 @@ class AssistenteComandoTest {
         when(clienteRepository.nomeDaPessoaPorClienteId(10L)).thenReturn(Optional.of("Empresa Cliente S/A"));
         when(nfeService.emitirNFe(eq(1L), any(PedidoVenda.class))).thenReturn("135260000123456");
 
-        var resposta = acaoService.processar("emita a nota fiscal do pedido 54", "ACAO", 1L, "euripedes");
+        // Com confirmar=true → emite de verdade
+        var resposta = acaoService.processar("emita a nota fiscal do pedido 54", "ACAO", 1L, "euripedes", true);
 
         assertEquals("ACAO", resposta.modo());
         assertEquals("SUCESSO", resposta.status());
@@ -164,8 +186,13 @@ class AssistenteComandoTest {
         when(pedidoVendaRepository.findByIdAndEmpresaId(55L, 1L)).thenReturn(Optional.of(pedido));
         when(clienteRepository.nomeDaPessoaPorClienteId(10L)).thenReturn(Optional.of("Cliente Serviços"));
 
-        var resposta = acaoService.processar("emita a nota do pedido 55", "ACAO", 1L, "euripedes");
+        // Sem confirmar → pede confirmação
+        var preview = acaoService.processar("emita a nota do pedido 55", "ACAO", 1L, "euripedes", false);
+        assertEquals("CONFIRMACAO", preview.status());
+        assertTrue(preview.mensagem().contains("Cliente Serviços"));
 
+        // Com confirmar → orienta NFS-e
+        var resposta = acaoService.processar("emita a nota do pedido 55", "ACAO", 1L, "euripedes", true);
         assertEquals("ACAO", resposta.modo());
         assertEquals("SUCESSO", resposta.status());
         assertEquals("/fiscal/nfse", resposta.rota());

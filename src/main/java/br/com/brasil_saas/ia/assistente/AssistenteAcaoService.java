@@ -28,7 +28,7 @@ public class AssistenteAcaoService {
 
     public record ComandoResponse(
             String modo,
-            String status, // SUCESSO, AVISO, ERRO
+            String status, // SUCESSO, AVISO, ERRO, CONFIRMACAO
             String titulo,
             String mensagem,
             String rota,
@@ -57,15 +57,21 @@ public class AssistenteAcaoService {
     }
 
     @Transactional
-    public ComandoResponse processar(String texto, String modo, Long empresaId, String usuarioNome) {
+    public ComandoResponse processar(String texto, String modo, Long empresaId, String usuarioNome, boolean confirmar) {
         String textoLimpo = texto == null ? "" : texto.trim();
         String modoNormalizado = modo == null ? "DUVIDA" : modo.trim().toUpperCase(Locale.ROOT);
 
         if ("ACAO".equals(modoNormalizado)) {
-            return executarAcao(textoLimpo, empresaId, usuarioNome);
+            return executarAcao(textoLimpo, empresaId, usuarioNome, confirmar);
         } else {
             return responderDuvida(textoLimpo, empresaId);
         }
+    }
+
+    /** Compatibilidade: chamada sem confirmação (sempre pede confirmação em ações críticas). */
+    @Transactional
+    public ComandoResponse processar(String texto, String modo, Long empresaId, String usuarioNome) {
+        return processar(texto, modo, empresaId, usuarioNome, false);
     }
 
     private ComandoResponse responderDuvida(String pergunta, Long empresaId) {
@@ -103,7 +109,7 @@ public class AssistenteAcaoService {
         );
     }
 
-    private ComandoResponse executarAcao(String comando, Long empresaId, String usuarioNome) {
+    private ComandoResponse executarAcao(String comando, Long empresaId, String usuarioNome, boolean confirmar) {
         // Padrão para emissão de nota de pedido: "emita a nota do pedido 54", "gerar nfe pedido 54", etc.
         Matcher matcherEmissao = Pattern.compile("(?i)(?:emitir|emita|gerar|gera|transmitir|transmita|faturar|fatura|nota|nfe|nfse).*?(?:pedido|ped|#|n[oº]|numero)?\\s*(\\d+)").matcher(comando);
         Matcher matcherApenasPedido = Pattern.compile("(?i)(?:pedido|ped|#|n[oº]|numero)\\s*(\\d+)").matcher(comando);
@@ -116,7 +122,7 @@ public class AssistenteAcaoService {
         }
 
         if (numeroOuId != null && (ehComandoDeNota(comando) || ehComandoDeFaturamento(comando))) {
-            return processarEmissaoNotaPedido(numeroOuId, empresaId, usuarioNome);
+            return processarEmissaoNotaPedido(numeroOuId, empresaId, usuarioNome, confirmar);
         }
 
         // Consulta de status do pedido: "status do pedido 54", "como está o pedido 54", etc.
@@ -155,7 +161,7 @@ public class AssistenteAcaoService {
         );
     }
 
-    private ComandoResponse processarEmissaoNotaPedido(String idOuNumeroStr, Long empresaId, String usuarioNome) {
+    private ComandoResponse processarEmissaoNotaPedido(String idOuNumeroStr, Long empresaId, String usuarioNome, boolean confirmar) {
         Long pedidoId = null;
         try {
             pedidoId = Long.parseLong(idOuNumeroStr);
@@ -220,26 +226,72 @@ public class AssistenteAcaoService {
         boolean temProdutos = valProdutos.compareTo(BigDecimal.ZERO) > 0;
         boolean temServicos = valServicos.compareTo(BigDecimal.ZERO) > 0;
 
+        String natureza;
+        String tipoDoc;
         if (temProdutos && temServicos) {
-            // Itens mistos: produto sai por NF-e estadual e serviço por NFS-e municipal
+            natureza = "Misto (Produtos + Serviços)";
+            tipoDoc = "NF-e + NFS-e";
+        } else if (temServicos) {
+            natureza = "Serviços";
+            tipoDoc = "NFS-e";
+        } else {
+            natureza = "Produtos / Mercadorias";
+            tipoDoc = "NF-e";
+        }
+
+        // SEM confirmação: devolve resumo do pedido e pede confirmação explícita
+        if (!confirmar) {
+            Map<String, Object> extras = new LinkedHashMap<>();
+            extras.put("pedidoId", pedido.getId());
+            extras.put("pedidoNumero", pedidoNumero);
+            extras.put("cliente", clienteNome);
+            extras.put("statusPedido", pedido.getStatus());
+            extras.put("valorProdutos", valProdutos);
+            extras.put("valorServicos", valServicos);
+            extras.put("valorTotal", valTotal);
+            extras.put("natureza", natureza);
+            extras.put("tipoDocumento", tipoDoc);
+            extras.put("precisaConfirmacao", true);
+
+            return new ComandoResponse(
+                    "ACAO",
+                    "CONFIRMACAO",
+                    "Confirmar emissão — Pedido #" + pedidoNumero,
+                    "Revise os dados antes de emitir:\n\n" +
+                    "• Consumidor / Destinatário: " + clienteNome + "\n" +
+                    "• Status do pedido: " + pedido.getStatus() + "\n" +
+                    "• Natureza: " + natureza + "\n" +
+                    "• Documento: " + tipoDoc + "\n" +
+                    "• Produtos: R$ " + valProdutos + "\n" +
+                    "• Serviços: R$ " + valServicos + "\n" +
+                    "• Total: R$ " + valTotal + "\n\n" +
+                    "Clique em Confirmar para emitir a nota com o nome do consumidor acima.",
+                    "/vendas/pedidos",
+                    "Vendas > Pedidos de Venda",
+                    "Confirmar emissão",
+                    extras
+            );
+        }
+
+        // COM confirmação: executa
+        if (temProdutos && temServicos) {
             return new ComandoResponse(
                     "ACAO",
                     "AVISO",
                     "Pedido com Itens Mistos (Produto + Serviço)",
-                    "O pedido #" + pedidoNumero + " possui tanto produtos (R$ " + valProdutos + ") quanto serviços (R$ " + valServicos + "). " +
-                    "No Brasil, itens de produto são emitidos via NF-e estadual (SEFAZ) e serviços via NFS-e municipal (Prefeitura). " +
-                    "Acesse as telas de emissão para transmitir cada documento.",
+                    "O pedido #" + pedidoNumero + " (consumidor: " + clienteNome + ") possui produtos (R$ " + valProdutos +
+                    ") e serviços (R$ " + valServicos + ").\n" +
+                    "Emita a NF-e na tela de NF-e e a NFS-e na tela de NFS-e.",
                     "/fiscal/nfe",
                     "Fiscal > Documentos Fiscais",
                     "Acessar Emissão Fiscal",
-                    Map.of("pedidoId", pedido.getId(), "produtos", valProdutos, "servicos", valServicos)
+                    Map.of("pedidoId", pedido.getId(), "cliente", clienteNome,
+                            "produtos", valProdutos, "servicos", valServicos)
             );
         }
         if (temServicos) {
-            // Só serviços: operação de NFS-e Municipal
             return tratarEmissaoNfse(pedido, pedidoNumero, clienteNome, valServicos, empresaId);
         }
-        // Só produtos, ou cabeçalho sem valores preenchidos: assume NF-e de mercadoria padrão
         return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
     }
 

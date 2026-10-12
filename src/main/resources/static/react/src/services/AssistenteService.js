@@ -7,8 +7,8 @@ const empresaHeaders = (empresaId, json = false) => ({
 
 /**
  * Serviço do Assistente ERP.
- *
- * Suporta o fluxo clássico e o novo modelo unificado com botões [ Dúvida ] e [ Ação ].
+ * - Consultar: modo DUVIDA
+ * - Executar: modo ACAO (primeira chamada pede confirmação; segunda com confirmar=true executa)
  */
 export const AssistenteService = {
     perguntar: async (empresaId, pergunta) => {
@@ -23,11 +23,17 @@ export const AssistenteService = {
         return resposta.json();
     },
 
-    executarComando: async (empresaId, texto, modo) => {
+    /**
+     * @param {number|string} empresaId
+     * @param {string} texto
+     * @param {string} modo  DUVIDA | ACAO
+     * @param {boolean} [confirmar=false]  true só após o usuário confirmar a execução
+     */
+    executarComando: async (empresaId, texto, modo, confirmar = false) => {
         const resposta = await apiFetch(`${ApiConfig.BASE_URL}/api/ia/assistente/comando`, {
             method: 'POST',
             headers: empresaHeaders(empresaId, true),
-            body: JSON.stringify({ texto, modo })
+            body: JSON.stringify({ texto, modo, confirmar: !!confirmar })
         });
         if (!resposta.ok) {
             const err = await resposta.json().catch(() => ({}));

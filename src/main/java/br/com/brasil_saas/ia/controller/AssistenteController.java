@@ -51,7 +51,8 @@ public class AssistenteController {
             final Authentication auth,
             @Valid @RequestBody final ComandoRequest req) {
         return ResponseEntity.ok(acaoService.processar(
-                req.texto(), req.modo(), empresaId, usuario(auth)));
+                req.texto(), req.modo(), empresaId, usuario(auth),
+                Boolean.TRUE.equals(req.confirmar())));
     }
 
     @Operation(summary = "Histórico do assistente com a auditoria de cada resposta")
@@ -78,11 +79,13 @@ public class AssistenteController {
             String pergunta) {
     }
 
-    /** Requisição para o motor de Dúvida / Ação. */
+    /** Requisição para o motor de Dúvida / Ação.
+     *  confirmar=true só na segunda chamada (após o usuário confirmar a execução). */
     public record ComandoRequest(
             @NotBlank(message = "O texto não pode ser vazio")
             @Size(max = 1000, message = "O texto pode ter no máximo 1000 caracteres")
             String texto,
-            String modo) {
+            String modo,
+            Boolean confirmar) {
     }
 }

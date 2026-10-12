@@ -131,3 +131,18 @@
     width: 100%;
     margin-top: 0.5rem;
 }
+
+.copiloto-confirmacao {
+    border-color: var(--primary-color, #2563eb);
+    background: var(--primary-50, #eff6ff);
+}
+
+.copiloto-confirm-botoes {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.copiloto-confirm-botoes .p-button {
+    flex: 1;
+}

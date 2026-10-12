@@ -11,10 +11,8 @@ import './AssistenteCopilotoDialog.css';
 
 /**
  * Caixa pequena do Copiloto IA.
- * Botão no topo direito ou flutuante inferior direito.
- * Usuário digita o que quer e escolhe:
- *  - [ Consultar ] → ensina onde fica e como fazer
- *  - [ Executar ]  → tenta realizar a operação (ex: emitir nota do pedido com o nome do consumidor)
+ * - [ Consultar ] → ensina onde fica e como fazer
+ * - [ Executar ]  → mostra resumo do pedido/ordem e pede confirmação antes de emitir
  */
 export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
     const navigate = useNavigate();
@@ -51,7 +49,6 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
         }
     }, []);
 
-    // Limpa resultado ao abrir de novo ou ao digitar
     useEffect(() => {
         if (visible) {
             setResultado(null);
@@ -71,22 +68,33 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
         }
     };
 
-    const enviarComando = async (modo) => {
+    const enviarComando = async (modo, confirmar = false) => {
         const conteudo = texto.trim();
         if (!conteudo || carregando) return;
 
         setCarregando(true);
         setErro(null);
-        setResultado(null);
+        if (!confirmar) {
+            setResultado(null);
+        }
 
         try {
-            const res = await AssistenteService.executarComando(empresaId, conteudo, modo);
+            const res = await AssistenteService.executarComando(empresaId, conteudo, modo, confirmar);
             setResultado(res);
         } catch (e) {
             setErro(e.message || 'Falha ao processar o comando.');
         } finally {
             setCarregando(false);
         }
+    };
+
+    const confirmarExecucao = () => {
+        // Segunda chamada: confirma e executa de verdade
+        enviarComando('ACAO', true);
+    };
+
+    const cancelarConfirmacao = () => {
+        setResultado(null);
     };
 
     const irParaTela = (rota) => {
@@ -101,9 +109,12 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
             case 'SUCESSO': return 'success';
             case 'AVISO': return 'warning';
             case 'ERRO': return 'danger';
+            case 'CONFIRMACAO': return 'info';
             default: return 'info';
         }
     };
+
+    const precisaConfirmacao = resultado?.status === 'CONFIRMACAO';
 
     return (
         <Dialog
@@ -165,9 +176,9 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
                     label="Executar"
                     icon="pi pi-play"
                     className="p-button-success p-button-sm"
-                    onClick={() => enviarComando('ACAO')}
+                    onClick={() => enviarComando('ACAO', false)}
                     disabled={carregando || !texto.trim()}
-                    tooltip="Executa a operação (ex: emitir nota com o nome do consumidor do pedido)"
+                    tooltip="Prepara a ação e pede confirmação antes de emitir"
                 />
             </div>
 
@@ -195,7 +206,9 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
             {carregando && (
                 <div className="mt-2">
                     <ProgressBar mode="indeterminate" style={{ height: '4px' }} />
-                    <p className="text-center text-xs text-500 mt-1">Processando...</p>
+                    <p className="text-center text-xs text-500 mt-1">
+                        {precisaConfirmacao ? 'Emitindo...' : 'Processando...'}
+                    </p>
                 </div>
             )}
 
@@ -204,10 +217,16 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
             )}
 
             {resultado && !carregando && (
-                <div className="copiloto-resultado-card">
+                <div className={`copiloto-resultado-card ${precisaConfirmacao ? 'copiloto-confirmacao' : ''}`}>
                     <div className="copiloto-resultado-header">
                         <Tag
-                            value={resultado.modo === 'ACAO' ? 'Executado' : 'Consulta'}
+                            value={
+                                precisaConfirmacao
+                                    ? 'Confirmação'
+                                    : resultado.modo === 'ACAO'
+                                      ? 'Executado'
+                                      : 'Consulta'
+                            }
                             severity={getStatusSeverity(resultado.status)}
                         />
                         <span className="text-xs text-500">{resultado.status}</span>
@@ -215,7 +234,7 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
 
                     <h4 className="copiloto-resultado-titulo">{resultado.titulo}</h4>
 
-                    {resultado.caminhoMenu && (
+                    {resultado.caminhoMenu && !precisaConfirmacao && (
                         <div className="copiloto-caminho-menu">
                             <i className="pi pi-compass text-primary" />
                             <span>{resultado.caminhoMenu}</span>
@@ -224,13 +243,30 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
 
                     <p className="copiloto-resultado-msg">{resultado.mensagem}</p>
 
-                    {resultado.rota && (
-                        <Button
-                            label={resultado.rotuloBotao || 'Ir para a tela'}
-                            icon="pi pi-arrow-right"
-                            className="p-button-sm copiloto-navegacao-btn p-button-primary"
-                            onClick={() => irParaTela(resultado.rota)}
-                        />
+                    {precisaConfirmacao ? (
+                        <div className="copiloto-confirm-botoes">
+                            <Button
+                                label="Cancelar"
+                                icon="pi pi-times"
+                                className="p-button-outlined p-button-secondary p-button-sm"
+                                onClick={cancelarConfirmacao}
+                            />
+                            <Button
+                                label="Confirmar emissão"
+                                icon="pi pi-check"
+                                className="p-button-success p-button-sm"
+                                onClick={confirmarExecucao}
+                            />
+                        </div>
+                    ) : (
+                        resultado.rota && (
+                            <Button
+                                label={resultado.rotuloBotao || 'Ir para a tela'}
+                                icon="pi pi-arrow-right"
+                                className="p-button-sm copiloto-navegacao-btn p-button-primary"
+                                onClick={() => irParaTela(resultado.rota)}
+                            />
+                        )
                     )}
                 </div>
             )}
