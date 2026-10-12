@@ -236,6 +236,5 @@ app:
 bi:
   datasource:
     enabled: ${BI_DATASOURCE_ENABLED:false}
-    url: "jdbc:postgresql://localhost:5432/brasil_saas_bi?sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt"
+    url: "jdbc:postgresql://localhost:5432/brasil_saas_bi?sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt&sslcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/issued/brasil_saas_bi_reader.crt&sslkey=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/private/brasil_saas_bi_reader.pk8"
     username: ${BI_DB_USER:brasil_saas_bi_reader}
-    password: ${BI_DB_PASSWORD:}
