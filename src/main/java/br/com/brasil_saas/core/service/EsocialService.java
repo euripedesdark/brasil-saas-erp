@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
+import java.util.Collections;
 import java.util.*;
 
 @Service
@@ -41,7 +42,9 @@ public class EsocialService {
         log.info("Consultando status eSocial para funcionário: {}", funcionarioId);
         try {
             String url = String.format("%s/api/eventos/status/%d", ESOCIAL_API_URL, funcionarioId);
-            return restTemplate.getForObject(url, List.class);
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> lista = restTemplate.getForObject(url, List.class);
+            return lista != null ? lista : Collections.emptyList();
         } catch (Exception e) {
             log.error("Erro ao consultar status eSocial: {}", e.getMessage());
             return Collections.emptyList();

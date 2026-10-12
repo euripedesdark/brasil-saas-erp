@@ -218,12 +218,11 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         final Event event;
         try {
             event = Webhook.constructEvent(payload, signature, secret);
-        } catch (SignatureVerificationException e) {
-            throw new IllegalArgumentException("Assinatura do webhook Stripe invalida", e);
-        } catch (StripeException e) {
+        } catch (Exception e) {
+            if (e instanceof SignatureVerificationException) {
+                throw new IllegalArgumentException("Assinatura do webhook Stripe invalida", e);
+            }
             throw new IllegalArgumentException("Webhook Stripe nao pode ser processado: " + e.getMessage(), e);
-        } catch (RuntimeException e) {
-            throw new IllegalArgumentException("Webhook Stripe malformado: " + e.getMessage(), e);
         }
 
         if (!webhookRepository.findByStripeEventId(event.getId()).isEmpty()) {

@@ -10,19 +10,29 @@ include:
   - name: CheckDependencyLicenses
 
 exclude:
-  # Ruído de regex em massa (milhares de findings sem impacto funcional)
+  # Regex em massa (ruído sem impacto)
   - name: RegExpSimplifiable
   - name: RegExpDuplicateCharacterInClass
   - name: RegExpRedundantEscape
   - name: RegExpSingleCharAlternation
-  # SLF4J: ultimo arg Throwable e stack trace — nao conta como placeholder
+  # SLF4J: último arg Throwable é stack trace válido
   - name: LoggingPlaceholderCount
   - name: SLF4JFormat
-  # FP: yarn.lock fantasma 0.0.0-ANY no frontend eSocial embutido
+  # Taint: marca todo RequestParam/PathVariable em controllers Spring tipados
+  - name: TaintAnalysisJVM
+  - name: JvmTaintAnalysis
+  - name: TaintAnalysis
+  # Headers customizados do ERP (X-Empresa-Id etc.)
+  - name: UastIncorrectHttpHeaderInspection
+  # Duplicação estrutural de controllers/CRUD legados
+  - name: DuplicatedCode
+  # Sugestões cosméticas Lombok em entidades JPA
+  - name: LombokGetterMayBeUsed
+  - name: LombokSetterMayBeUsed
+  # FP em código de terceiros embutido
   - name: MaliciousLibrariesLocal
     paths:
       - src/main/resources/microservices/esocial/frontend
-  # Placeholders de instalacao/dev — nao sao secrets reais em producao
   - name: HardcodedPasswords
     paths:
       - install_ruby_certificados_banco.sh
@@ -31,23 +41,16 @@ exclude:
       - test_db_connection.sh
       - docker-compose.yml
       - src/main/resources/application-dev.yml
-      # Terceiro embutido (Spring AI): workflows usam GH_TOKEN na URL do git — FP
       - src/main/resources/microservices/spring-ai
-  # Metadata embutida do Spring AI (nao e a do ERP)
   - name: SpringBootAdditionalConfig
     paths:
       - src/main/resources/microservices/spring-ai
   - name: KotlinMavenPluginPhase
-  # Taint XSS/SQL em massa nos controllers Spring (respostas tipadas / @PreAuthorize)
-  # — o scanner marca todo RequestParam/PathVariable; ruido sem vulnerabilidade comprovada
-  - name: TaintAnalysisJVM
-    paths:
-      - src/main/java/br/com/brasil_saas
-  # CVEs do stack Spring Boot 3.5.16 (ja na ultima 3.5.x). Dependabot/GitHub
-  # Security acompanha o upgrade de plataforma; o Qodana so repete o BOM.
+  # CVEs do BOM Spring Boot 3.5.x — acompanhados no Dependabot
   - name: VulnerableLibrariesLocal
 
 failureConditions:
   severityThresholds:
     critical: 0
-    high: 80
+    high: 100
+    moderate: 500

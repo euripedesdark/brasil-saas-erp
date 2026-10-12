@@ -51,6 +51,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
+@SuppressWarnings("unchecked")
 public class NfseEmissaoService {
 
     private static final DateTimeFormatter ISO = DateTimeFormatter.ISO_LOCAL_DATE;
