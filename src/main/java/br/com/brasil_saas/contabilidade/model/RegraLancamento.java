@@ -9,7 +9,10 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.TenantId;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -49,9 +52,17 @@ public class RegraLancamento {
     private String historico;
 
     @Column(name = "ativo", nullable = false)
-    private Boolean ativo;
+    private Boolean ativo = true;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "configuracao", columnDefinition = "jsonb", nullable = false)
+    private String configuracao = "{}";
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

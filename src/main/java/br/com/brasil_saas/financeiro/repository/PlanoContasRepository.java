@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PlanoContasRepository extends JpaRepository<PlanoContas, Long> {
     List<PlanoContas> findByEmpresaIdAndAtivaTrueAndDeletedAtIsNullOrderByCodigo(Long empresaId);
+    List<PlanoContas> findByEmpresaIdAndDeletedAtIsNullOrderByCodigo(Long empresaId);
     Optional<PlanoContas> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
 }
