@@ -155,8 +155,6 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         return out;
     }
     @Override public List<Map<String, Object>> balancete(Long empresaId, LocalDate de, LocalDate ate) {
-        Set<Long> ids = new HashSet<>();
-        for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate)) ids.add(l.getId());
         Map<Long, BigDecimal[]> acc = new LinkedHashMap<>();
         for (CtbLancamento l : lancadosNoPeriodo(empresaId, de, ate))
             for (CtbPartida p : partidas.findByLancamentoIdAndEmpresaIdAndDeletedAtIsNull(l.getId(), empresaId)) {

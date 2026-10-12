@@ -252,7 +252,7 @@ public class BoletoCnabClient {
         // RestClientException — erro de transporte nao tem corpo.
         if (e instanceof RestClientResponseException rcre) {
             String b = rcre.getResponseBodyAsString();
-            if (b != null && !b.isBlank() && !b.contains("no body")) {
+            if (!b.isBlank() && !b.contains("no body")) {
                 return b.length() > 300 ? b.substring(0, 300) + "..." : b;
             }
         }

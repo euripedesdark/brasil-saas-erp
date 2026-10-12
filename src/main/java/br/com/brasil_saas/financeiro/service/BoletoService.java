@@ -164,7 +164,7 @@ public class BoletoService {
                 .toList();
 
         Map<String, Object> cabecalho = new java.util.LinkedHashMap<>();
-        cabecalho.put("empresa_mae", cedente == null ? "" : cedente);
+        cabecalho.put("empresa_mae", cedente);
         cabecalho.put("documento_cedente", conta == null ? "" : conta.getConta());
         cabecalho.put("agencia", conta == null ? "" : conta.getAgencia());
         cabecalho.put("conta_corrente", conta == null ? "" : conta.getConta());

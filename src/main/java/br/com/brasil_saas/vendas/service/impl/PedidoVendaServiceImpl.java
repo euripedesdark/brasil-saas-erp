@@ -277,7 +277,7 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente nao encontrado"));
         java.math.BigDecimal limite = java.math.BigDecimal.ZERO;
         java.math.BigDecimal emAberto = java.math.BigDecimal.ZERO;
-        if (cli != null && cli.getPessoa() != null && cli.getPessoa().getId() != null) {
+        if (cli.getPessoa() != null && cli.getPessoa().getId() != null) {
             limite = cli.getLimiteCredito() == null ? java.math.BigDecimal.ZERO : cli.getLimiteCredito();
             for (var x : tituloRepository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, cli.getPessoa().getId())) {
                 if (!"R".equals(x.getTipo())) continue;

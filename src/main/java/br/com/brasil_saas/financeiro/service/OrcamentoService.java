@@ -67,9 +67,7 @@ public class OrcamentoService {
             m.put("realizado", total);
             m.put("desvio", total.subtract(orcado));
             m.put("percentual", pct);
-            List<BigDecimal> meses = new ArrayList<>();
-            for (BigDecimal v : porMes) meses.add(v);
-            m.put("porMes", meses);
+            m.put("porMes", Arrays.asList(porMes));
             out.add(m);
         }
         return out;

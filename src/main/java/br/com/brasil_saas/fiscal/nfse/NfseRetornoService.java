@@ -198,7 +198,7 @@ public class NfseRetornoService {
     private Map<String, Object> lerCorpo(RestClientResponseException erro) {
         try {
             String bruto = erro.getResponseBodyAsString(StandardCharsets.UTF_8);
-            if (bruto == null || bruto.isBlank()) {
+            if (bruto.isBlank()) {
                 return null;
             }
             return objectMapper.readValue(bruto, new TypeReference<Map<String, Object>>() {});

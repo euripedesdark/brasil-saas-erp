@@ -90,9 +90,7 @@ public class NFeServiceImpl implements NFeService {
                 }
                 Thread.sleep(1000);
             }
-            if (retornoNfe == null) {
-                throw new IllegalStateException("SEFAZ nao retornou o resultado do lote");
-            }
+            // consultaRecibo sempre atribui retornoNfe no corpo do loop
             RetornoUtil.validaAssincrono(retornoNfe);
             var prot = retornoNfe.getProtNFe().get(0);
             protocolo = prot.getInfProt().getNProt();

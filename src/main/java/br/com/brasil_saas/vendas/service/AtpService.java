@@ -28,7 +28,7 @@ public class AtpService {
         PedidoVenda pedido = pedidoRepository.findByIdAndEmpresaId(pedidoId, empresaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido de venda nao encontrado"));
         Long depositoId = depositoRepository.findByEmpresaIdAndCodigoAndAtivoTrue(empresaId, "PADRAO")
-                .map(d -> d.getId())
+                .map(br.com.brasil_saas.estoque.model.Deposito::getId)
                 .orElse(null);
 
         List<Map<String, Object>> linhas = new ArrayList<>();
