@@ -119,6 +119,11 @@ public class AssistenteAcaoService {
             return processarEmissaoNotaPedido(numeroOuId, empresaId, usuarioNome);
         }
 
+        // Consulta de status do pedido: "status do pedido 54", "como está o pedido 54", etc.
+        if (numeroOuId != null && ehComandoDeStatusPedido(comando)) {
+            return consultarStatusPedido(numeroOuId, empresaId);
+        }
+
         // Se não for comando de nota de pedido, tenta encontrar a ação correspondente no catálogo
         Optional<CatalogoNavegacaoService.ItemNavegacao> item = catalogoNavegacao.buscarMaisRelevante(comando);
         if (item.isPresent()) {
@@ -341,5 +346,88 @@ public class AssistenteAcaoService {
     private boolean ehComandoDeFaturamento(String s) {
         String n = NormalizacaoFiscal.texto(s);
         return n.contains("faturar") || n.contains("emitir") || n.contains("gerar") || n.contains("transmita");
+    }
+
+    private boolean ehComandoDeStatusPedido(String s) {
+        String n = NormalizacaoFiscal.texto(s);
+        return n.contains("status") || n.contains("como esta") || n.contains("como esta o")
+                || n.contains("situacao") || n.contains("consultar pedido") || n.contains("ver pedido");
+    }
+
+    /**
+     * Consulta o status e resumo financeiro de um pedido de venda.
+     */
+    private ComandoResponse consultarStatusPedido(String idOuNumeroStr, Long empresaId) {
+        Optional<PedidoVenda> pedidoOpt = Optional.empty();
+        try {
+            Long pedidoId = Long.parseLong(idOuNumeroStr);
+            pedidoOpt = pedidoVendaRepository.findByIdAndEmpresaId(pedidoId, empresaId);
+        } catch (NumberFormatException ignored) {
+            // continua com busca por número
+        }
+        if (pedidoOpt.isEmpty()) {
+            pedidoOpt = pedidoVendaRepository.findByEmpresaIdAndNumero(empresaId, idOuNumeroStr);
+        }
+        if (pedidoOpt.isEmpty()) {
+            List<PedidoVenda> recentes = pedidoVendaRepository.findByEmpresaIdOrderByDataEmissaoDesc(empresaId);
+            pedidoOpt = recentes.stream()
+                    .filter(p -> p.getNumero() != null && p.getNumero().endsWith(idOuNumeroStr))
+                    .findFirst();
+        }
+        if (pedidoOpt.isEmpty()) {
+            return new ComandoResponse(
+                    "ACAO",
+                    "AVISO",
+                    "Pedido Não Encontrado",
+                    "Não localizei o pedido #" + idOuNumeroStr + " nesta empresa. Verifique o número e tente novamente.",
+                    "/vendas/pedidos",
+                    "Vendas > Pedidos de Venda",
+                    "Ver Pedidos",
+                    Map.of()
+            );
+        }
+
+        PedidoVenda pedido = pedidoOpt.get();
+        String pedidoNumero = pedido.getNumero() != null ? pedido.getNumero() : String.valueOf(pedido.getId());
+        String clienteNome = "Cliente não informado";
+        if (pedido.getClienteId() != null) {
+            clienteNome = clienteRepository.nomeDaPessoaPorClienteId(pedido.getClienteId()).orElse(clienteNome);
+        }
+        BigDecimal valProdutos = pedido.getValorProdutos() != null ? pedido.getValorProdutos() : BigDecimal.ZERO;
+        BigDecimal valServicos = pedido.getValorServicos() != null ? pedido.getValorServicos() : BigDecimal.ZERO;
+        BigDecimal valTotal = pedido.getValorTotal() != null ? pedido.getValorTotal() : BigDecimal.ZERO;
+
+        String natureza;
+        if (valProdutos.compareTo(BigDecimal.ZERO) > 0 && valServicos.compareTo(BigDecimal.ZERO) > 0) {
+            natureza = "Misto (Produtos + Serviços)";
+        } else if (valServicos.compareTo(BigDecimal.ZERO) > 0) {
+            natureza = "Serviços (NFS-e)";
+        } else {
+            natureza = "Produtos (NF-e)";
+        }
+
+        Map<String, Object> extras = new LinkedHashMap<>();
+        extras.put("pedidoId", pedido.getId());
+        extras.put("pedidoNumero", pedidoNumero);
+        extras.put("status", pedido.getStatus());
+        extras.put("cliente", clienteNome);
+        extras.put("valorTotal", valTotal);
+        extras.put("natureza", natureza);
+
+        return new ComandoResponse(
+                "ACAO",
+                "SUCESSO",
+                "Status do Pedido #" + pedidoNumero,
+                "• Status: " + pedido.getStatus() + "\n" +
+                "• Cliente: " + clienteNome + "\n" +
+                "• Natureza: " + natureza + "\n" +
+                "• Produtos: R$ " + valProdutos + "\n" +
+                "• Serviços: R$ " + valServicos + "\n" +
+                "• Total: R$ " + valTotal,
+                "/vendas/pedidos",
+                "Vendas > Pedidos de Venda",
+                "Abrir Pedido",
+                extras
+        );
     }
 }

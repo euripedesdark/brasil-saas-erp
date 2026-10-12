@@ -179,6 +179,12 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
                 >
                     ⚡ Emita a nota do pedido 54
                 </span>
+                <span
+                    className="copiloto-exemplo-chip"
+                    onClick={() => setTexto('Status do pedido 54')}
+                >
+                    ⚡ Status do pedido 54
+                </span>
             </div>
 
             {carregando && (

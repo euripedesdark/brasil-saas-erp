@@ -170,4 +170,28 @@ class AssistenteComandoTest {
         assertEquals("/fiscal/nfse", resposta.rota());
         assertTrue(resposta.mensagem().contains("NFS-e"));
     }
+
+    @Test
+    void testConsultarStatusPedido() {
+        PedidoVenda pedido = new PedidoVenda();
+        pedido.setId(54L);
+        pedido.setNumero("54");
+        pedido.setStatus("ABERTO");
+        pedido.setClienteId(10L);
+        pedido.setValorProdutos(new BigDecimal("1500.00"));
+        pedido.setValorServicos(BigDecimal.ZERO);
+        pedido.setValorTotal(new BigDecimal("1500.00"));
+
+        when(pedidoVendaRepository.findByIdAndEmpresaId(54L, 1L)).thenReturn(Optional.of(pedido));
+        when(clienteRepository.nomeDaPessoaPorClienteId(10L)).thenReturn(Optional.of("Empresa Cliente S/A"));
+
+        var resposta = acaoService.processar("status do pedido 54", "ACAO", 1L, "euripedes");
+
+        assertEquals("ACAO", resposta.modo());
+        assertEquals("SUCESSO", resposta.status());
+        assertTrue(resposta.titulo().contains("Status do Pedido"));
+        assertTrue(resposta.mensagem().contains("ABERTO"));
+        assertTrue(resposta.mensagem().contains("Empresa Cliente S/A"));
+    }
+
 }
