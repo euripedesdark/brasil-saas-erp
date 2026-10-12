@@ -211,20 +211,12 @@ public class AssistenteAcaoService {
             );
         }
 
-        // Avaliar natureza: SERVIÇO, PRODUTO ou MISTO
+        // Avaliar natureza: PRODUTO, SERVIÇO, MISTO ou indefinido
         boolean temProdutos = valProdutos.compareTo(BigDecimal.ZERO) > 0;
         boolean temServicos = valServicos.compareTo(BigDecimal.ZERO) > 0;
 
-        if (temServicos && !temProdutos) {
-            // Só serviço → NFS-e municipal
-            return tratarEmissaoNfse(pedido, pedidoNumero, clienteNome, valServicos, empresaId);
-        }
-        if (temProdutos && !temServicos) {
-            // Só produto → NF-e estadual
-            return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
-        }
-        if (temProdutos) {
-            // Misto (produto + serviço): orienta emissão dos dois documentos
+        if (temProdutos && temServicos) {
+            // Itens mistos: produto sai por NF-e estadual e serviço por NFS-e municipal
             return new ComandoResponse(
                     "ACAO",
                     "AVISO",
@@ -238,7 +230,11 @@ public class AssistenteAcaoService {
                     Map.of("pedidoId", pedido.getId(), "produtos", valProdutos, "servicos", valServicos)
             );
         }
-        // Sem valores de produto/serviço no cabeçalho → assume NF-e padrão
+        if (temServicos) {
+            // Só serviços: operação de NFS-e Municipal
+            return tratarEmissaoNfse(pedido, pedidoNumero, clienteNome, valServicos, empresaId);
+        }
+        // Só produtos, ou cabeçalho sem valores preenchidos: assume NF-e de mercadoria padrão
         return tratarEmissaoNfe(pedido, pedidoNumero, clienteNome, valTotal, empresaId);
     }
 
@@ -269,8 +265,11 @@ public class AssistenteAcaoService {
                         "Ver Notas Fiscais",
                         extras
                 );
-            } catch (RuntimeException e) {
-                // Falhas de validação SEFAZ / certificado / regras do NFeService
+            } catch (Exception e) {
+                // Falhas de validação SEFAZ / certificado / regras do NFeService.
+                // O catch é amplo de propósito: NFeService.emitirNFe declara
+                // `throws Exception`, então falhas checadas da SEFAZ/certificado
+                // precisam ser tratadas aqui para virar uma resposta ao usuário.
                 log.warn("Tentativa de emissão de NF-e para pedido {}: {}", pedidoNumero, e.getMessage());
                 return new ComandoResponse(
                         "ACAO",
@@ -313,6 +312,10 @@ public class AssistenteAcaoService {
         extras.put("cliente", clienteNome);
         extras.put("valorServicos", valServicos);
         extras.put("tipoDocumento", "NFS-e");
+        // O emissor municipal só existe quando o provedor da prefeitura está
+        // configurado; a resposta informa isso e mantém a navegação guiada para
+        // a tela de NFS-e, onde os dados do RPS são preenchidos.
+        extras.put("emissaoAutomaticaNfse", nfseEmissaoService.isPresent());
 
         return new ComandoResponse(
                 "ACAO",

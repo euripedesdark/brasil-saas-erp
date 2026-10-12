@@ -58,10 +58,9 @@ public record Achado(String fonte,
         if (o.contains("arquivo")) {
             return "baixa";                       // prosa menciona o assunto
         }
-        if (pontuacao >= 90) {
-            return "media";                       // prefixo: pode ser mais de um
-        }
-        return "media";                           // derivado da descrição oficial
+        // A partir daqui a faixa é sempre "media": pontuação >= 90 é prefixo (pode
+        // casar com mais de um código) e o restante vem da descrição oficial.
+        return "media";
     }
 
     /** Confiança de um achado que é uma classificação fiscal. */

@@ -1,8 +1,8 @@
 package br.com.brasil_saas.ia.assistente;
 
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
-import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.fiscal.nfse.NfseEmissaoService;
+import br.com.brasil_saas.fiscal.service.NFeService;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,10 +52,56 @@ class AssistenteComandoTest {
     }
 
     @Test
+    void testCatalogoNavegacaoEncontraNfse() {
+        var achado = catalogo.buscarMaisRelevante("onde emito nota de servico");
+        assertTrue(achado.isPresent());
+        assertEquals("/fiscal/nfse", achado.get().rota());
+    }
+
+    @Test
     void testCatalogoNavegacaoEncontraCliente() {
         var achado = catalogo.buscarMaisRelevante("como cadastrar um cliente");
         assertTrue(achado.isPresent());
-        assertEquals("/cadastros/clientes", achado.get().rota());
+        assertEquals("/cadastro/clientes", achado.get().rota());
+    }
+
+    @Test
+    void testCatalogoNavegacaoEncontraProduto() {
+        var achado = catalogo.buscarMaisRelevante("quero cadastrar um produto");
+        assertTrue(achado.isPresent());
+        assertEquals("/cadastro/produtos", achado.get().rota());
+    }
+
+    @Test
+    void testCatalogoNavegacaoEncontraContasAPagar() {
+        var achado = catalogo.buscarMaisRelevante("onde vejo contas a pagar");
+        assertTrue(achado.isPresent());
+        assertEquals("/financeiro/lancamentos", achado.get().rota());
+    }
+
+    /**
+     * Guarda-corpo: nenhuma rota do catálogo pode ficar em branco ou fora do padrão
+     * de rota absoluta do React Router. Sem isto, a IA mandaria o usuário para uma
+     * tela inexistente.
+     */
+    @Test
+    void testTodasAsRotasSaoAbsolutasEPreenchidas() {
+        assertFalse(catalogo.getTodos().isEmpty(), "O catálogo não pode estar vazio");
+        for (var item : catalogo.getTodos()) {
+            assertNotNull(item.rota(), "Rota nula em " + item.id());
+            assertTrue(item.rota().startsWith("/"), "Rota não absoluta em " + item.id() + ": " + item.rota());
+            assertTrue(item.rota().length() > 1, "Rota vazia em " + item.id());
+            assertNotNull(item.caminhoMenu(), "Menu nulo em " + item.id());
+            assertFalse(item.caminhoMenu().isBlank(), "Menu vazio em " + item.id());
+            assertFalse(item.sinonimos().isEmpty(), "Sem sinônimos em " + item.id());
+            assertNotNull(item.descricaoPassoAPasso(), "Sem passo a passo em " + item.id());
+        }
+    }
+
+    @Test
+    void testIdesDoCatalogoSaoUnicos() {
+        var ids = catalogo.getTodos().stream().map(CatalogoNavegacaoService.ItemNavegacao::id).toList();
+        assertEquals(ids.size(), ids.stream().distinct().count(), "Existem IDs duplicados no catálogo");
     }
 
     @Test
