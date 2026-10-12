@@ -42,12 +42,7 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
     @Override
     @Transactional
     public ChatSessao atualizar(Long empresaId, Long id, ChatSessaoRequest request) {
-        ChatSessao sessao = sessaoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sessao de chat nao encontrada"));
-
-        if (!sessao.getEmpresaId().equals(empresaId)) {
-            throw new ResourceNotFoundException("Sessao nao pertence a esta empresa");
-        }
+        ChatSessao sessao = buscarDaEmpresa(empresaId, id);
 
         sessao.setTitulo(request.titulo());
         sessao.setModeloIa(request.modeloIa());
@@ -63,14 +58,7 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
     @Override
     @Transactional(readOnly = true)
     public ChatSessao buscarPorId(Long empresaId, Long id) {
-        ChatSessao sessao = sessaoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sessao de chat nao encontrada"));
-
-        if (!sessao.getEmpresaId().equals(empresaId)) {
-            throw new ResourceNotFoundException("Sessao nao pertence a esta empresa");
-        }
-
-        return sessao;
+        return buscarDaEmpresa(empresaId, id);
     }
 
     @Override
@@ -100,12 +88,7 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
     @Override
     @Transactional
     public void excluir(Long empresaId, Long id) {
-        ChatSessao sessao = sessaoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sessao de chat nao encontrada"));
-
-        if (!sessao.getEmpresaId().equals(empresaId)) {
-            throw new ResourceNotFoundException("Sessao nao pertence a esta empresa");
-        }
+        ChatSessao sessao = buscarDaEmpresa(empresaId, id);
 
         // Excluir mensagens da sessao
         List<ChatMensagem> mensagens = mensagemRepository.findByEmpresaIdAndSessaoId(empresaId, id);
@@ -117,12 +100,7 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
     @Override
     @Transactional
     public void alternarFavorito(Long empresaId, Long id) {
-        ChatSessao sessao = sessaoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sessao de chat nao encontrada"));
-
-        if (!sessao.getEmpresaId().equals(empresaId)) {
-            throw new ResourceNotFoundException("Sessao nao pertence a esta empresa");
-        }
+        ChatSessao sessao = buscarDaEmpresa(empresaId, id);
 
         sessao.setFavorito(!sessao.getFavorito());
         sessaoRepository.save(sessao);
@@ -131,6 +109,17 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
     @Override
     @Transactional
     public void limparHistorico(Long empresaId, Long id) {
+        ChatSessao sessao = buscarDaEmpresa(empresaId, id);
+
+        List<ChatMensagem> mensagens = mensagemRepository.findByEmpresaIdAndSessaoId(empresaId, id);
+        mensagemRepository.deleteAll(mensagens);
+
+        sessao.setDataAtualizacao(LocalDateTime.now());
+        sessaoRepository.save(sessao);
+    }
+
+    /** Busca a sessao garantindo que ela pertence a empresa informada. */
+    private ChatSessao buscarDaEmpresa(Long empresaId, Long id) {
         ChatSessao sessao = sessaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sessao de chat nao encontrada"));
 
@@ -138,10 +127,6 @@ public class ChatSessaoServiceImpl implements ChatSessaoService {
             throw new ResourceNotFoundException("Sessao nao pertence a esta empresa");
         }
 
-        List<ChatMensagem> mensagens = mensagemRepository.findByEmpresaIdAndSessaoId(empresaId, id);
-        mensagemRepository.deleteAll(mensagens);
-
-        sessao.setDataAtualizacao(LocalDateTime.now());
-        sessaoRepository.save(sessao);
+        return sessao;
     }
 }
