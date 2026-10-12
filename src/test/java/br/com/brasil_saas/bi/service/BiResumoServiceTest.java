@@ -80,6 +80,40 @@ class BiResumoServiceTest {
         assertThrows(BusinessException.class, () -> service.consultarArea(1L, inicio, fim, "vendas;DROP TABLE x"));
     }
 
+    @Test void evolucaoMensalUsaDadosReaisEIsolaEmpresa() {
+        jdbc.execute("INSERT INTO brasil_saas.bc_fin_titulo VALUES (1,'R',120,'2026-01-01','ABERTO',NULL),(1,'P',70,'2026-01-31','ABERTO',NULL),(2,'R',900,'2026-01-15','ABERTO',NULL)");
+        jdbc.execute("INSERT INTO brasil_saas.bc_ven_pedido VALUES (1,'PEDIDO','FATURADO','2026-01-15',300,NULL),(1,'PEDIDO','PARCIAL','2026-01-16',100,NULL),(2,'PEDIDO','FATURADO','2026-01-15',9000,NULL)");
+        var resumo = service.consultar(1L, inicio, fim);
+        valor(resumo, "financeiro", "saldo_previsto", "50");
+        valor(resumo, "vendas", "valor_faturado", "300");
+        var vendas = resumo.areas().stream().filter(a -> a.codigo().equals("vendas")).findFirst().orElseThrow();
+        assertEquals(1, vendas.evolucao().size());
+        assertEquals(inicio, vendas.evolucao().getFirst().mes());
+        assertEquals(0, new BigDecimal("400").compareTo(vendas.evolucao().getFirst().valor()));
+        assertEquals("BRL", vendas.evolucao().getFirst().unidade());
+        assertTrue(resumo.areas().stream().filter(a -> a.codigo().equals("producao")).findFirst().orElseThrow().evolucao().isEmpty());
+    }
+
+    @Test void agrupaMesesEmOrdemEPreservaDataDeFechamentoDosServicos() {
+        jdbc.execute("INSERT INTO brasil_saas.bc_srv_ordem_servico VALUES (1,'FECHADA',250,'2025-12-10','2026-01-31',NULL,NULL),(1,'FECHADA',800,'2026-01-10','2026-02-15',NULL,NULL),(2,'FECHADA',900,'2026-01-10','2026-02-15',NULL,NULL)");
+        var area = service.consultarArea(1L, inicio, fim.plusMonths(1), "servicos").areas().getFirst();
+        assertEquals(java.util.List.of(inicio, inicio.plusMonths(1)), area.evolucao().stream().map(BiResumo.Ponto::mes).toList());
+        assertTrue(area.evolucao().stream().allMatch(p -> p.valor().compareTo(BigDecimal.ONE) == 0));
+    }
+
+    @Test void conexaoDedicadaNaoConsultaBancoOperacional() {
+        var operational = new DriverManagerDataSource("jdbc:h2:mem:operational" + UUID.randomUUID(), "sa", "");
+        var client = org.mockito.Mockito.mock(br.com.brasil_saas.bi.config.BiDataSourceConfig.BiReadClient.class);
+        org.mockito.Mockito.when(client.jdbc()).thenReturn(new NamedParameterJdbcTemplate(jdbc.getDataSource()));
+        @SuppressWarnings("unchecked")
+        var provider = (org.springframework.beans.factory.ObjectProvider<br.com.brasil_saas.bi.config.BiDataSourceConfig.BiReadClient>)
+                org.mockito.Mockito.mock(org.springframework.beans.factory.ObjectProvider.class);
+        org.mockito.Mockito.when(provider.getIfAvailable()).thenReturn(client);
+        var dedicated = new BiResumoService(new NamedParameterJdbcTemplate(operational), provider);
+        assertEquals(4, dedicated.consultar(1L, inicio, fim).areas().size());
+        assertFalse(new JdbcTemplate(operational).queryForObject("SELECT COUNT(*) > 0 FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='BRASIL_SAAS_DL'", Boolean.class));
+    }
+
     private void valor(BiResumo resumo, String area, String indicador, String esperado) {
         BigDecimal atual = resumo.areas().stream().filter(a -> a.codigo().equals(area)).findFirst().orElseThrow()
                 .indicadores().stream().filter(i -> i.codigo().equals(indicador)).findFirst().orElseThrow().valor();
