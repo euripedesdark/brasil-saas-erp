@@ -89,8 +89,7 @@ public class RescisaoService {
         BigDecimal sal = f.getSalario() == null ? BigDecimal.ZERO : f.getSalario();
         long meses = ChronoUnit.MONTHS.between(f.getDataAdmissao().withDayOfMonth(1), desligamento.withDayOfMonth(1));
         if (meses < 0) meses = 0;
-        long diasMes = desligamento.getDayOfMonth() - 1;
-        if (diasMes < 0) diasMes = 0;
+        long diasMes = desligamento.getDayOfMonth() - 1; // 0..30 (DayOfMonth >= 1)
 
         BigDecimal saldoSalario = sal.multiply(BigDecimal.valueOf(diasMes)).divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
         BigDecimal decimo = sal.multiply(BigDecimal.valueOf(Math.min(12, meses + 1))).divide(BigDecimal.valueOf(12), 2, RoundingMode.HALF_UP);

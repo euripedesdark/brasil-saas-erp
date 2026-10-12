@@ -143,7 +143,7 @@ public final class CalculoDesconto {
         BigDecimal bruto = BigDecimal.ZERO;
         BigDecimal descontoItens = BigDecimal.ZERO;
         for (Item item : itens == null ? List.<Item>of() : itens) {
-            if (item == null || item.quantidade().signum() <= 0 || item.valorUnitario().signum() < 0) {
+            if (item.quantidade().signum() <= 0 || item.valorUnitario().signum() < 0) {
                 throw new BusinessException("Item deve possuir quantidade positiva e valor unitario nao negativo");
             }
             if (item.valorDesconto().signum() < 0 || item.valorDesconto().compareTo(item.bruto()) > 0) {

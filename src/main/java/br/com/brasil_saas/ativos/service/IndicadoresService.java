@@ -68,19 +68,19 @@ public class IndicadoresService {
             Manutencao n = new Manutencao();
             n.setEmpresaId(empresaId);
             n.setAtivoId(a.getId());
-            n.setNumero("PREV-" + a.getId() + "-" + prevista.toString());
+            n.setNumero("PREV-" + a.getId() + "-" + String.valueOf(prevista));
             n.setTipo("PREVENTIVA"); n.setStatus("ABERTA"); n.setPrioridade("MEDIA");
             n.setDescricao("Preventiva gerada pelo MTBF");
             n.setDataProgramada(prevista);
             manutencoes.save(n);
             java.util.Map<String, Object> r = new java.util.LinkedHashMap<>();
-            r.put("ativoId", a.getId()); r.put("codigo", a.getCodigo()); r.put("dataProgramada", prevista.toString());
+            r.put("ativoId", a.getId()); r.put("codigo", a.getCodigo()); r.put("dataProgramada", String.valueOf(prevista));
             criadas.add(r);
         }
         return criadas;
     }
     private String proximaPreventiva(LocalDate ultimaFalha, double mtbf) {
         if (ultimaFalha == null || mtbf <= 0) return null;
-        return ultimaFalha.plusDays(Math.round(mtbf)).toString();
+        return String.valueOf(ultimaFalha.plusDays(Math.round(mtbf)));
     }
 }

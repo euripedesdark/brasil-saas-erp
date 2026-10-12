@@ -254,10 +254,11 @@ public class BoletoService {
 
             // o banco devolve nosso_numero so com digitos; a chave normalizada
             // do boleto e o que permite casar de fato
-            var boleto = digito(item.getNossoNumero()) == null || digito(item.getNossoNumero()).isBlank()
+            String chaveNn = digito(item.getNossoNumero());
+            var boleto = chaveNn.isBlank()
                     ? java.util.Optional.<Boleto>empty()
                     : boletoRepository.findByEmpresaIdAndBancoAndNossoNumeroChave(
-                            empresaId, bank, digito(item.getNossoNumero()));
+                            empresaId, bank, chaveNn);
             if (boleto.isPresent()) {
                 item.setBoletoId(boleto.get().getId());
                 item.setAplicado(true);

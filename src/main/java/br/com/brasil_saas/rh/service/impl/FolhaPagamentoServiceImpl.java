@@ -61,7 +61,8 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
 
                 if ("PROVENTO".equals(itemReq.tipo())) {
                     totalProventos = totalProventos.add(itemReq.valor());
-                } else if ("DESCONTO".equals(itemReq.tipo())) {
+                } else {
+                    // tipo validado como PROVENTO|DESCONTO no request
                     totalDescontos = totalDescontos.add(itemReq.valor());
                 }
             }
@@ -129,7 +130,8 @@ public class FolhaPagamentoServiceImpl implements FolhaPagamentoService {
 
                 if ("PROVENTO".equals(itemReq.tipo())) {
                     totalProventos = totalProventos.add(itemReq.valor());
-                } else if ("DESCONTO".equals(itemReq.tipo())) {
+                } else {
+                    // tipo validado como PROVENTO|DESCONTO no request
                     totalDescontos = totalDescontos.add(itemReq.valor());
                 }
             }

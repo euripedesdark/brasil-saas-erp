@@ -82,7 +82,7 @@ public class NfseArquivoService {
             return doc.getId();
         } catch (RuntimeException e) {
             log.error("NFS-e {} emitida mas o XML nao foi arquivado. Prazo de guarda de {} dias "
-                    + "esta em risco. Causa: {}", nfse.getNumero(), diasXml, e.toString(), e);
+                    + "esta em risco. Causa: {}", nfse.getNumero(), diasXml, e);
             return null;
         }
     }
@@ -100,7 +100,7 @@ public class NfseArquivoService {
             return doc.getId();
         } catch (RuntimeException e) {
             log.error("NFS-e {} emitida mas o PDF nao foi arquivado. Causa: {}",
-                    nfse.getNumero(), e.toString(), e);
+                    nfse.getNumero(), e);
             return null;
         }
     }

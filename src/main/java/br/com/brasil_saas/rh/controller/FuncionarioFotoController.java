@@ -42,9 +42,7 @@ public class FuncionarioFotoController {
             @RequestParam("foto") MultipartFile arquivo,
             @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) throws IOException {
 
-        Long funcionarioId = id;
-        
-        Optional<Funcionario> optionalFuncionario = funcionarioRepository.findById(funcionarioId);
+        Optional<Funcionario> optionalFuncionario = funcionarioRepository.findById(id);
         if (optionalFuncionario.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -120,9 +118,7 @@ public class FuncionarioFotoController {
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser usuarioAutenticado) {
 
-        Long funcionarioId = id;
-        
-        Optional<Funcionario> optionalFuncionario = funcionarioRepository.findById(funcionarioId);
+        Optional<Funcionario> optionalFuncionario = funcionarioRepository.findById(id);
         if (optionalFuncionario.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

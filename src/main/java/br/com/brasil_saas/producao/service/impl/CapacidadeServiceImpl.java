@@ -76,7 +76,7 @@ public class CapacidadeServiceImpl implements CapacidadeService {
     public List<Map<String, Object>> cargaPorCentro(Long empresaId, List<Request> pedidos) {
         Map<Long, BigDecimal> total = new LinkedHashMap<>();
         for (Request r : pedidos == null ? List.<Request>of() : pedidos) {
-            validar(r == null ? null : r.produtoId(), r == null ? null : r.quantidade());
+            validar(r.produtoId(), r.quantidade());
             planejar(empresaId, r.produtoId(), r.quantidade(), r.dataInicio(), null)
                     .horasPorCentro.forEach((id, h) -> total.merge(id, h, BigDecimal::add));
         }

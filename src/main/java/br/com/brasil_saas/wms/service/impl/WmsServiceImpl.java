@@ -52,7 +52,7 @@ public class WmsServiceImpl implements WmsService {
     @Override @Transactional public WmsOndaItem addItem(Long empresaId, Long ondaId, WmsOndaItem i) {
         WmsOnda o = exigirOnda(empresaId, ondaId);
         if (!"ABERTA".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda ja liberada");
-        if (i.getProdutoId() == null || !produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isPresent())
+        if (i.getProdutoId() == null || produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isEmpty())
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
         if (i.getQtdSolicitada() == null || i.getQtdSolicitada().signum() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade solicitada deve ser positiva");
@@ -186,7 +186,7 @@ public class WmsServiceImpl implements WmsService {
     @Override @Transactional public WmsVolumeItem embalar(Long empresaId, Long volumeId, WmsVolumeItem i) {
         WmsVolume v = exigir(volumes.findByIdAndEmpresaIdAndDeletedAtIsNull(volumeId, empresaId), "Volume inexistente");
         if (!"ABERTO".equals(v.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Volume fechado");
-        if (i.getProdutoId() == null || !produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isPresent())
+        if (i.getProdutoId() == null || produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isEmpty())
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
         if (i.getQuantidade() == null || i.getQuantidade().signum() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade embalada deve ser positiva");

@@ -61,7 +61,6 @@ public class SefazConfig {
             certificado = CertificadoService.certificadoA3(System.getenv("NFSE_CERT_PASSWORD"), provider);
         }
         AmbienteEnum amb = "PRODUCAO".equalsIgnoreCase(props.getAmbiente()) ? AmbienteEnum.PRODUCAO : AmbienteEnum.HOMOLOGACAO;
-        ConfiguracoesNfe config = ConfiguracoesNfe.criarConfiguracoes(uf, amb, certificado, "4.00", ZoneId.of("America/Sao_Paulo"));
-        return config;
+        return ConfiguracoesNfe.criarConfiguracoes(uf, amb, certificado, "4.00", ZoneId.of("America/Sao_Paulo"));
     }
 }

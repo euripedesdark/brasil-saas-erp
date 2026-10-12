@@ -36,10 +36,9 @@ public final class NormalizacaoFiscal {
         // for letra ASCII ou dígito vira espaço.
         final String semAcento = Normalizer.normalize(entrada, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
-        final String limpo = semAcento.toLowerCase(Locale.ROOT)
+        return semAcento.toLowerCase(Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", " ")
                 .trim();
-        return limpo;
     }
 
     /**

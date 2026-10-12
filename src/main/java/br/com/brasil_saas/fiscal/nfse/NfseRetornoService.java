@@ -113,7 +113,7 @@ public class NfseRetornoService {
         } catch (RuntimeException e) {
             log.error("Nao consegui gravar o retorno da {} da NFS-e {}. A prefeitura respondeu "
                             + "mas o motivo nao ficou registrado. Causa: {}",
-                    operacao, nfse == null ? "?" : nfse.getNumero(), e.toString(), e);
+                    operacao, nfse == null ? "?" : nfse.getNumero(), e);
         }
     }
 
@@ -206,7 +206,7 @@ public class NfseRetornoService {
             // Corpo ausente ou não-JSON é caso previsto: a API pode responder
             // HTML de erro, por exemplo. Não é motivo para falhar a gravação.
             log.debug("Corpo da resposta de status {} nao era JSON legivel: {}",
-                    erro.getStatusCode().value(), e.toString());
+                    erro.getStatusCode().value(), e);
             return null;
         }
     }
@@ -278,7 +278,7 @@ public class NfseRetornoService {
         } catch (Exception e) {
             log.error("Nao consegui arquivar o JSON bruto do retorno {} da operacao {}. "
                             + "Fica o registro no Postgres sem o corpo original. Causa: {}",
-                    registroId, operacao, e.toString(), e);
+                    registroId, operacao, e);
             return null;
         }
     }

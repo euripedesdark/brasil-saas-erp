@@ -112,7 +112,7 @@ public class NfsePdfService {
         } catch (Exception e) {
             log.error("Falha ao gerar o PDF da NFS-e {}. A nota segue emitida; "
                     + "o PDF pode ser regerado a partir do XML arquivado. Causa: {}",
-                    nfse.getNumero(), e.toString(), e);
+                    nfse.getNumero(), e);
             return null;
         }
     }

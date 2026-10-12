@@ -62,16 +62,14 @@ public class TributacaoSimuladorService {
         boolean naoContrib = contribuinte == null || !contribuinte;
 
         if (interestadual && cf && naoContrib) {
-            BigDecimal inter = aliqIcms;
             BigDecimal interna = r.getAliquotaInterna() != null ? r.getAliquotaInterna() : aliqIcms;
-            Map<String, Object> d = difalService.calcular(base, inter, interna, nz(r.getAliquotaFcp()));
+            Map<String, Object> d = difalService.calcular(base, aliqIcms, interna, nz(r.getAliquotaFcp()));
             out.put("difal", d);
         }
         if (r.getMva() != null && r.getMva().signum() > 0) {
-            BigDecimal inter = aliqIcms;
             BigDecimal interna = r.getAliquotaInterna() != null ? r.getAliquotaInterna()
                     : (r.getAliquotaSt() != null ? r.getAliquotaSt() : aliqIcms);
-            Map<String, Object> st = icmsStService.calcular(base, inter, interna, r.getMva(), nz(r.getReducaoBasePct()));
+            Map<String, Object> st = icmsStService.calcular(base, aliqIcms, interna, r.getMva(), nz(r.getReducaoBasePct()));
             out.put("icmsSt", st);
         }
         return out;
