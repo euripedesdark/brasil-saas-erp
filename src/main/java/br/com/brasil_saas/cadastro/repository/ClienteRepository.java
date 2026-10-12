@@ -25,4 +25,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     @Query("select p.nome from Cliente c join c.pessoa p where c.id = :id and c.deletedAt is null")
     Optional<String> nomeDaPessoaPorClienteId(@Param("id") Long id);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

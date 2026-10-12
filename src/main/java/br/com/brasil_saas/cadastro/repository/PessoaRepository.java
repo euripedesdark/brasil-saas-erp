@@ -36,4 +36,5 @@ public interface PessoaRepository extends JpaRepository<Pessoa, Long> {
     Optional<Pessoa> findByEmpresaIdAndDocumentoAndDeletedAtIsNull(Long empresaId, String documento);
 
     boolean existsByEmpresaIdAndDocumentoAndIdNotAndDeletedAtIsNull(Long empresaId, String documento, Long id);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

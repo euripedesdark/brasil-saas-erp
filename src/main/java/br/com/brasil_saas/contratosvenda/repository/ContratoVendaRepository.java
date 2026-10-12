@@ -11,4 +11,5 @@ public interface ContratoVendaRepository extends JpaRepository<ContratoVenda, Lo
     List<ContratoVenda> findByEmpresaIdAndStatusAndDeletedAtIsNullOrderByIdDesc(Long empresaId, String status);
     Optional<ContratoVenda> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     long countByEmpresaIdAndStatusAndDeletedAtIsNull(Long empresaId, String status);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

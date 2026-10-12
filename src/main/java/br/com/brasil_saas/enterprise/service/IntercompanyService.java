@@ -1,13 +1,15 @@
 package br.com.brasil_saas.enterprise.service;
 
+import br.com.brasil_saas.financeiro.model.IntercompanyLancamento;
+import br.com.brasil_saas.financeiro.repository.IntercompanyLancamentoRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -19,41 +21,50 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class IntercompanyService {
     private static final BigDecimal TOLERANCIA = new BigDecimal("0.01");
-    private final JdbcTemplate jdbc;
+    private final IntercompanyLancamentoRepository repository;
 
     @Transactional
     public Map<String, Object> reconciliar(Long empresaId, Long userId, Long id) {
-        Map<String, Object> meu = jdbc.queryForList(
-                "select id, empresa_parceira_id, numero, valor, moeda, competencia from brasil_saas.bc_fin_intercompany " +
-                "where empresa_id=? and id=? and deleted_at is null", empresaId, id)
-                .stream().findFirst().orElseThrow(() -> new NoSuchElementException("Lançamento intercompany não encontrado"));
-        Long parceira = ((Number) meu.get("empresa_parceira_id")).longValue();
-        List<Map<String, Object>> espelho = jdbc.queryForList(
-                "select id, valor, moeda from brasil_saas.bc_fin_intercompany " +
-                "where empresa_id=? and empresa_parceira_id=? and numero=? and deleted_at is null " +
-                "and competencia is not distinct from ?",
-                parceira, empresaId, meu.get("numero"), meu.get("competencia"));
-        Map<String, Object> par = espelho.isEmpty() ? null : espelho.get(0);
+        IntercompanyLancamento meu = repository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
+                .orElseThrow(() -> new NoSuchElementException("Lançamento intercompany não encontrado"));
+        Long parceira = meu.getEmpresaParceiraId();
+        List<IntercompanyLancamento> espelhos = repository.findEspelho(
+                parceira, empresaId, meu.getNumero(), meu.getCompetencia());
+        IntercompanyLancamento par = espelhos.isEmpty() ? null : espelhos.get(0);
 
-        var r = IntercompanyConciliacao.comparar((BigDecimal) meu.get("valor"), String.valueOf(meu.get("moeda")),
-                par == null ? null : (BigDecimal) par.get("valor"), par == null ? null : String.valueOf(par.get("moeda")),
+        var r = IntercompanyConciliacao.comparar(meu.getValor(), String.valueOf(meu.getMoeda()),
+                par == null ? null : par.getValor(), par == null ? null : String.valueOf(par.getMoeda()),
                 TOLERANCIA);
-        jdbc.update("update brasil_saas.bc_fin_intercompany set status=?, reconciliado=?, diferenca=?, contrapartida_id=?, " +
-                        "reconciliado_em=case when ? then now() else null end, updated_at=now(), updated_by=? where empresa_id=? and id=?",
-                r.status(), r.reconciliado(), r.diferenca(), par == null ? null : par.get("id"),
-                r.reconciliado(), userId, empresaId, id);
-        return jdbc.queryForMap("select * from brasil_saas.bc_fin_intercompany where empresa_id=? and id=?", empresaId, id);
+        meu.setStatus(r.status());
+        meu.setReconciliado(r.reconciliado());
+        meu.setDiferenca(r.diferenca());
+        meu.setContrapartidaId(par == null ? null : par.getId());
+        meu.setReconciliadoEm(r.reconciliado() ? java.time.LocalDateTime.now() : null);
+        meu.setUpdatedBy(userId);
+        repository.save(meu);
+        return lancamentoMap(meu);
     }
 
     /** Linhas reconciliadas do mês; totais segregados por moeda, sem conversão implícita. */
     @Transactional(readOnly = true)
     public Map<String, Object> eliminacoes(Long empresaId, java.time.LocalDate competencia) {
         java.time.LocalDate inicio = competencia.withDayOfMonth(1);
-        List<Map<String, Object>> linhas = jdbc.queryForList(
-                "select id, numero, empresa_parceira_id, valor, moeda, status, reconciliado, diferenca, competencia " +
-                "from brasil_saas.bc_fin_intercompany " +
-                "where empresa_id=? and reconciliado=true and deleted_at is null and competencia>=? and competencia<? " +
-                "order by numero", empresaId, java.sql.Date.valueOf(inicio), java.sql.Date.valueOf(inicio.plusMonths(1)));
+        List<IntercompanyLancamento> lancamentos = repository
+                .findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                        empresaId, inicio, inicio.plusMonths(1));
+        List<Map<String, Object>> linhas = lancamentos.stream().map(l -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", l.getId());
+            m.put("numero", l.getNumero());
+            m.put("empresa_parceira_id", l.getEmpresaParceiraId());
+            m.put("valor", l.getValor());
+            m.put("moeda", l.getMoeda());
+            m.put("status", l.getStatus());
+            m.put("reconciliado", l.getReconciliado());
+            m.put("diferenca", l.getDiferenca());
+            m.put("competencia", l.getCompetencia());
+            return m;
+        }).toList();
         Map<String, BigDecimal> totaisPorMoeda = new LinkedHashMap<>();
         for (Map<String, Object> linha : linhas) {
             BigDecimal valor = (BigDecimal) linha.get("valor");
@@ -68,5 +79,34 @@ public class IntercompanyService {
                 totaisPorMoeda.values().stream().findFirst().orElse(BigDecimal.ZERO));
         resultado.put("competencia", inicio.toString());
         return resultado;
+    }
+
+    private static Map<String, Object> lancamentoMap(IntercompanyLancamento l) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", l.getId());
+        m.put("uuid", l.getUuid());
+        m.put("empresa_id", l.getEmpresaId());
+        m.put("empresa_parceira_id", l.getEmpresaParceiraId());
+        m.put("numero", l.getNumero());
+        m.put("tipo", l.getTipo());
+        m.put("data_documento", l.getDataDocumento());
+        m.put("competencia", l.getCompetencia());
+        m.put("descricao", l.getDescricao());
+        m.put("valor", l.getValor());
+        m.put("moeda", l.getMoeda());
+        m.put("status", l.getStatus());
+        m.put("reconciliado", l.getReconciliado());
+        m.put("documento_origem_tipo", l.getDocumentoOrigemTipo());
+        m.put("documento_origem_id", l.getDocumentoOrigemId());
+        m.put("observacao", l.getObservacao());
+        m.put("contrapartida_id", l.getContrapartidaId());
+        m.put("diferenca", l.getDiferenca());
+        m.put("reconciliado_em", l.getReconciliadoEm());
+        m.put("created_at", l.getCreatedAt());
+        m.put("updated_at", l.getUpdatedAt());
+        m.put("created_by", l.getCreatedBy());
+        m.put("updated_by", l.getUpdatedBy());
+        m.put("deleted_at", l.getDeletedAt());
+        return m;
     }
 }

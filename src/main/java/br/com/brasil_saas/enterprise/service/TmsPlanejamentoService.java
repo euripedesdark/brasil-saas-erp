@@ -1,13 +1,15 @@
 package br.com.brasil_saas.enterprise.service;
 
+import br.com.brasil_saas.enterprise.model.TmsOrdem;
+import br.com.brasil_saas.enterprise.model.TmsParada;
+import br.com.brasil_saas.enterprise.repository.TmsOrdemRepository;
+import br.com.brasil_saas.enterprise.repository.TmsParadaRepository;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -15,7 +17,8 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class TmsPlanejamentoService {
-    private final JdbcTemplate jdbc;
+    private final TmsOrdemRepository ordemRepository;
+    private final TmsParadaRepository paradaRepository;
 
     @Transactional
     public List<Map<String, Object>> planejar(Long empresaId, String origem, BigDecimal capPeso, BigDecimal capVolume,
@@ -24,9 +27,9 @@ public class TmsPlanejamentoService {
         if (entregas == null || entregas.isEmpty()) throw new BusinessException("Nenhuma entrega informada");
         for (var e : entregas) {
             if (e.referenciaTipo() == null || e.referenciaId() == null) throw new BusinessException("Entrega sem documento de origem");
-            Integer ja = jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_parada where empresa_id=? and referencia_tipo=? " +
-                    "and referencia_id=? and status<>'CANCELADA'", Integer.class, empresaId, e.referenciaTipo(), e.referenciaId());
-            if (ja != null && ja > 0) throw new BusinessException("Documento " + e.referenciaTipo() + " " + e.referenciaId() + " já está planejado");
+            boolean ja = paradaRepository.existsByEmpresaIdAndReferenciaTipoAndReferenciaIdAndStatusNot(
+                    empresaId, e.referenciaTipo(), e.referenciaId(), "CANCELADA");
+            if (ja) throw new BusinessException("Documento " + e.referenciaTipo() + " " + e.referenciaId() + " já está planejado");
         }
         List<PlanejadorCarga.Carga> cargas = PlanejadorCarga.planejar(entregas, capPeso, capVolume);
         List<Map<String, Object>> ordens = new ArrayList<>();
@@ -34,16 +37,35 @@ public class TmsPlanejamentoService {
         int n = 1;
         for (var c : cargas) {
             String numero = "TMS-" + base + "-" + n++;
-            Long ordemId = jdbc.queryForObject("insert into brasil_saas.bc_tms_ordem(empresa_id,numero,origem,destino,transportadora_id," +
-                            "status,data_prevista_saida,peso,volume) values (?,?,?,?,?,'PLANEJADA',?,?,?) returning id",
-                    Long.class, empresaId, numero, origem, c.destino(), transportadoraId,
-                    saida == null ? null : Timestamp.valueOf(saida), c.peso(), c.volume());
+            TmsOrdem ordem = new TmsOrdem();
+            ordem.setEmpresaId(empresaId);
+            ordem.setNumero(numero);
+            ordem.setOrigem(origem);
+            ordem.setDestino(c.destino());
+            ordem.setTransportadoraId(transportadoraId);
+            ordem.setStatus("PLANEJADA");
+            ordem.setDataPrevistaSaida(saida);
+            ordem.setPeso(c.peso());
+            ordem.setVolume(c.volume());
+            ordem = ordemRepository.save(ordem);
+            Long ordemId = ordem.getId();
             int seq = 1;
+            List<TmsParada> paradas = new ArrayList<>();
             for (var e : c.entregas()) {
-                jdbc.update("insert into brasil_saas.bc_tms_parada(empresa_id,ordem_id,sequencia,tipo,localizacao,status," +
-                                "referencia_tipo,referencia_id,peso,volume) values (?,?,?,'ENTREGA',?,'PENDENTE',?,?,?,?)",
-                        empresaId, ordemId, seq++, e.destino(), e.referenciaTipo(), e.referenciaId(), e.peso(), e.volume());
+                TmsParada p = new TmsParada();
+                p.setEmpresaId(empresaId);
+                p.setOrdemId(ordemId);
+                p.setSequencia(seq++);
+                p.setTipo("ENTREGA");
+                p.setLocalizacao(e.destino());
+                p.setStatus("PENDENTE");
+                p.setReferenciaTipo(e.referenciaTipo());
+                p.setReferenciaId(e.referenciaId());
+                p.setPeso(e.peso());
+                p.setVolume(e.volume());
+                paradas.add(p);
             }
+            paradaRepository.saveAll(paradas);
             Map<String, Object> o = new LinkedHashMap<>();
             o.put("ordemId", ordemId); o.put("numero", numero); o.put("destino", c.destino());
             o.put("peso", c.peso()); o.put("volume", c.volume()); o.put("paradas", c.entregas().size());
