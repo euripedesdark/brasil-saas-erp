@@ -63,7 +63,7 @@ ENTRAR_PELO_NGINX="${ENTRAR_PELO_NGINX:-1}"
 
 echo -e "${BLUE}============================================================${NC}"
 echo -e "${BLUE}  Brasil SaaS ERP - Instalador de Ambiente NATIVO${NC}"
-echo -e "${BLUE}  Spring Boot 3.3.5 + React (Vite) — sem Docker${NC}"
+echo -e "${BLUE}  Spring Boot conforme pom.xml + React (Vite) — sem Docker${NC}"
 echo -e "${BLUE}============================================================${NC}"
 
 detect_distro() {
@@ -169,40 +169,40 @@ instalar_pacote() {
 }
 
 # -----------------------------------------------------------------------------
-# JDK 21+ (pom.xml usa java.version 21; JDK maior — ex.: 25 — é aceito)
+# JDK definido pelo POM; nao muda o Java global usado pelo Graylog/Astral.
 # -----------------------------------------------------------------------------
-echo -e "${GREEN}[JAVA] Verificando JDK 21+...${NC}"
-NEED_JAVA=false
-if command -v java &> /dev/null; then
-    CURRENT_JAVA_VER=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}' | head -n 1)
-    CURRENT_MAJOR=$(echo "$CURRENT_JAVA_VER" | cut -d'.' -f1)
-    if [ "$CURRENT_MAJOR" -ge 21 ] 2>/dev/null; then
-        echo -e "${GREEN}[JAVA] JDK $CURRENT_JAVA_VER já está instalado e ativo.${NC}"
+JAVA_REQUIRED=$(python3 - "$PROJECT_DIR/pom.xml" <<'PYXML'
+import sys, xml.etree.ElementTree as ET
+root = ET.parse(sys.argv[1]).getroot()
+print(root.findtext('{http://maven.apache.org/POM/4.0.0}properties/{http://maven.apache.org/POM/4.0.0}java.version'))
+PYXML
+)
+[[ "$JAVA_REQUIRED" =~ ^[0-9]+$ ]] || { echo '[ERRO] java.version invalida no POM.'; exit 1; }
+find_erp_jdk() {
+    local candidate version
+    for candidate in "${ERP_JAVA_HOME:-}" "${JAVA_HOME:-}" /usr/lib/jvm/* /opt/java/*; do
+        [[ -x "$candidate/bin/javac" && -x "$candidate/bin/java" ]] || continue
+        version=$("$candidate/bin/javac" -version 2>&1)
+        if [[ "$version" =~ ^javac\ ${JAVA_REQUIRED}(\.|$) ]]; then
+            export JAVA_HOME="$candidate"
+            export PATH="$JAVA_HOME/bin:$PATH"
+            return 0
+        fi
+    done
+    return 1
+}
+if ! find_erp_jdk; then
+    echo "[JAVA] Instalando JDK $JAVA_REQUIRED exigido pelo POM..."
+    if command -v apt-get >/dev/null; then
+        instalar_pacote "openjdk-${JAVA_REQUIRED}-jdk"
+    elif command -v dnf >/dev/null || command -v yum >/dev/null; then
+        instalar_pacote "java-${JAVA_REQUIRED}-openjdk-devel"
     else
-        NEED_JAVA=true
+        echo "[ERRO] Instale JDK $JAVA_REQUIRED e informe ERP_JAVA_HOME."; exit 1
     fi
-else
-    NEED_JAVA=true
+    find_erp_jdk || { echo "[ERRO] JDK $JAVA_REQUIRED nao encontrado apos instalacao."; exit 1; }
 fi
-
-if [ "$NEED_JAVA" = true ]; then
-    echo -e "${YELLOW}[JAVA] Instalando JDK 21...${NC}"
-    # A distro primeiro: um JDK de sistema serve o ERP e nao depende de home.
-    # O SDKMAN fica como reserva, e so quando pedido explicitamente.
-    if [ "$SDK_DISPONIVEL" = true ]; then
-        sdk install java 21.0.5-tem 2>/dev/null || true
-        sdk default java 21.0.5-tem 2>/dev/null || true
-    else
-        instalar_pacote java-21-openjdk || instalar_pacote java-21-openjdk-devel || true
-    fi
-    if ! command -v java &> /dev/null; then
-        echo -e "${RED}[ERRO] Nenhum JDK ficou disponível. Instale um JDK 21+ e rode de novo.${NC}"
-        exit 1
-    fi
-fi
-
-export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-echo -e "${GREEN}[JAVA] JAVA_HOME configurado: $JAVA_HOME${NC}"
+echo "[JAVA] JDK do ERP: $JAVA_HOME (alternatives global preservado)."
 
 # -----------------------------------------------------------------------------
 # Maven

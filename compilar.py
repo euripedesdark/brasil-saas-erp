@@ -401,7 +401,20 @@ def main():
         help="Pula o build do frontend"
     )
     
+    parser.add_argument('--prepare-upgrade', metavar='DESTINO',
+                        help='Prepara Java 25/Spring Boot 4 em worktree isolada; nao faz deploy')
+    parser.add_argument('--verify-upgrade', action='store_true',
+                        help='Executa clean verify no candidato com JDK 25/Maven')
     args = parser.parse_args()
+    if args.verify_upgrade and not args.prepare_upgrade:
+        parser.error('--verify-upgrade exige --prepare-upgrade')
+    if args.prepare_upgrade:
+        command = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    'scripts', 'prepare-runtime-upgrade.py'), '--destination', args.prepare_upgrade]
+        if args.verify_upgrade:
+            command.append('--verify')
+        return subprocess.call(command)
+
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(script_dir)
@@ -489,4 +502,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
