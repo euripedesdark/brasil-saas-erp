@@ -41,6 +41,7 @@ public class RelatorioServiceImpl implements RelatorioService {
     @Override
     @Transactional
     public Relatorio criar(Long empresaId, RelatorioRequest request) {
+        ReportSqlParameters.validate(request.sqlQuery());
         Relatorio relatorio = new Relatorio();
         relatorio.setEmpresaId(empresaId);
         relatorio.setNome(request.nome());
@@ -68,6 +69,8 @@ public class RelatorioServiceImpl implements RelatorioService {
         if (!relatorio.getEmpresaId().equals(empresaId)) {
             throw new ResourceNotFoundException("Relatorio nao pertence a esta empresa");
         }
+
+        ReportSqlParameters.validate(request.sqlQuery());
 
         relatorio.setNome(request.nome());
         relatorio.setDescricao(request.descricao());
@@ -133,7 +136,11 @@ public class RelatorioServiceImpl implements RelatorioService {
     public Map<String, Object> executarRelatorio(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);
 
-        Map<String, Object> valores = parametros == null ? Map.of() : parametros;
+        // O tenant nunca e definido pelo cliente, inclusive na API legada de relatorios.
+        Map<String, Object> valores = new LinkedHashMap<>();
+        if (parametros != null) valores.putAll(parametros);
+        valores.put("empresaId", empresaId);
+        valores.put("empresa_id", empresaId);
         String sql = ReportSqlParameters.bind(relatorio.getSqlQuery(), valores);
         List<Map<String, Object>> resultados = new NamedParameterJdbcTemplate(jdbcTemplate)
                 .queryForList(sql, valores);

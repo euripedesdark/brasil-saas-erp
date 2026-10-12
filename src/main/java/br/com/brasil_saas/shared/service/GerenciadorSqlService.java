@@ -12,10 +12,9 @@ import java.util.regex.Pattern;
 /**
  * Operacoes de banco para o gerenciador SQL do SUPERUSER (estilo Interbase).
  *
- * Regra central: NENHUM identificador (tabela, coluna, esquema) entra no SQL
- * por concatenacao de string. Tudo passa por {@link #identificador(String)},
- * que so aceita o que o proprio banco ja possui — nome de tabela, coluna ou
- * view do schema. E por isso que {@code update-campo} trabalha com metadados
+ * Identificadores nao sao valores bindaveis no JDBC. A navegacao valida a
+ * sintaxe, resolve tabela/view no catalogo do schema fixo e delimita os nomes.
+ * Valores, incluindo limites e offsets, sao parametros JDBC. E por isso que {@code update-campo} trabalha com metadados
  * resolvidos, e nao com o que o navegador mandou.
  *
  * O console antigo aceitava {@code tableName} e {@code column} direto do
@@ -69,7 +68,7 @@ public class GerenciadorSqlService {
 
     /** Estrutura da tabela: colunas, tipos, nulabilidade, chave primaria, defaults. */
     public List<Map<String, Object>> descreverTabela(String tabela) {
-        String t = identificador(tabela);
+        String t = resolverTabela(tabela);
         return jdbc.queryForList("""
                 select c.column_name,
                        c.data_type,
@@ -92,7 +91,7 @@ public class GerenciadorSqlService {
     }
 
     public long contarRegistros(String tabela) {
-        String t = identificador(tabela);
+        String t = resolverTabela(tabela);
         Long n = jdbc.queryForObject("select count(*) from " + qualificar(t), Long.class);
         return n == null ? 0 : n;
     }
@@ -102,16 +101,9 @@ public class GerenciadorSqlService {
      * como parametro e o nome da coluna vem do catalogo.
      */
     public Map<String, Object> navegar(String tabela, Integer pagina, Integer tamanho, String busca, String colunaBusca) {
-        String t = identificador(tabela);
-        String colunas = String.join(", ",
-                descreverTabela(t).stream()
-                        .map(c -> identificador((String) c.get("column_name")))
-                        .toList());
-
-        // LIMIT/OFFSET sao concatenados como literal, nunca como bind: no
-        // Postgres o parametro em LIMIT e se lido como bigint e a declaracao
-        // prepared falha. Sao inteiros ja validados por faixa, entao nao ha
-        // como injetar algo aqui.
+        String t = resolverTabela(tabela);
+        List<Map<String, Object>> estrutura = descreverTabela(t);
+        // PostgreSQL aceita LIMIT/OFFSET como parametros numericos JDBC.
         int limite = Math.min(Math.max(inteiro(tamanho, 50), 1), 1000);
         int paginaSegura = Math.max(inteiro(pagina, 0), 0);
         long offset = (long) paginaSegura * limite;
@@ -121,17 +113,21 @@ public class GerenciadorSqlService {
         if (busca != null && !busca.isBlank() && colunaBusca != null && !colunaBusca.isBlank()) {
             String cb = identificador(colunaBusca);
             // a coluna precisa existir, senao o filtro vira erro de runtime
-            boolean existe = descreverTabela(t).stream()
+            boolean existe = estrutura.stream()
                     .anyMatch(c -> cb.equals(c.get("column_name")));
             if (existe) {
-                where = " where " + cb + "::text ilike ?";
+                where = " where CAST(" + delimitar(cb) + " AS text) ilike ?";
                 params.add("%" + busca.trim() + "%");
+            } else {
+                throw new ColunaInvalidaException("Coluna de busca nao existe na tabela");
             }
         }
 
+        params.add(limite);
+        params.add(offset);
         List<Map<String, Object>> linhas =
                 jdbc.queryForList("select * from " + qualificar(t) + where
-                                + " limit " + limite + " offset " + offset,
+                                + " limit ? offset ?",
                         params.toArray());
 
         return Map.of(
@@ -213,7 +209,7 @@ public class GerenciadorSqlService {
      */
     public Resultado atualizarCampo(String tabela, String coluna, Object valor, Object id, String pk,
                                    String usuario) {
-        String t = identificador(tabela);
+        String t = resolverTabela(tabela);
         List<Map<String, Object>> estrutura = descreverTabela(t);
 
         String c = identificador(coluna);
@@ -226,7 +222,7 @@ public class GerenciadorSqlService {
             throw new ColunaInvalidaException("A tabela " + t + " nao tem a chave " + chave);
         }
 
-        String sql = "update " + qualificar(t) + " set " + c + " = ? where " + chave + " = ?";
+        String sql = "update " + qualificar(t) + " set " + delimitar(c) + " = ? where " + delimitar(chave) + " = ?";
         int afetadas = jdbc.update(sql, valor, id);
 
         log.warn("Campo alterado por usuario='{}' tabela={} coluna={} linhas={}", usuario, t, c, afetadas);
@@ -258,8 +254,24 @@ public class GerenciadorSqlService {
         return nome;
     }
 
+    private String resolverTabela(String nome) {
+        String tabela = identificador(nome);
+        Integer count = jdbc.queryForObject("""
+                select count(*) from information_schema.tables
+                where table_schema = ? and table_name = ?
+                """, Integer.class, SCHEMA, tabela);
+        if (count == null || count != 1) {
+            throw new IdentificadorInvalidoException("Tabela ou view inexistente no schema autorizado");
+        }
+        return tabela;
+    }
+
+    private String delimitar(String nome) {
+        return "\"" + identificador(nome) + "\"";
+    }
+
     private String qualificar(String tabela) {
-        return SCHEMA + "." + tabela;
+        return delimitar(SCHEMA) + "." + delimitar(tabela);
     }
 
     /** Converte para int, devolvendo o padrao quando nao da. */
