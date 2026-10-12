@@ -18,9 +18,9 @@ public class BiDataSourceConfig {
 
     @Bean(name = "biReadClient", destroyMethod = "close")
     public BiReadClient biReadClient(org.springframework.core.env.Environment environment) {
-        String url = required(environment, "BI_DB_URL");
-        String username = required(environment, "BI_DB_USER");
-        String password = required(environment, "BI_DB_PASSWORD");
+        String url = required(environment, "bi.datasource.url");
+        String username = required(environment, "bi.datasource.username");
+        String password = required(environment, "bi.datasource.password");
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
