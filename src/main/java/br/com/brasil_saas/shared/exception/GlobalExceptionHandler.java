@@ -42,16 +42,6 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Recurso inexistente.
-     *
-     * So o EntityNotFoundException (do proprio JPA) tinha handler, entao a
-     * excecao que o projeto usa — ResourceNotFoundException, lancada por
-     * todos os services — caia no handler generico e voltava 500. Na pratica:
-     * todo "nao encontrado" do sistema respondia como se fosse erro do
-     * servidor. O frontend nao consegue distinguir "nao tem esse registro" de
-     * "o sistema quebrou", e mostra erro em vez de informacao vazia.
-     */
-    /**
      * Excecoes com status proprio (ResponseStatusException), usadas por
      * modulos inteiros como contabilidade e compras. Sem este handler,
      * caiam no generico e voltavam 500: toda regra de negocio desses
@@ -68,6 +58,10 @@ public class GlobalExceptionHandler {
         return build(status, mensagem, "ERRO_NEGOCIO", req);
     }
 
+    /**
+     * Recurso inexistente (ResourceNotFoundException do projeto).
+     * Sem este handler, caia no generico e voltava 500.
+     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> recursoNaoEncontrado(ResourceNotFoundException ex,
                                                                   HttpServletRequest req) {

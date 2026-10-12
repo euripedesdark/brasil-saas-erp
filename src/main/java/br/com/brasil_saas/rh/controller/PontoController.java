@@ -1,6 +1,5 @@
 package br.com.brasil_saas.rh.controller;
 
-import java.time.LocalDate;
 import br.com.brasil_saas.rh.model.Ponto;
 import br.com.brasil_saas.rh.service.PontoService;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;

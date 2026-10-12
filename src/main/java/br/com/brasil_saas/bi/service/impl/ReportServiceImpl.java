@@ -1,6 +1,5 @@
 package br.com.brasil_saas.bi.service.impl;
 
-import java.util.LinkedHashMap;
 import br.com.brasil_saas.bi.dto.ReportRequest;
 import br.com.brasil_saas.bi.model.Report;
 import br.com.brasil_saas.bi.model.ReportParameter;

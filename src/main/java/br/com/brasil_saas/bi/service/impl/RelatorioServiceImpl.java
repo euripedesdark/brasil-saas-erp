@@ -1,8 +1,6 @@
 package br.com.brasil_saas.bi.service.impl;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Row;
 import br.com.brasil_saas.bi.dto.RelatorioRequest;
 import br.com.brasil_saas.bi.model.Relatorio;

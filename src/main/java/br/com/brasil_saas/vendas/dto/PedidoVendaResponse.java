@@ -50,17 +50,17 @@ public record PedidoVendaResponse(
         String origem,
         LocalDate dataEmissao,
         LocalDate dataEntrega,
-        /** Soma de (quantidade x valorUnitario), ainda SEM nenhum desconto. */
+        // Soma de (quantidade x valorUnitario), ainda SEM nenhum desconto.
         BigDecimal valorProdutos,
         BigDecimal valorServicos,
-        /** Soma dos descontos dados linha a linha. */
+        // Soma dos descontos dados linha a linha.
         BigDecimal valorDescontoItens,
-        /** Desconto dado no pedido, por valor ou por percentual. Nunca os dois. */
+        // Desconto dado no pedido, por valor ou por percentual. Nunca os dois.
         BigDecimal valorDescontoPedido,
-        /** {@code valorDescontoItens + valorDescontoPedido}. */
+        // valorDescontoItens + valorDescontoPedido
         BigDecimal valorDescontoTotal,
         BigDecimal valorFrete,
-        /** {@code valorProdutos + valorServicos - valorDescontoTotal + valorFrete}. */
+        // valorProdutos + valorServicos - valorDescontoTotal + valorFrete
         BigDecimal valorTotal,
         Long tituloId,
         String observacao,

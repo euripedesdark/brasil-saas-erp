@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -18,7 +19,7 @@ public class OfxService {
     private final ContaBancariaRepository contas;
     @Transactional public Map<String, Object> importar(Long empresaId, Long contaBancariaId, byte[] arquivo) {
         contas.findById(contaBancariaId).filter(c -> empresaId.equals(c.getEmpresaId())).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta inexistente"));
-        String txt = new String(arquivo == null ? new byte[0] : arquivo, Charset.forName("ISO-8859-1"));
+        String txt = new String(arquivo == null ? new byte[0] : arquivo, StandardCharsets.ISO_8859_1);
         Pattern bloco = Pattern.compile("<STMTTRN>(.*?)(?=<STMTTRN>|</BANKMSGSRSV1>)", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
         Matcher m = bloco.matcher(txt);
         int novos = 0;

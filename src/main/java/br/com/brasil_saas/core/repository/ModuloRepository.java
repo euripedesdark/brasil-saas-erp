@@ -1,6 +1,5 @@
 package br.com.brasil_saas.core.repository;
 
-import br.com.brasil_saas.core.model.UsuarioModulo;
 import br.com.brasil_saas.core.model.Modulo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

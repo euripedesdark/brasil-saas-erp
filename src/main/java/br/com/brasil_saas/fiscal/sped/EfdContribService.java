@@ -1,6 +1,5 @@
 package br.com.brasil_saas.fiscal.sped;
 
-import java.math.RoundingMode;
 import br.com.swconsultoria.efd.contribuicoes.bo.GerarEfdContribuicoes;
 import br.com.swconsultoria.efd.contribuicoes.registros.EfdContribuicoes;
 import br.com.swconsultoria.efd.contribuicoes.registros.bloco0.Bloco0;
