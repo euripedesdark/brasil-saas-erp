@@ -8,8 +8,7 @@ const empresaHeaders = (empresaId, json = false) => ({
 /**
  * Serviço do Assistente ERP.
  *
- * Transport only. A confiança, o motivo e a origem chegam calculados do backend:
- * a tela não computa nada, e também não extrai código de dentro de um texto.
+ * Suporta o fluxo clássico e o novo modelo unificado com botões [ Dúvida ] e [ Ação ].
  */
 export const AssistenteService = {
     perguntar: async (empresaId, pergunta) => {
@@ -20,6 +19,19 @@ export const AssistenteService = {
         });
         if (!resposta.ok) {
             throw new Error('Não foi possível consultar o assistente');
+        }
+        return resposta.json();
+    },
+
+    executarComando: async (empresaId, texto, modo) => {
+        const resposta = await apiFetch(`${ApiConfig.BASE_URL}/api/ia/assistente/comando`, {
+            method: 'POST',
+            headers: empresaHeaders(empresaId, true),
+            body: JSON.stringify({ texto, modo })
+        });
+        if (!resposta.ok) {
+            const err = await resposta.json().catch(() => ({}));
+            throw new Error(err.message || 'Falha ao processar comando com o assistente');
         }
         return resposta.json();
     },

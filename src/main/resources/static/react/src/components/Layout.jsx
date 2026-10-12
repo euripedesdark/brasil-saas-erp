@@ -14,6 +14,7 @@ import './Layout.css';
 import './shared/responsivo.css';
 import { ErrorBoundary } from './shared/ErrorBoundary';
 import RecentUpdates from './RecentUpdates';
+import { AssistenteCopilotoDialog } from './ia/AssistenteCopilotoDialog';
 import { ExigeEmpresa } from './core/ExigeEmpresa';
 import { useTranslation } from 'react-i18next';
 import i18n, { supportedLanguages } from '../i18n';
@@ -27,6 +28,7 @@ export const Layout = () => {
     const location = useLocation();
     const [collapsed, setCollapsed] = useState(false);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [copilotoAberto, setCopilotoAberto] = useState(false);
     const userMenuRef = useRef(null);
     const [bgStyle, setBgStyle] = useState({
         backgroundImage: `url(${STATIC_BG})`,
@@ -576,6 +578,14 @@ export const Layout = () => {
                             <h2 className="page-title">{t('app.managementTitle')}</h2>
                         </div>
                         <div className="header-actions flex align-items-center gap-2">
+                            <Button
+                                icon="pi pi-sparkles"
+                                label="Assistente IA"
+                                className="p-button-rounded p-button-outlined p-button-sm ai-assistant-top-btn"
+                                onClick={() => setCopilotoAberto(true)}
+                                tooltip="Copiloto IA (Dúvida ou Ação)"
+                                tooltipOptions={{ position: 'bottom' }}
+                            />
                             <Dropdown
                                 value={i18n.resolvedLanguage || i18n.language}
                                 options={supportedLanguages}
@@ -609,6 +619,27 @@ export const Layout = () => {
                         </ErrorBoundary>
                     )}
                 </div>
+                <Button
+                    icon="pi pi-sparkles"
+                    className="p-button-rounded p-button-raised ai-fab-btn"
+                    onClick={() => setCopilotoAberto(true)}
+                    aria-label="Assistente IA"
+                    tooltip="Assistente IA"
+                    tooltipOptions={{ position: 'left' }}
+                    style={{
+                        position: 'fixed',
+                        bottom: '24px',
+                        right: '24px',
+                        zIndex: 999,
+                        width: '3.5rem',
+                        height: '3.5rem',
+                        boxShadow: '0 4px 14px rgba(0,0,0,0.25)'
+                    }}
+                />
+                <AssistenteCopilotoDialog
+                    visible={copilotoAberto}
+                    onHide={() => setCopilotoAberto(false)}
+                />
             </main>
         </div>
     );
