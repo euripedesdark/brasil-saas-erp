@@ -1,0 +1,11 @@
+[Unit]
+Description=Atualiza as quatro areas do BI a cada 15 minutos
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+RandomizedDelaySec=30
+Unit=brasil-saas-bi-etl.service
+
+[Install]
+WantedBy=timers.target

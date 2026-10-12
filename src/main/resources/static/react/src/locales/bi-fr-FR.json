@@ -8,7 +8,7 @@
   "retry": "Réessayer",
   "details": "Voir les indicateurs",
   "management": "Gérer les tableaux de bord et rapports",
-  "periodHelp": "Finances : échéances de la période et soldes actuels. Production et ventes : ordres commencés et commandes émises pendant la période. Services : ouverts par date d’ouverture, terminés par date de clôture.",
+  "periodHelp": "Finances : échéances de la période et soldes actuels. Production et ventes : ordres commencés et commandes émises pendant la période. Services : ouverts par date d’ouverture, terminés par date de clôture. La valeur facturée inclut les commandes entièrement facturées par date d’émission ; elle ne représente pas les encaissements ni la facturation partielle.",
   "areas": {
     "financeiro": "Finances",
     "producao": "Production",
@@ -27,7 +27,9 @@
     "ticket_medio": "Valeur moyenne des commandes",
     "abertas": "Ordres ouverts",
     "concluidas": "Ordres terminés",
-    "valor_concluido": "Valeur des ordres terminés"
+    "valor_concluido": "Valeur des ordres terminés",
+    "saldo_previsto": "Solde prévu (à recevoir − à payer)",
+    "valor_faturado": "Valeur des commandes facturées"
   },
   "openGraylog": "Ouvrir Graylog",
   "graylogPending": "La disponibilité de l’extension est vérifiée à l’ouverture des indicateurs.",
@@ -37,5 +39,14 @@
     "ready": "Extension connectée. Les requêtes utilisent votre session ERP actuelle.",
     "blocked": "Le navigateur a bloqué la fenêtre. Autorisez les fenêtres pour ce site.",
     "unavailable": "Impossible de se connecter à l’extension. Vérifiez l’installation du plugin et l’accès à Graylog."
+  },
+  "month": "Mois",
+  "value": "Valeur",
+  "noEvolution": "Aucun enregistrement pour cette évolution.",
+  "evolution": {
+    "financeiro": "Solde prévu par échéance",
+    "producao": "Ordres par mois de début",
+    "vendas": "Valeur des commandes par mois d’émission",
+    "servicos": "Services par mois de clôture"
   }
 }

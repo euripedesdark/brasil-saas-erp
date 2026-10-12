@@ -8,7 +8,7 @@
   "retry": "Reintentar",
   "details": "Ver indicadores",
   "management": "Administrar paneles e informes",
-  "periodHelp": "Finanzas: vencimientos del período y saldos actuales. Producción y ventas: órdenes iniciadas y pedidos emitidos en el período. Servicios: abiertos por apertura, concluidos por cierre.",
+  "periodHelp": "Finanzas: vencimientos del período y saldos actuales. Producción y ventas: órdenes iniciadas y pedidos emitidos en el período. Servicios: abiertos por apertura, concluidos por cierre. El valor facturado incluye pedidos totalmente facturados por fecha de emisión; no representa cobros ni facturación parcial.",
   "areas": {
     "financeiro": "Finanzas",
     "producao": "Producción",
@@ -27,7 +27,9 @@
     "ticket_medio": "Valor medio de pedidos",
     "abertas": "Órdenes abiertas",
     "concluidas": "Órdenes concluidas",
-    "valor_concluido": "Valor de órdenes concluidas"
+    "valor_concluido": "Valor de órdenes concluidas",
+    "saldo_previsto": "Saldo previsto (por cobrar − por pagar)",
+    "valor_faturado": "Valor de pedidos facturados"
   },
   "openGraylog": "Abrir Graylog",
   "graylogPending": "La disponibilidad de la extensión se comprueba al abrir los indicadores.",
@@ -37,5 +39,14 @@
     "ready": "Extensión conectada. Las consultas usan su sesión actual del ERP.",
     "blocked": "El navegador bloqueó la ventana. Permita ventanas emergentes para este sitio.",
     "unavailable": "No se pudo conectar con la extensión. Compruebe la instalación del plugin y el acceso a Graylog."
+  },
+  "month": "Mes",
+  "value": "Valor",
+  "noEvolution": "Sin registros en el período para esta evolución.",
+  "evolution": {
+    "financeiro": "Saldo previsto por vencimiento",
+    "producao": "Órdenes por mes de inicio",
+    "vendas": "Valor de pedidos por mes de emisión",
+    "servicos": "Servicios por mes de cierre"
   }
 }

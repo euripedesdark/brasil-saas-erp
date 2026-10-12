@@ -1,0 +1,21 @@
+[Unit]
+Description=Sincronizacao transacional do BI Brasil SaaS ERP
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=postgres
+Group=postgres
+EnvironmentFile=/etc/brasil-saas/bi-etl.env
+ExecStart=/bin/bash /opt/brasil-saas-bi/sincronizar_reporting.sh
+UMask=0077
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/run/lock/brasil-saas-bi
+TimeoutStartSec=20min
+StandardOutput=journal
+StandardError=journal
