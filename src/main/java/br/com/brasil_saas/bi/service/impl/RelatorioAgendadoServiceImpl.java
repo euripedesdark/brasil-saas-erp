@@ -9,6 +9,7 @@ import br.com.brasil_saas.bi.service.RelatorioAgendadoService;
 import br.com.brasil_saas.bi.service.RelatorioService;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,6 +23,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
 
     private final RelatorioAgendadoRepository relatorioAgendadoRepository;
@@ -166,7 +168,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
             relatorioAgendadoRepository.save(agendado);
 
         } catch (Exception e) {
-            System.err.println("Erro ao executar relatorio agendado ID " + id + ": " + e.getMessage());
+            log.error("Erro ao executar relatorio agendado ID {}: {}", id, e.getMessage(), e);
         }
     }
 
@@ -200,7 +202,7 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
             try {
                 executarAgendado(agendado.getEmpresaId(), agendado.getId());
             } catch (Exception e) {
-                System.err.println("Erro ao executar relatorio agendado ID " + agendado.getId() + ": " + e.getMessage());
+                log.error("Erro ao executar relatorio agendado ID {}: {}", agendado.getId(), e.getMessage(), e);
             }
         }
     }
@@ -209,14 +211,13 @@ public class RelatorioAgendadoServiceImpl implements RelatorioAgendadoService {
         LocalDateTime agora = LocalDateTime.now();
 
         return switch (agendado.getFrequencia().toUpperCase()) {
-            case "DIARIO" -> agora.plusDays(1);
             case "SEMANAL" -> agora.plusWeeks(1);
             case "QUINZENAL" -> agora.plusWeeks(2);
             case "MENSAL" -> agora.plusMonths(1);
             case "TRIMESTRAL" -> agora.plusMonths(3);
             case "ANUAL" -> agora.plusYears(1);
             case "CUSTOM" -> agora.plusDays(agendado.getIntervaloDias() != null ? agendado.getIntervaloDias() : 1);
-            default -> agora.plusDays(1);
+            case "DIARIO", default -> agora.plusDays(1);
         };
     }
 

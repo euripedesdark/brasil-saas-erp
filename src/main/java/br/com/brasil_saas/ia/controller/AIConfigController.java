@@ -37,7 +37,7 @@ public class AIConfigController {
     @PostMapping("/test-connection")
     @Operation(summary = "Testar conexao com API de IA")
     public ResponseEntity<ApiResponse<Boolean>> testConnection(@RequestParam Long empresaId) {
-        Boolean response = aiConfigService.testConnection(empresaId);
+        boolean response = aiConfigService.testConnection(empresaId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

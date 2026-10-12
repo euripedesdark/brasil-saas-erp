@@ -25,7 +25,7 @@ public class EntradaNotaServiceImpl implements EntradaNotaService {
     private final ManifestacaoRepository manifRepo; private final ProdutoRepository produtoRepo;
     private final SaldoEstoqueRepository saldoRepo; private final DepositoRepository depositoRepo; private final MovimentacaoEstoqueRepository movRepo;
     @Override @Transactional public EntradaResp registrar(Long e, EntradaReq r){
-        if (r.chaveAcesso()!=null && nfeRepo.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(e,r.chaveAcesso()).isPresent())
+        if (r.chaveAcesso()!=null && !nfeRepo.findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(e,r.chaveAcesso()).isEmpty())
             throw new BusinessException("Nota de entrada já registrada para esta chave");
         Nfe n=new Nfe(); n.setEmpresaId(e); n.setPessoaId(r.pessoaId()); n.setChaveAcesso(r.chaveAcesso());
         n.setNaturezaOperacao(r.naturezaOperacao()); n.setCfop(r.cfop()); n.setDataEmissao(r.dataEmissao());

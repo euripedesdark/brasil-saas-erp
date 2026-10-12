@@ -1,18 +1,13 @@
 package br.com.brasil_saas.shared.service;
 
-import br.com.brasil_saas.core.model.Empresa;
 import br.com.brasil_saas.core.repository.EmpresaRepository;
-import br.com.brasil_saas.cadastro.model.Cliente;
-import br.com.brasil_saas.cadastro.model.Fornecedor;
 import br.com.brasil_saas.cadastro.repository.ClienteRepository;
 import br.com.brasil_saas.cadastro.repository.FornecedorRepository;
-import br.com.brasil_saas.rh.model.Funcionario;
 import br.com.brasil_saas.rh.repository.FuncionarioRepository;
 import br.com.brasil_saas.shared.image.ImagemDocumento;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 
 /**
  * Service para obter logos e fotos para uso em relatórios, notas fiscais e ordens de serviço
@@ -31,12 +26,11 @@ public class LogoService {
      * Obter logo da empresa
      */
     public byte[] obterLogoEmpresa(Long empresaId) {
-        Optional<Empresa> empresaOpt = empresaRepository.findById(empresaId);
-        if (!empresaOpt.isEmpty()) {
-            ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "empresa_logo", empresaId);
-            return imagem != null ? imagem.getConteudo() : null;
+        if (!empresaRepository.existsById(empresaId)) {
+            return null;
         }
-        return null;
+        ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "empresa_logo", empresaId);
+        return imagem != null ? imagem.getConteudo() : null;
     }
 
     /**

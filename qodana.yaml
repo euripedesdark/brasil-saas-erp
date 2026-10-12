@@ -15,6 +15,9 @@ exclude:
   - name: RegExpDuplicateCharacterInClass
   - name: RegExpRedundantEscape
   - name: RegExpSingleCharAlternation
+  # SLF4J: ultimo arg Throwable e stack trace — nao conta como placeholder
+  - name: LoggingPlaceholderCount
+  - name: SLF4JFormat
   # FP: yarn.lock fantasma 0.0.0-ANY no frontend eSocial embutido
   - name: MaliciousLibrariesLocal
     paths:

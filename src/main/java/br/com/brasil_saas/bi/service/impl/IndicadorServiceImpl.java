@@ -6,6 +6,7 @@ import br.com.brasil_saas.bi.repository.IndicadorRepository;
 import br.com.brasil_saas.bi.service.IndicadorService;
 import br.com.brasil_saas.shared.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class IndicadorServiceImpl implements IndicadorService {
 
     private final IndicadorRepository indicadorRepository;
@@ -206,7 +208,7 @@ public class IndicadorServiceImpl implements IndicadorService {
             // Por enquanto, retorna 0
             return BigDecimal.ZERO;
         } catch (Exception e) {
-            System.err.println("Erro ao calcular indicador com formula: " + formula + ": " + e.getMessage());
+            log.error("Erro ao calcular indicador com formula {}: {}", formula, e.getMessage(), e);
             return BigDecimal.ZERO;
         }
     }

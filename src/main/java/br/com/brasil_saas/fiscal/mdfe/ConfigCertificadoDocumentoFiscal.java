@@ -224,6 +224,7 @@ public class ConfigCertificadoDocumentoFiscal {
         }
     }
 
+    // DFConfig.TIMEZONE_SP esta deprecated na lib documentofiscal
     private static final TimeZone TIMEZONE_SP_LOCAL =
-            com.fincatto.documentofiscal.DFConfig.TIMEZONE_SP;
+            TimeZone.getTimeZone("America/Sao_Paulo");
 }

@@ -184,8 +184,8 @@ public class NfeImportacaoService {
         }
 
         // --- chave ja registrada ---------------------------------------
-        if (l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isPresent()) {
+        if (l.chave() != null && !nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
         if (l.chave() == null) {
@@ -352,8 +352,8 @@ public class NfeImportacaoService {
 
     private Confirmado confirmar(Long empresaId, NfeXmlReader.Leitura l, Long pessoaId,
                                  boolean criarProdutos) {
-        if (l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isPresent()) {
+        if (l.chave() != null && !nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
 
