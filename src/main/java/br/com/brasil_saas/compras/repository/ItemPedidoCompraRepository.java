@@ -21,4 +21,18 @@ public interface ItemPedidoCompraRepository extends JpaRepository<ItemPedidoComp
         java.math.BigDecimal getSomaValor();
         java.math.BigDecimal getSomaQtd();
     }
+    @Query("SELECT p.dataPrevisaoEntrega AS dataEntrega, "
+            + "SUM(i.quantidade - i.quantidadeRecebida) AS saldo "
+            + "FROM ItemPedidoCompra i JOIN i.pedido p "
+            + "WHERE p.empresaId = :empresaId AND i.produtoId = :produtoId "
+            + "AND p.deletedAt IS NULL AND i.deletedAt IS NULL "
+            + "AND p.status IN ('ABERTO', 'PARCIAL') AND p.dataPrevisaoEntrega IS NOT NULL "
+            + "GROUP BY p.dataPrevisaoEntrega HAVING SUM(i.quantidade - i.quantidadeRecebida) > 0")
+    List<EntradaPrevista> entradasFuturas(@Param("empresaId") Long empresaId,
+            @Param("produtoId") Long produtoId);
+
+    interface EntradaPrevista {
+        java.time.LocalDate getDataEntrega();
+        java.math.BigDecimal getSaldo();
+    }
 }

@@ -56,4 +56,16 @@ public interface ReservaEstoqueRepository extends JpaRepository<ReservaEstoque, 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from ReservaEstoque r where r.id = :id and r.empresaId = :empresaId and r.deletedAt is null")
     Optional<ReservaEstoque> findWithLockByIdAndEmpresaIdAndDeletedAtIsNull(@Param("id") Long id, @Param("empresaId") Long empresaId);
+    @Query("SELECT COALESCE(SUM(s.quantidade), 0) FROM ReservaEstoque s "
+            + "WHERE s.empresaId = :empresaId AND s.produtoId = :produtoId "
+            + "AND s.status IN ('RESERVADA', 'SEPARACAO') AND s.deletedAt IS NULL")
+    java.math.BigDecimal somaReservada(@Param("empresaId") Long empresaId,
+            @Param("produtoId") Long produtoId);
+
+    @Query("SELECT COALESCE(SUM(s.quantidade), 0) FROM ReservaEstoque s "
+            + "WHERE s.empresaId = :empresaId AND s.produtoId = :produtoId "
+            + "AND s.depositoId = :depositoId AND s.status IN ('RESERVADA', 'SEPARACAO') "
+            + "AND s.deletedAt IS NULL")
+    java.math.BigDecimal somaReservadaPorDeposito(@Param("empresaId") Long empresaId,
+            @Param("produtoId") Long produtoId, @Param("depositoId") Long depositoId);
 }
