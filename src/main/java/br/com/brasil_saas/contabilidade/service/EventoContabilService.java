@@ -4,14 +4,17 @@ import br.com.brasil_saas.contabilidade.model.CtbLancamento;
 import br.com.brasil_saas.contabilidade.model.CtbPartida;
 import br.com.brasil_saas.contabilidade.repository.CtbLancamentoRepository;
 import lombok.RequiredArgsConstructor;
+import br.com.brasil_saas.contabilidade.model.CtbPendencia;
+import br.com.brasil_saas.contabilidade.repository.CtbPendenciaRepository;
+import br.com.brasil_saas.contabilidade.repository.RegraLancamentoRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +31,8 @@ public class EventoContabilService {
 
     private final ContabilidadeService contabilidade;
     private final CtbLancamentoRepository lancamentos;
-    private final JdbcTemplate jdbc;
+    private final RegraLancamentoRepository regraLancamentoRepository;
+    private final CtbPendenciaRepository ctbPendenciaRepository;
 
     public record Resultado(Optional<CtbLancamento> lancamento, boolean pendente, String motivo) {
         public static Resultado ok(CtbLancamento l) { return new Resultado(Optional.of(l), false, null); }
@@ -104,35 +108,36 @@ public class EventoContabilService {
     private record Regra(Long contaDebitoId, Long contaCreditoId, Long centroCustoId, String historico) {}
 
     private Regra buscarRegra(Long empresaId, String evento) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                "select conta_debito_id, conta_credito_id, centro_custo_id, historico from brasil_saas.bc_cont_regra_lancamento where empresa_id=? and codigo=? and ativo=true limit 1",
-                empresaId, evento);
-        if (rows.isEmpty()) return null;
-        Map<String, Object> m = rows.get(0);
-        return new Regra(asLong(m.get("conta_debito_id")), asLong(m.get("conta_credito_id")),
-                asLong(m.get("centro_custo_id")), (String) m.get("historico"));
-    }
-
-    private static Long asLong(Object o) {
-        if (o == null) return null;
-        if (o instanceof Number n) return n.longValue();
-        return Long.valueOf(o.toString());
+        return regraLancamentoRepository.findFirstByEmpresaIdAndCodigoAndAtivoTrue(empresaId, evento)
+                .map(r -> new Regra(r.getContaDebitoId(), r.getContaCreditoId(),
+                        r.getCentroCustoId(), r.getHistorico()))
+                .orElse(null);
     }
 
     private void registrarPendencia(Long empresaId, String evento, String origemTipo, Long origemId,
                                     BigDecimal valor, String motivo) {
-        jdbc.update("""
-            insert into brasil_saas.bc_ctb_pendencia(empresa_id,evento,origem_tipo,origem_id,motivo,valor,status)
-            values(?,?,?,?,?,?,'ABERTA')
-            on conflict(empresa_id,origem_tipo,origem_id,evento) do update
-              set motivo=excluded.motivo, valor=excluded.valor, status='ABERTA', resolvido_em=null
-            """, empresaId, evento, origemTipo, origemId, motivo, valor);
+        CtbPendencia p = ctbPendenciaRepository
+                .findByEmpresaIdAndOrigemTipoAndOrigemIdAndEvento(empresaId, origemTipo, origemId, evento)
+                .orElseGet(CtbPendencia::new);
+        p.setEmpresaId(empresaId);
+        p.setEvento(evento);
+        p.setOrigemTipo(origemTipo);
+        p.setOrigemId(origemId);
+        p.setMotivo(motivo);
+        p.setValor(valor);
+        p.setStatus("ABERTA");
+        p.setResolvidoEm(null);
+        ctbPendenciaRepository.save(p);
     }
 
     private void resolverPendenciaSeHouver(Long empresaId, String origemTipo, Long origemId, String evento) {
-        jdbc.update("""
-            update brasil_saas.bc_ctb_pendencia set status='RESOLVIDA', resolvido_em=now()
-            where empresa_id=? and origem_tipo=? and origem_id=? and evento=? and status='ABERTA'
-            """, empresaId, origemTipo, origemId, evento);
+        ctbPendenciaRepository
+                .findByEmpresaIdAndOrigemTipoAndOrigemIdAndEventoAndStatus(
+                        empresaId, origemTipo, origemId, evento, "ABERTA")
+                .ifPresent(p -> {
+                    p.setStatus("RESOLVIDA");
+                    p.setResolvidoEm(LocalDateTime.now());
+                    ctbPendenciaRepository.save(p);
+                });
     }
 }
