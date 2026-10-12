@@ -1,0 +1,122 @@
+package br.com.brasil_saas.financeiro.model;
+
+import br.com.brasil_saas.shared.model.AuditableEntity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+import br.com.brasil_saas.shared.web.MapValues;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+@Entity
+@Table(name = "bc_fin_intercompany", schema = "brasil_saas")
+@Getter
+@Setter
+public class IntercompanyLancamento extends AuditableEntity {
+
+    @Column(name = "empresa_parceira_id", nullable = false)
+    private Long empresaParceiraId;
+
+    @Column(name = "numero", length = 80, nullable = false)
+    private String numero;
+
+    @Column(name = "tipo", length = 30, nullable = false)
+    private String tipo = "LANCAMENTO";
+
+    @Column(name = "data_documento", nullable = false)
+    private LocalDate dataDocumento;
+
+    @Column(name = "competencia")
+    private LocalDate competencia;
+
+    @Column(name = "descricao", length = 500, nullable = false)
+    private String descricao;
+
+    @Column(name = "valor", precision = 18, scale = 2, nullable = false)
+    private BigDecimal valor = BigDecimal.ZERO;
+
+    @Column(name = "moeda", length = 3, nullable = false)
+    private String moeda = "BRL";
+
+    @Column(name = "status", length = 25, nullable = false)
+    private String status = "ABERTO";
+
+    @Column(name = "reconciliado", nullable = false)
+    private Boolean reconciliado = false;
+
+    @Column(name = "documento_origem_tipo", length = 50)
+    private String documentoOrigemTipo;
+
+    @Column(name = "documento_origem_id")
+    private Long documentoOrigemId;
+
+    @Column(name = "observacao", columnDefinition = "text")
+    private String observacao;
+
+    @Column(name = "contrapartida_id")
+    private Long contrapartidaId;
+
+    @Column(name = "diferenca", precision = 18, scale = 2)
+    private BigDecimal diferenca;
+
+    @Column(name = "reconciliado_em")
+    private LocalDateTime reconciliadoEm;
+
+    private static final Set<String> BLOQUEADOS = Set.of(
+            "id", "uuid", "empresa_id", "created_at", "created_by", "updated_at", "updated_by", "deleted_at");
+
+    public void aplicar(Map<String, Object> b) {
+        for (var e : b.entrySet()) {
+            String k = e.getKey();
+            if (k == null || !k.matches("[a-z][a-z0-9_]*") || BLOQUEADOS.contains(k)) {
+                continue;
+            }
+            Object v = e.getValue();
+            switch (k) {
+                case "empresa_parceira_id" -> setEmpresaParceiraId(MapValues.lng(v));
+                case "numero" -> setNumero(MapValues.str(v));
+                case "tipo" -> setTipo(MapValues.str(v));
+                case "data_documento" -> setDataDocumento(MapValues.dt(v));
+                case "competencia" -> setCompetencia(MapValues.dt(v));
+                case "descricao" -> setDescricao(MapValues.str(v));
+                case "valor" -> { BigDecimal x = MapValues.bd(v); if (x != null) setValor(x); }
+                case "moeda" -> setMoeda(MapValues.str(v));
+                case "status" -> setStatus(MapValues.str(v));
+                case "reconciliado" -> { Boolean x = MapValues.bool(v); if (x != null) setReconciliado(x); }
+                case "documento_origem_tipo" -> setDocumentoOrigemTipo(MapValues.str(v));
+                case "documento_origem_id" -> setDocumentoOrigemId(MapValues.lng(v));
+                case "observacao" -> setObservacao(MapValues.str(v));
+                case "contrapartida_id" -> setContrapartidaId(MapValues.lng(v));
+                case "diferenca" -> setDiferenca(MapValues.bd(v));
+                case "reconciliado_em" -> setReconciliadoEm(MapValues.dtTime(v));
+                default -> { }
+            }
+        }
+    }
+
+    public Map<String, Object> toMap() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", getId()); m.put("uuid", getUuid()); m.put("empresa_id", getEmpresaId());
+        m.put("empresa_parceira_id", getEmpresaParceiraId()); m.put("numero", getNumero());
+        m.put("tipo", getTipo()); m.put("data_documento", getDataDocumento());
+        m.put("competencia", getCompetencia()); m.put("descricao", getDescricao());
+        m.put("valor", getValor()); m.put("moeda", getMoeda()); m.put("status", getStatus());
+        m.put("reconciliado", getReconciliado());
+        m.put("documento_origem_tipo", getDocumentoOrigemTipo());
+        m.put("documento_origem_id", getDocumentoOrigemId());
+        m.put("observacao", getObservacao());
+        m.put("contrapartida_id", getContrapartidaId()); m.put("diferenca", getDiferenca());
+        m.put("reconciliado_em", getReconciliadoEm());
+        m.put("created_at", getCreatedAt()); m.put("updated_at", getUpdatedAt());
+        m.put("created_by", getCreatedBy()); m.put("updated_by", getUpdatedBy());
+        m.put("deleted_at", getDeletedAt());
+        return m;
+    }
+}

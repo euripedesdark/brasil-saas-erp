@@ -3,9 +3,10 @@ package br.com.brasil_saas.fiscal.service;
 import br.com.brasil_saas.fiscal.model.Apuracao;
 import br.com.brasil_saas.fiscal.model.Reinf;
 import br.com.brasil_saas.fiscal.repository.ApuracaoRepository;
+import br.com.brasil_saas.fiscal.repository.NfeRepository;
+import br.com.brasil_saas.fiscal.repository.NfseRepository;
 import br.com.brasil_saas.fiscal.repository.ReinfRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,7 +23,8 @@ public class FiscalPainelService {
     private final ApuracaoRepository apuracaoRepository;
     private final ReinfRepository reinfRepository;
     private final RegraTributariaService regraService;
-    private final JdbcTemplate jdbc;
+    private final NfeRepository nfeRepository;
+    private final NfseRepository nfseRepository;
 
     public Map<String, Object> resumo(Long empresaId, String competencia) {
         String comp = competencia == null || competencia.isBlank()
@@ -45,22 +47,16 @@ public class FiscalPainelService {
 
         LocalDate ini = YearMonth.parse(comp).atDay(1);
         LocalDate fim = YearMonth.parse(comp).atEndOfMonth();
+        java.time.LocalDateTime de = ini.atStartOfDay();
+        java.time.LocalDateTime ate = fim.plusDays(1).atStartOfDay();
         try {
-            Integer nfe = jdbc.queryForObject(
-                    "select count(*) from brasil_saas.bc_fis_nfe where empresa_id=? and deleted_at is null " +
-                    "and data_emissao >= ? and data_emissao < ?",
-                    Integer.class, empresaId, java.sql.Date.valueOf(ini), java.sql.Date.valueOf(fim.plusDays(1)));
-            out.put("nfePeriodo", nfe == null ? 0 : nfe);
+            out.put("nfePeriodo", nfeRepository.countNoPeriodo(empresaId, de, ate));
         } catch (Exception e) {
             out.put("nfePeriodo", null);
             out.put("nfeErro", e.getMessage());
         }
         try {
-            Integer nfse = jdbc.queryForObject(
-                    "select count(*) from brasil_saas.bc_fis_nfse where empresa_id=? and deleted_at is null " +
-                    "and data_emissao >= ? and data_emissao < ?",
-                    Integer.class, empresaId, java.sql.Date.valueOf(ini), java.sql.Date.valueOf(fim.plusDays(1)));
-            out.put("nfsePeriodo", nfse == null ? 0 : nfse);
+            out.put("nfsePeriodo", nfseRepository.countNoPeriodo(empresaId, de, ate));
         } catch (Exception e) {
             out.put("nfsePeriodo", null);
         }

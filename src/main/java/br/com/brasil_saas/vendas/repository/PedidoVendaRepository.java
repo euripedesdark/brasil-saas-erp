@@ -3,7 +3,9 @@ package br.com.brasil_saas.vendas.repository;
 import br.com.brasil_saas.vendas.model.PedidoVenda;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
@@ -48,4 +50,31 @@ public interface PedidoVendaRepository extends JpaRepository<PedidoVenda, Long> 
 
     List<PedidoVenda> findByEmpresaIdAndStatusAndDataEmissaoLessThanEqual(
         Long empresaId, String status, LocalDate data);
+
+    @Query("SELECT p.numero AS numero, p.dataEmissao AS dataEmissao, "
+            + "COALESCE(pe.nome, CONCAT('Cliente #', p.clienteId)) AS cliente, "
+            + "p.valorProdutos AS valorProdutos, p.valorDesconto AS valorDesconto, "
+            + "p.valorTotal AS valorTotal, p.status AS status, COUNT(pi.id) AS quantidadePedidos "
+            + "FROM PedidoVenda p LEFT JOIN Cliente c ON c.id = p.clienteId "
+            + "LEFT JOIN c.pessoa pe LEFT JOIN p.itens pi "
+            + "WHERE p.empresaId = :empresaId AND p.deletedAt IS NULL "
+            + "AND (:inicio IS NULL OR p.dataEmissao >= :inicio) "
+            + "AND (:fim IS NULL OR p.dataEmissao <= :fim) "
+            + "GROUP BY p.numero, p.dataEmissao, pe.nome, p.clienteId, "
+            + "p.valorProdutos, p.valorDesconto, p.valorTotal, p.status "
+            + "ORDER BY p.dataEmissao DESC")
+    java.util.List<VendasRow> relatorioVendas(@Param("empresaId") Long empresaId,
+            @Param("inicio") java.time.LocalDate inicio, @Param("fim") java.time.LocalDate fim,
+            Pageable pageable);
+
+    interface VendasRow {
+        String getNumero();
+        java.time.LocalDate getDataEmissao();
+        String getCliente();
+        java.math.BigDecimal getValorProdutos();
+        java.math.BigDecimal getValorDesconto();
+        java.math.BigDecimal getValorTotal();
+        String getStatus();
+        long getQuantidadePedidos();
+    }
 }

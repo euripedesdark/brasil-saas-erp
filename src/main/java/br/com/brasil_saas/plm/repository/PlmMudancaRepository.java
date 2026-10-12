@@ -16,4 +16,8 @@ public interface PlmMudancaRepository extends JpaRepository<PlmMudanca, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select m from PlmMudanca m where m.id = :id and m.empresaId = :empresaId and m.deletedAt is null")
     Optional<PlmMudanca> findByIdForUpdate(@Param("id") Long id, @Param("empresaId") Long empresaId);
+    List<PlmMudanca> findByEmpresaIdOrderByIdDesc(Long empresaId);
+    boolean existsByIdAndEmpresaId(Long id, Long empresaId);
+    boolean existsByIdAndEmpresaIdAndStatusIn(Long id, Long empresaId, java.util.Collection<String> status);
+    Optional<PlmMudanca> findByIdAndEmpresaId(Long id, Long empresaId);
 }

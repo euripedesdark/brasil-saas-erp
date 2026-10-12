@@ -6,4 +6,5 @@ import java.util.Optional;
 public interface PrjProjetoRepository extends JpaRepository<PrjProjeto, Long> {
     Optional<PrjProjeto> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     List<PrjProjeto> findByEmpresaIdAndDeletedAtIsNull(Long empresaId);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

@@ -1,7 +1,8 @@
 package br.com.brasil_saas.core.controller;
 
+import br.com.brasil_saas.core.repository.AuditoriaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RecentController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final AuditoriaRepository auditoriaRepository;
 
     @GetMapping("/updates")
     @PreAuthorize("isAuthenticated()")
@@ -39,14 +41,17 @@ public class RecentController {
             return List.of();
         }
 
-        String sql = """
-            SELECT id, tabela as modulo, operacao as tipo,
-                   registro_id as idRegistro, created_at as data,
-                   usuario_id as usuarioId, ip
-            FROM brasil_saas.bc_core_auditoria
-            WHERE empresa_id = ?
-            ORDER BY created_at DESC LIMIT ?
-            """;
-        return jdbcTemplate.queryForList(sql, empresaId, lim);
+        return auditoriaRepository.findByEmpresaIdOrderByCreatedAtDesc(empresaId, PageRequest.of(0, lim))
+                .stream().map(a -> {
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("id", a.getId());
+                    m.put("modulo", a.getTabela());
+                    m.put("tipo", a.getOperacao());
+                    m.put("idRegistro", a.getRegistroId());
+                    m.put("data", a.getCreatedAt());
+                    m.put("usuarioId", a.getUsuarioId());
+                    m.put("ip", a.getIp());
+                    return m;
+                }).toList();
     }
 }

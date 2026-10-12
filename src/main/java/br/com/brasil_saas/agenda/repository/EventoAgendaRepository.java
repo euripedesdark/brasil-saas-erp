@@ -24,4 +24,5 @@ public interface EventoAgendaRepository extends JpaRepository<EventoAgenda, Long
                                  @Param("ate") LocalDateTime ate);
 
     long countByEmpresaIdAndStatusAndDeletedAtIsNull(Long empresaId, String status);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

@@ -16,4 +16,8 @@ public interface PlmRevisaoRepository extends JpaRepository<PlmRevisao, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from PlmRevisao r where r.id = :id and r.empresaId = :empresaId")
     Optional<PlmRevisao> findByIdForUpdate(@Param("id") Long id, @Param("empresaId") Long empresaId);
+    List<PlmRevisao> findByEmpresaIdAndProdutoIdAndIdNotAndStatus(Long empresaId, Long produtoId, Long id, String status);
+    Optional<PlmRevisao> findTopByEmpresaIdOrderByIdDesc(Long empresaId);
+    List<PlmRevisao> findByEmpresaIdOrderByIdDesc(Long empresaId);
+    boolean existsByIdAndEmpresaId(Long id, Long empresaId);
 }

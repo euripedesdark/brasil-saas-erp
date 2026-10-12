@@ -1,31 +1,44 @@
 package br.com.brasil_saas.core.service;
 
 import br.com.brasil_saas.core.model.RelatorioResponse;
+import br.com.brasil_saas.financeiro.repository.LancamentoPartidaRepository;
+import br.com.brasil_saas.financeiro.repository.PlanoContasRepository;
+import br.com.brasil_saas.financeiro.repository.ProjecaoFluxoCaixaRepository;
+import br.com.brasil_saas.financeiro.repository.TituloRepository;
+import br.com.brasil_saas.fiscal.repository.NfeRepository;
+import br.com.brasil_saas.producao.repository.ProducaoRepository;
+import br.com.brasil_saas.vendas.repository.PedidoVendaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
  * Relatórios gerenciais.
  *
- * Todas as consultas usam o schema "brasil_saas" e o tenant (empresa_id) é sempre
- * parametrizado — nunca interpolado — para evitar injecao e vazamento entre empresas.
+ * Todas as consultas são JPQL com tenant (empresa_id) sempre parametrizado —
+ * nunca interpolado — para evitar injecao e vazamento entre empresas.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class RelatorioService {
 
-    private static final String SCHEMA = "brasil_saas.";
+    private static final Pageable LIMITE = PageRequest.of(0, 1000);
 
-    private final JdbcTemplate jdbcTemplate;
+    private final PedidoVendaRepository pedidoVendaRepository;
+    private final TituloRepository tituloRepository;
+    private final ProducaoRepository producaoRepository;
+    private final NfeRepository nfeRepository;
+    private final LancamentoPartidaRepository partidaRepository;
+    private final ProjecaoFluxoCaixaRepository projecaoRepository;
 
     public RelatorioResponse gerarRelatorio(String tipo, Long empresaId, Map<String, Object> filtros) {
         log.info("Gerando relatório {} para empresa {}", tipo, empresaId);
@@ -90,133 +103,102 @@ public class RelatorioService {
     }
 
     private List<Map<String, Object>> relatorioVendas(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT p.numero,
-                   p.data_emissao,
-                   COALESCE(pe.nome, 'Cliente #' || p.cliente_id) AS cliente,
-                   p.valor_produtos,
-                   p.valor_desconto,
-                   p.valor_total,
-                   p.status,
-                   COUNT(pi.id) AS quantidade_pedidos
-            FROM %1$sbc_ven_pedido p
-            LEFT JOIN %1$sbc_cad_cliente c ON c.id = p.cliente_id
-            LEFT JOIN %1$sbc_cad_pessoa  pe ON pe.id = c.pessoa_id
-            LEFT JOIN %1$sbc_ven_pedido_item pi ON pi.pedido_id = p.id
-            WHERE p.empresa_id = ? AND p.deleted_at IS NULL
-            
-             GROUP BY p.numero, p.data_emissao, pe.nome, p.cliente_id,
-                      p.valor_produtos, p.valor_desconto, p.valor_total, p.status
-             """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "p.data_emissao");
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : pedidoVendaRepository.relatorioVendas(empresaId, inicio, fim, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("numero", r.getNumero());
+            m.put("data_emissao", r.getDataEmissao());
+            m.put("cliente", r.getCliente());
+            m.put("valor_produtos", r.getValorProdutos());
+            m.put("valor_desconto", r.getValorDesconto());
+            m.put("valor_total", r.getValorTotal());
+            m.put("status", r.getStatus());
+            m.put("quantidade_pedidos", r.getQuantidadePedidos());
+            out.add(m);
+        }
+        return out;
     }
 
     private List<Map<String, Object>> relatorioFinanceiro(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT t.numero_documento,
-                   t.data_emissao,
-                   t.data_vencimento,
-                   t.descricao,
-                   t.tipo,
-                   t.valor_original,
-                   t.valor_saldo,
-                   t.status
-            FROM %1$sbc_fin_titulo t
-            WHERE t.empresa_id = ? AND t.deleted_at IS NULL
-            """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "t.data_emissao");
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : tituloRepository.relatorioFinanceiro(empresaId, inicio, fim, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("numero_documento", r.getNumeroDocumento());
+            m.put("data_emissao", r.getDataEmissao());
+            m.put("data_vencimento", r.getDataVencimento());
+            m.put("descricao", r.getDescricao());
+            m.put("tipo", r.getTipo());
+            m.put("valor_original", r.getValorOriginal());
+            m.put("valor_saldo", r.getValorSaldo());
+            m.put("status", r.getStatus());
+            out.add(m);
+        }
+        return out;
     }
 
     private List<Map<String, Object>> relatorioProducao(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT o.numero,
-                   o.data_inicio,
-                   o.data_fim,
-                   COALESCE(pr.nome, 'Produto #' || o.produto_final_id) AS produto_final,
-                   o.quantidade_planejada,
-                   o.custo_total,
-                   o.status,
-                   o.tipo_producao
-            FROM %1$sbc_prod_ordem o
-            LEFT JOIN %1$sbc_cad_produto pr ON pr.id = o.produto_final_id
-            WHERE o.empresa_id = ? AND o.deleted_at IS NULL
-            """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "o.data_inicio");
+        java.time.LocalDateTime de = inicio == null ? null : inicio.atStartOfDay();
+        java.time.LocalDateTime ate = fim == null ? null : fim.atTime(LocalTime.MAX);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : producaoRepository.relatorioProducao(empresaId, de, ate, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("numero", r.getNumero());
+            m.put("data_inicio", r.getDataInicio());
+            m.put("data_fim", r.getDataFim());
+            m.put("produto_final", r.getProdutoFinal());
+            m.put("quantidade_planejada", r.getQuantidadePlanejada());
+            m.put("custo_total", r.getCustoTotal());
+            m.put("status", r.getStatus());
+            m.put("tipo_producao", r.getTipoProducao());
+            out.add(m);
+        }
+        return out;
     }
 
     private List<Map<String, Object>> relatorioDre(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT pc.codigo,
-                   pc.descricao,
-                   pc.natureza,
-                   COALESCE(SUM(CASE WHEN lp.tipo = 'D' THEN lp.valor ELSE 0 END), 0) AS debitos,
-                   COALESCE(SUM(CASE WHEN lp.tipo = 'C' THEN lp.valor ELSE 0 END), 0) AS creditos,
-                   COALESCE(SUM(CASE WHEN lp.tipo = 'C' THEN lp.valor ELSE -lp.valor END), 0) AS resultado
-            FROM %1$sbc_fin_lancamento_contabil lc
-            JOIN %1$sbc_fin_lancamento_partida lp ON lp.lancamento_id = lc.id
-            JOIN %1$sbc_fin_plano_contas pc ON pc.id = lp.plano_contas_id
-            WHERE lc.empresa_id = ? AND lc.deleted_at IS NULL
-              AND lp.deleted_at IS NULL AND pc.deleted_at IS NULL
-            GROUP BY pc.codigo, pc.descricao, pc.natureza
-            ORDER BY pc.codigo
-            """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "lc.data_lancamento");
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : partidaRepository.relatorioDre(empresaId, inicio, fim, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("codigo", r.getCodigo());
+            m.put("descricao", r.getDescricao());
+            m.put("natureza", r.getNatureza());
+            m.put("debitos", r.getDebitos());
+            m.put("creditos", r.getCreditos());
+            m.put("resultado", r.getResultado());
+            out.add(m);
+        }
+        return out;
     }
 
     private List<Map<String, Object>> relatorioFluxoCaixa(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT data_projecao,
-                   valor_previsto_entrada,
-                   valor_previsto_saida,
-                   (COALESCE(valor_previsto_entrada, 0) - COALESCE(valor_previsto_saida, 0)) AS saldo_projetado
-            FROM %1$sbc_fin_projecao_fluxo_caixa
-            WHERE empresa_id = ? AND deleted_at IS NULL
-            """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "data_projecao");
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : projecaoRepository.relatorioFluxoCaixa(empresaId, inicio, fim, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("data_projecao", r.getDataProjecao());
+            m.put("valor_previsto_entrada", r.getValorPrevistoEntrada());
+            m.put("valor_previsto_saida", r.getValorPrevistoSaida());
+            m.put("saldo_projetado", r.getSaldoProjetado());
+            out.add(m);
+        }
+        return out;
     }
 
     private List<Map<String, Object>> relatorioFiscal(Long empresaId, LocalDate inicio, LocalDate fim) {
-        String sql = """
-            SELECT n.numero,
-                   n.serie,
-                   n.natureza_operacao,
-                   n.data_emissao,
-                   n.status,
-                   n.valor_total,
-                   COUNT(1) AS quantidade_notas
-            FROM %1$sbc_fis_nfe n
-            WHERE n.empresa_id = ? AND n.deleted_at IS NULL
-            GROUP BY n.id, n.numero, n.serie, n.natureza_operacao, n.data_emissao, n.status, n.valor_total
-            """.formatted(SCHEMA);
-        return consultar(sql, empresaId, inicio, fim, "n.data_emissao");
-    }
-
-    private List<Map<String, Object>> consultar(String baseSql, Long empresaId,
-                                                 LocalDate inicio, LocalDate fim, String colunaData) {
-        StringBuilder sql = new StringBuilder(baseSql);
-        List<Object> params = new ArrayList<>();
-        params.add(empresaId);
-        StringBuilder filtros = new StringBuilder();
-
-        if (inicio != null) {
-            filtros.append(" AND ").append(colunaData).append(" >= ? ");
-            params.add(Date.valueOf(inicio));
+        java.time.LocalDateTime de = inicio == null ? null : inicio.atStartOfDay();
+        java.time.LocalDateTime ate = fim == null ? null : fim.atTime(LocalTime.MAX);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (var r : nfeRepository.relatorioFiscal(empresaId, de, ate, LIMITE)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("numero", r.getNumero());
+            m.put("serie", r.getSerie());
+            m.put("natureza_operacao", r.getNaturezaOperacao());
+            m.put("data_emissao", r.getDataEmissao());
+            m.put("status", r.getStatus());
+            m.put("valor_total", r.getValorTotal());
+            m.put("quantidade_notas", r.getQuantidadeNotas());
+            out.add(m);
         }
-        if (fim != null) {
-            filtros.append(" AND ").append(colunaData).append(" <= ? ");
-            params.add(Date.valueOf(fim));
-        }
-        int groupBy = sql.indexOf(" GROUP BY ");
-        if (groupBy >= 0) sql.insert(groupBy, filtros);
-        else sql.append(filtros);
-        sql.append(" ORDER BY ").append(colunaData).append(" DESC LIMIT 1000");
-
-        try {
-            return jdbcTemplate.queryForList(sql.toString(), params.toArray());
-        } catch (Exception e) {
-            log.error("Falha ao executar relatório para empresa {}: {}", empresaId, e.getMessage());
-            return List.of();
-        }
+        return out;
     }
 
     private LocalDate data(Map<String, Object> filtros, String chave) {

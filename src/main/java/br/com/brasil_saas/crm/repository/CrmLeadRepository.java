@@ -7,4 +7,5 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, Long> {
     Optional<CrmLead> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     List<CrmLead> findByEmpresaIdAndDeletedAtIsNull(Long empresaId);
     List<CrmLead> findByEmpresaIdAndEtapaAndDeletedAtIsNull(Long empresaId, String etapa);
+    long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
 }

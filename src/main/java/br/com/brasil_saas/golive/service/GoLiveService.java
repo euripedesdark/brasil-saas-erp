@@ -1,11 +1,16 @@
 package br.com.brasil_saas.golive.service;
 
+import br.com.brasil_saas.cadastro.repository.ClienteRepository;
+import br.com.brasil_saas.cadastro.repository.PessoaRepository;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
+import br.com.brasil_saas.contratosvenda.repository.ContratoVendaRepository;
+import br.com.brasil_saas.core.repository.EmpresaRepository;
 import br.com.brasil_saas.core.service.EmpresaStripeService;
+import br.com.brasil_saas.crm.repository.CrmLeadRepository;
 import br.com.brasil_saas.fiscal.service.CertificadoDigitalService;
 import br.com.brasil_saas.helpdesk.service.HelpdeskService;
 import br.com.brasil_saas.metas.service.MetaComercialService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
@@ -13,13 +18,19 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.LongSupplier;
 
 /** Checklist de go-live operacional (sem reabrir emissão de nota). */
 @Service
 @RequiredArgsConstructor
 public class GoLiveService {
 
-    private final JdbcTemplate jdbc;
+    private final EmpresaRepository empresaRepository;
+    private final ClienteRepository clienteRepository;
+    private final PessoaRepository pessoaRepository;
+    private final ProdutoRepository produtoRepository;
+    private final CrmLeadRepository crmLeadRepository;
+    private final ContratoVendaRepository contratoVendaRepository;
     private final EmpresaStripeService stripeService;
     private final CertificadoDigitalService certificadoDigitalService;
     private final HelpdeskService helpdeskService;
@@ -30,8 +41,7 @@ public class GoLiveService {
         int ok = 0, pend = 0;
 
         // Empresa dados básicos
-        boolean emp = count(empresaId, "bc_core_empresa", true) > 0
-                || existsEmpresa(empresaId);
+        boolean emp = existsEmpresa(empresaId);
         itens.add(item("empresa", "Cadastro da empresa", emp, "/configurar-empresa"));
         if (emp) ok++; else pend++;
 
@@ -51,20 +61,20 @@ public class GoLiveService {
         itens.add(item("certificado", "Certificado A1", cert, "/configurar-empresa"));
         if (cert) ok++; else pend++;
 
-        boolean clientes = count(empresaId, "bc_cad_cliente") > 0 || count(empresaId, "bc_cad_pessoa") > 0;
+        boolean clientes = count(() -> clienteRepository.countByEmpresaIdAndDeletedAtIsNull(empresaId)) > 0
+                || count(() -> pessoaRepository.countByEmpresaIdAndDeletedAtIsNull(empresaId)) > 0;
         itens.add(item("clientes", "Clientes/pessoas", clientes, "/cadastros"));
         if (clientes) ok++; else pend++;
 
-        boolean produtos = count(empresaId, "bc_cad_produto") > 0;
+        boolean produtos = count(() -> produtoRepository.countByEmpresaIdAndDeletedAtIsNull(empresaId)) > 0;
         itens.add(item("produtos", "Produtos", produtos, "/cadastros"));
         if (produtos) ok++; else pend++;
 
-        boolean crm = count(empresaId, "bc_crm_lead") >= 0; // table exists check
-        long leads = count(empresaId, "bc_crm_lead");
+        long leads = count(() -> crmLeadRepository.countByEmpresaIdAndDeletedAtIsNull(empresaId));
         itens.add(item("crm", "CRM (leads)", leads >= 0, "/crm"));
         if (leads >= 0) ok++; else pend++;
 
-        long contratos = count(empresaId, "bc_ven_contrato");
+        long contratos = count(() -> contratoVendaRepository.countByEmpresaIdAndDeletedAtIsNull(empresaId));
         itens.add(item("contratos", "Contratos de venda", contratos >= 0, "/vendas/contratos"));
         if (contratos >= 0) ok++; else pend++;
 
@@ -99,27 +109,15 @@ public class GoLiveService {
 
     private boolean existsEmpresa(Long id) {
         try {
-            Integer n = jdbc.queryForObject("select count(*) from brasil_saas.bc_core_empresa where id=? and deleted_at is null", Integer.class, id);
-            return n != null && n > 0;
+            return empresaRepository.existsByIdAndDeletedAtIsNull(id);
         } catch (Exception e) {
             return false;
         }
     }
 
-    private long count(Long empresaId, String table) {
-        return count(empresaId, table, false);
-    }
-
-    private long count(Long empresaId, String table, boolean isEmpresaRoot) {
+    private long count(LongSupplier contador) {
         try {
-            if (isEmpresaRoot) {
-                Integer n = jdbc.queryForObject("select count(*) from brasil_saas." + table + " where id=? and deleted_at is null", Integer.class, empresaId);
-                return n == null ? 0 : n;
-            }
-            Long n = jdbc.queryForObject(
-                    "select count(*) from brasil_saas." + table + " where empresa_id=? and deleted_at is null",
-                    Long.class, empresaId);
-            return n == null ? 0 : n;
+            return contador.getAsLong();
         } catch (Exception e) {
             return -1;
         }

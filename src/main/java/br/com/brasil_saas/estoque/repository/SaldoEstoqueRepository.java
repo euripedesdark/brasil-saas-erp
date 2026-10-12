@@ -29,4 +29,14 @@ public interface SaldoEstoqueRepository extends JpaRepository<SaldoEstoque, Long
 
     List<SaldoEstoque> findByEmpresaIdOrderByProdutoIdAsc(Long empresaId);
     List<SaldoEstoque> findByEmpresaIdAndDepositoIdOrderByProdutoIdAsc(Long empresaId, Long depositoId);
+    @Query("SELECT COALESCE(SUM(s.quantidade), 0) FROM SaldoEstoque s "
+            + "WHERE s.empresaId = :empresaId AND s.produtoId = :produtoId AND s.deletedAt IS NULL")
+    java.math.BigDecimal somaPorProduto(@Param("empresaId") Long empresaId,
+            @Param("produtoId") Long produtoId);
+
+    @Query("SELECT COALESCE(SUM(s.quantidade), 0) FROM SaldoEstoque s "
+            + "WHERE s.empresaId = :empresaId AND s.produtoId = :produtoId "
+            + "AND s.depositoId = :depositoId AND s.deletedAt IS NULL")
+    java.math.BigDecimal somaPorProdutoEDeposito(@Param("empresaId") Long empresaId,
+            @Param("produtoId") Long produtoId, @Param("depositoId") Long depositoId);
 }
