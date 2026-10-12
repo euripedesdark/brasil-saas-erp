@@ -119,6 +119,12 @@
                 <artifactId>amqp-client</artifactId>
                 <version>5.37.0</version>
             </dependency>
+            <!-- Patch CVE commons-lang3 transitivo (Qodana/Mend) -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.18.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

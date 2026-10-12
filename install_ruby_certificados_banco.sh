@@ -14,9 +14,9 @@ RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
-# Senhas do ambiente. ALTERE_ME e a senha de 'euripedes' (sudo), do usuario
+# Senhas do ambiente. CHANGE_ME_VIA_ENV e a senha de 'euripedes' (sudo), do usuario
 # 'euripedes' no app e do superusuario postgres; ver README_INSTALACAO.md.
-SENHA_PADRAO="${BRASIL_SAAS_SENHA:-ALTERE_ME}"
+SENHA_PADRAO="${BRASIL_SAAS_SENHA:-}"  # obrigatorio via env em automacao; vazio = pedir interativo
 SENHA_SUDO="${BRASIL_SAAS_SENHA_SUDO:-$SENHA_PADRAO}"
 
 PKI_DESTINO="${BRASIL_SAAS_PKI:-$HOME/.local/share/brasil-saas-certs/pki}"
@@ -180,7 +180,7 @@ instalar_ruby() {
 # 2. CERTIFICADOS
 # =============================================================================
 # O PostgreSQL daqui autentica por CERTIFICADO DE CLIENTE (sslclientcert),
-# nao por senha. A senha do superusuario postgres e ALTERE_ME, mas quem entra
+# nao por senha. A senha do superusuario postgres e CHANGE_ME_VIA_ENV, mas quem entra
 # no banco brasil-saas e o usuario 'sa', com certificado.
 #
 # Para o 'sa' em outra maquina: gera-se um certificado novo COM OS MESMOS
@@ -546,7 +546,7 @@ SQL
 #
 # O .env e' escrito no MESMO passo. Banco e arquivo divergentes e' o que produz
 # a falha que motivou isto: faltou MONGODB_PASSWORD no .env, a URI caiu no
-# padrao ALTERE_ME e a autenticacao do Mongo derrubou o servico no boot.
+# padrao CHANGE_ME_VIA_ENV e a autenticacao do Mongo derrubou o servico no boot.
 # =============================================================================
 configurar_credenciais_aplicacao() {
     echo -e "${GREEN}=========================================${NC}"

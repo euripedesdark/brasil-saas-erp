@@ -1,14 +1,38 @@
 {
+  "groups": [
+    {
+      "name": "app.jwt",
+      "type": "java.lang.Object",
+      "description": "Configuração de JWT do ERP."
+    },
+    {
+      "name": "app.minio",
+      "type": "java.lang.Object",
+      "description": "Configuração do MinIO / object storage."
+    },
+    {
+      "name": "app.ia",
+      "type": "java.lang.Object",
+      "description": "Configuração do assistente de IA."
+    },
+    {
+      "name": "stripe",
+      "type": "java.lang.Object",
+      "description": "Integração Stripe."
+    }
+  ],
   "properties": [
     {
       "name": "app.jwt.secret",
       "type": "java.lang.String",
-      "description": "Segredo HMAC para assinatura de tokens JWT do ERP."
+      "description": "Segredo HMAC para assinatura de tokens JWT do ERP.",
+      "sourceType": "br.com.brasil_saas.shared.config.JwtProperties"
     },
     {
       "name": "app.jwt.expiration",
       "type": "java.lang.Long",
-      "description": "Validade do access token JWT em milissegundos."
+      "description": "Validade do access token JWT em milissegundos.",
+      "defaultValue": 86400000
     },
     {
       "name": "app.minio.url",
@@ -33,7 +57,7 @@
     {
       "name": "app.ia.provider",
       "type": "java.lang.String",
-      "description": "Provedor de IA (ex: openrouter, openai)."
+      "description": "Provedor de IA (openrouter, openai)."
     },
     {
       "name": "app.ia.api-key",
@@ -53,7 +77,9 @@
     {
       "name": "stripe.webhook-path",
       "type": "java.lang.String",
-      "description": "Path do endpoint de webhook do Stripe."
+      "description": "Path do endpoint de webhook do Stripe.",
+      "defaultValue": "/api/stripe/webhook"
     }
-  ]
+  ],
+  "hints": []
 }

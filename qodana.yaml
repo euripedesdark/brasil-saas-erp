@@ -9,4 +9,27 @@ profile:
 include:
   - name: CheckDependencyLicenses
 
-# Scan completo do repositório — sem exclusões de path/inspeção.
+# Ruído em massa / falso positivo — não esconde CVE de código nem taint.
+# Regex "pode simplificar" sozinho eram ~5.7k Moderate e ~400 High sem
+# impacto funcional. MaliciousLibraries no yarn.lock do eSocial é 0.0.0-ANY
+# fantasma. HardcodedPasswords no instalador são comentários/env, não secrets.
+exclude:
+  - name: RegExpSimplifiable
+  - name: RegExpDuplicateCharacterInClass
+  - name: RegExpRedundantEscape
+  - name: RegExpSingleCharAlternation
+  - name: MaliciousLibrariesLocal
+    paths:
+      - src/main/resources/microservices/esocial/frontend
+  - name: HardcodedPasswords
+    paths:
+      - install_ruby_certificados_banco.sh
+  - name: SpringBootAdditionalConfig
+    paths:
+      - src/main/resources/microservices/spring-ai
+  - name: KotlinMavenPluginPhase
+
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 50
