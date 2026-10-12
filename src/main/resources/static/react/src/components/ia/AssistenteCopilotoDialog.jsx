@@ -10,11 +10,11 @@ import { AssistenteService } from '../../services/AssistenteService';
 import './AssistenteCopilotoDialog.css';
 
 /**
- * Modal Animado do Copiloto IA (PrimeReact).
- * Abre via botão no topo direito ou canto inferior direito.
- * Permite ao usuário digitar ou falar por voz, escolhendo entre:
- * - [ Dúvida ]: Encontra a tela, o caminho no menu e explica o passo a passo.
- * - [ Ação ]: Executa ou valida a operação solicitada (ex: emissão de nota de produto ou serviço).
+ * Caixa pequena do Copiloto IA.
+ * Botão no topo direito ou flutuante inferior direito.
+ * Usuário digita o que quer e escolhe:
+ *  - [ Consultar ] → ensina onde fica e como fazer
+ *  - [ Executar ]  → tenta realizar a operação (ex: emitir nota do pedido com o nome do consumidor)
  */
 export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
     const navigate = useNavigate();
@@ -33,7 +33,6 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
         }
     })();
 
-    // Configuração do reconhecimento de voz via Web Speech API (Nativo do navegador)
     useEffect(() => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
@@ -41,7 +40,6 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
             recognition.continuous = false;
             recognition.interimResults = false;
             recognition.lang = 'pt-BR';
-
             recognition.onstart = () => setOuvindo(true);
             recognition.onend = () => setOuvindo(false);
             recognition.onerror = () => setOuvindo(false);
@@ -49,14 +47,21 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
                 const transcricao = event.results[0][0].transcript;
                 setTexto((prev) => (prev ? prev + ' ' + transcricao : transcricao));
             };
-
             recognitionRef.current = recognition;
         }
     }, []);
 
+    // Limpa resultado ao abrir de novo ou ao digitar
+    useEffect(() => {
+        if (visible) {
+            setResultado(null);
+            setErro(null);
+        }
+    }, [visible]);
+
     const toggleVoz = () => {
         if (!recognitionRef.current) {
-            alert('Reconhecimento de voz não suportado neste navegador. Use o Google Chrome ou Edge.');
+            alert('Reconhecimento de voz não suportado. Use Chrome ou Edge.');
             return;
         }
         if (ouvindo) {
@@ -72,12 +77,13 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
 
         setCarregando(true);
         setErro(null);
+        setResultado(null);
 
         try {
             const res = await AssistenteService.executarComando(empresaId, conteudo, modo);
             setResultado(res);
         } catch (e) {
-            setErro(e.message || 'Falha ao processar comando com o assistente.');
+            setErro(e.message || 'Falha ao processar o comando.');
         } finally {
             setCarregando(false);
         }
@@ -103,25 +109,31 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
         <Dialog
             header={
                 <div className="flex align-items-center gap-2">
-                    <i className="pi pi-sparkles text-primary text-xl" />
-                    <span className="font-bold text-lg">Copiloto Inteligente ERP</span>
+                    <i className="pi pi-sparkles text-primary" />
+                    <span className="font-semibold">Copiloto ERP</span>
                 </div>
             }
             visible={visible}
             onHide={onHide}
             className="assistente-copiloto-dialog"
-            style={{ width: '92vw', maxWidth: '640px' }}
-            breakpoints={{ '960px': '85vw', '641px': '96vw' }}
+            style={{ width: '92vw', maxWidth: '420px' }}
+            breakpoints={{ '641px': '96vw' }}
             modal
             dismissableMask
+            draggable={false}
         >
             <div className="copiloto-input-container">
                 <InputTextarea
                     value={texto}
-                    onChange={(e) => setTexto(e.target.value)}
-                    placeholder="O que você precisa? Ex: 'Onde emito nota fiscal?' ou 'Emita a nota do pedido 54'..."
+                    onChange={(e) => {
+                        setTexto(e.target.value);
+                        setResultado(null);
+                        setErro(null);
+                    }}
+                    placeholder="Ex: emitir nota do pedido 2"
                     className="copiloto-textarea"
                     autoResize
+                    rows={2}
                     disabled={carregando}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -132,9 +144,9 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
                 />
                 <Button
                     icon={ouvindo ? 'pi pi-microphone text-red-500' : 'pi pi-microphone'}
-                    className={`p-button-rounded p-button-text copiloto-mic-btn ${ouvindo ? 'copiloto-mic-active' : ''}`}
+                    className={`p-button-rounded p-button-text p-button-sm copiloto-mic-btn ${ouvindo ? 'copiloto-mic-active' : ''}`}
                     onClick={toggleVoz}
-                    tooltip={ouvindo ? 'Gravando... Fale agora' : 'Falar por voz'}
+                    tooltip={ouvindo ? 'Gravando...' : 'Falar'}
                     tooltipOptions={{ position: 'top' }}
                     type="button"
                 />
@@ -142,80 +154,71 @@ export const AssistenteCopilotoDialog = ({ visible, onHide }) => {
 
             <div className="copiloto-botoes-acao">
                 <Button
-                    label="Dúvida"
-                    icon="pi pi-question-circle"
-                    className="p-button-outlined p-button-info"
+                    label="Consultar"
+                    icon="pi pi-search"
+                    className="p-button-outlined p-button-info p-button-sm"
                     onClick={() => enviarComando('DUVIDA')}
                     disabled={carregando || !texto.trim()}
-                    tooltip="Buscar onde fica a tela, caminho no menu e instruções"
+                    tooltip="Ensina onde fica e como fazer"
                 />
                 <Button
-                    label="Ação"
-                    icon="pi pi-bolt"
-                    className="p-button-success"
+                    label="Executar"
+                    icon="pi pi-play"
+                    className="p-button-success p-button-sm"
                     onClick={() => enviarComando('ACAO')}
                     disabled={carregando || !texto.trim()}
-                    tooltip="Executar comando (ex: emitir nota fiscal do pedido X)"
+                    tooltip="Executa a operação (ex: emitir nota com o nome do consumidor do pedido)"
                 />
             </div>
 
             <div className="copiloto-exemplos">
-                <span>Exemplos rápidos:</span>
                 <span
                     className="copiloto-exemplo-chip"
-                    onClick={() => setTexto('Onde emito nota fiscal?')}
+                    onClick={() => setTexto('emitir nota fiscal do pedido 2')}
                 >
-                    ❓ Onde emito nota?
+                    emitir nota do pedido 2
                 </span>
                 <span
                     className="copiloto-exemplo-chip"
-                    onClick={() => setTexto('Como cadastrar um cliente?')}
+                    onClick={() => setTexto('onde emito nota fiscal')}
                 >
-                    ❓ Cadastrar cliente
+                    onde emito nota
                 </span>
                 <span
                     className="copiloto-exemplo-chip"
-                    onClick={() => setTexto('Emita a nota fiscal do pedido 54')}
+                    onClick={() => setTexto('status do pedido 2')}
                 >
-                    ⚡ Emita a nota do pedido 54
-                </span>
-                <span
-                    className="copiloto-exemplo-chip"
-                    onClick={() => setTexto('Status do pedido 54')}
-                >
-                    ⚡ Status do pedido 54
+                    status do pedido 2
                 </span>
             </div>
 
             {carregando && (
-                <div className="mt-3">
-                    <ProgressBar mode="indeterminate" style={{ height: '6px' }} />
-                    <p className="text-center text-sm text-500 mt-2">Consultando o sistema...</p>
+                <div className="mt-2">
+                    <ProgressBar mode="indeterminate" style={{ height: '4px' }} />
+                    <p className="text-center text-xs text-500 mt-1">Processando...</p>
                 </div>
             )}
 
             {erro && (
-                <Message severity="error" text={erro} className="w-full mt-3" />
+                <Message severity="error" text={erro} className="w-full mt-2" />
             )}
 
             {resultado && !carregando && (
                 <div className="copiloto-resultado-card">
                     <div className="copiloto-resultado-header">
                         <Tag
-                            value={resultado.modo === 'ACAO' ? 'Ação' : 'Dúvida'}
+                            value={resultado.modo === 'ACAO' ? 'Executado' : 'Consulta'}
                             severity={getStatusSeverity(resultado.status)}
                         />
-                        <span className="text-xs text-500 font-medium">
-                            Status: {resultado.status}
-                        </span>
+                        <span className="text-xs text-500">{resultado.status}</span>
                     </div>
 
                     <h4 className="copiloto-resultado-titulo">{resultado.titulo}</h4>
 
                     {resultado.caminhoMenu && (
-                        <div className="copiloto-caminho-menu mt-2">
+                        <div className="copiloto-caminho-menu">
                             <i className="pi pi-compass text-primary" />
-                            <span><strong>Menu:</strong> {resultado.caminhoMenu}</span>
+                            <span>{resultado.caminhoMenu}</span>
                         </div>
                     )}
 

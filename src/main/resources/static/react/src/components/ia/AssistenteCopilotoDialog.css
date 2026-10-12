@@ -1,54 +1,53 @@
 .assistente-copiloto-dialog .p-dialog-content {
-    padding: 1.5rem;
+    padding: 1rem 1.1rem 1.25rem;
+}
+
+.assistente-copiloto-dialog .p-dialog-header {
+    padding: 0.75rem 1.1rem;
 }
 
 .copiloto-input-container {
     position: relative;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .copiloto-textarea {
     width: 100%;
-    min-height: 90px;
-    font-size: 1rem;
-    padding: 0.75rem;
+    min-height: 56px;
+    font-size: 0.95rem;
+    padding: 0.6rem 2.4rem 0.6rem 0.7rem;
     border-radius: 8px;
     border: 1px solid var(--surface-border, #cbd5e1);
     box-sizing: border-box;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: none;
 }
 
 .copiloto-textarea:focus {
     border-color: var(--primary-color, #2563eb);
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+    outline: none;
 }
 
 .copiloto-mic-btn {
     position: absolute;
-    right: 12px;
-    bottom: 12px;
+    right: 6px;
+    bottom: 6px;
 }
 
 .copiloto-mic-active {
-    animation: pulse-red 1.5s infinite;
+    animation: pulse-red 1.4s infinite;
 }
 
 @keyframes pulse-red {
-    0% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-    }
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.65); }
+    70%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .copiloto-botoes-acao {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
 }
 
 .copiloto-botoes-acao .p-button {
@@ -56,81 +55,79 @@
     font-weight: 600;
 }
 
-.copiloto-resultado-card {
-    background: var(--surface-card, #ffffff);
+.copiloto-exemplos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.25rem;
+}
+
+.copiloto-exemplo-chip {
+    cursor: pointer;
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: var(--surface-ground, #f1f5f9);
+    color: var(--text-color-secondary, #64748b);
+    font-size: 0.78rem;
     border: 1px solid var(--surface-border, #e2e8f0);
-    border-radius: 10px;
-    padding: 1.25rem;
-    margin-top: 1rem;
-    animation: fadeInSlide 0.25s ease-out;
+    transition: background 0.15s, color 0.15s;
+}
+
+.copiloto-exemplo-chip:hover {
+    background: var(--primary-100, #dbeafe);
+    color: var(--primary-700, #1d4ed8);
+}
+
+.copiloto-resultado-card {
+    background: var(--surface-card, #fff);
+    border: 1px solid var(--surface-border, #e2e8f0);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.75rem;
+    animation: fadeInSlide 0.22s ease-out;
 }
 
 @keyframes fadeInSlide {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .copiloto-resultado-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .copiloto-resultado-titulo {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-color, #1e293b);
-    margin: 0;
+    margin: 0 0 0.35rem 0;
 }
 
 .copiloto-resultado-msg {
     white-space: pre-line;
-    line-height: 1.5;
+    line-height: 1.45;
+    font-size: 0.9rem;
     color: var(--text-color-secondary, #475569);
-    margin: 0.75rem 0;
+    margin: 0.5rem 0;
 }
 
 .copiloto-caminho-menu {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     background: var(--surface-ground, #f1f5f9);
-    padding: 0.4rem 0.8rem;
+    padding: 0.3rem 0.65rem;
     border-radius: 6px;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--text-color, #334155);
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.4rem;
 }
 
 .copiloto-navegacao-btn {
     width: 100%;
-    margin-top: 0.75rem;
-}
-
-.copiloto-exemplos {
-    font-size: 0.85rem;
-    color: var(--text-color-secondary, #64748b);
     margin-top: 0.5rem;
-}
-
-.copiloto-exemplo-chip {
-    cursor: pointer;
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    margin: 0.25rem 0.25rem 0.25rem 0;
-    background: var(--surface-ground, #f8fafc);
-    border: 1px solid var(--surface-border, #e2e8f0);
-    border-radius: 4px;
-    transition: background 0.15s;
-}
-
-.copiloto-exemplo-chip:hover {
-    background: var(--surface-hover, #e2e8f0);
 }

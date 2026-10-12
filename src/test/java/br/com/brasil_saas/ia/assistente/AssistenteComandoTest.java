@@ -145,8 +145,9 @@ class AssistenteComandoTest {
         assertEquals("ACAO", resposta.modo());
         assertEquals("SUCESSO", resposta.status());
         assertEquals("/fiscal/nfe", resposta.rota());
-        assertTrue(resposta.mensagem().contains("autorizada com sucesso"));
+        assertTrue(resposta.titulo().contains("Empresa Cliente S/A") || resposta.mensagem().contains("Empresa Cliente S/A"));
         assertTrue(resposta.mensagem().contains("135260000123456"));
+        assertTrue(resposta.mensagem().contains("Consumidor") || resposta.mensagem().contains("Cliente"));
     }
 
     @Test

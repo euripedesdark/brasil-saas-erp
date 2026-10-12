@@ -260,9 +260,9 @@ public class AssistenteAcaoService {
                 return new ComandoResponse(
                         "ACAO",
                         "SUCESSO",
-                        "NF-e Emitida com Sucesso!",
-                        "A Nota Fiscal Eletrônica (NF-e) do Pedido #" + pedidoNumero + " foi autorizada com sucesso pela SEFAZ!\n" +
-                        "• Cliente: " + clienteNome + "\n" +
+                        "NF-e emitida para " + clienteNome,
+                        "Pedido #" + pedidoNumero + " — Nota Fiscal Eletrônica autorizada pela SEFAZ.\n\n" +
+                        "• Consumidor / Destinatário: " + clienteNome + "\n" +
                         "• Valor Total: R$ " + valTotal + "\n" +
                         "• Protocolo SEFAZ: " + protocolo,
                         "/fiscal/nfe",
@@ -294,13 +294,13 @@ public class AssistenteAcaoService {
             return new ComandoResponse(
                     "ACAO",
                     "SUCESSO",
-                    "Pedido Pronto para Emissão de NF-e",
-                    "O Pedido #" + pedidoNumero + " foi analisado com sucesso:\n" +
-                    "• Operação: Venda de Mercadoria (NF-e de Produto)\n" +
-                    "• Cliente: " + clienteNome + "\n" +
+                    "Pedido #" + pedidoNumero + " pronto — consumidor: " + clienteNome,
+                    "Análise concluída:\n\n" +
+                    "• Consumidor / Destinatário: " + clienteNome + "\n" +
+                    "• Operação: Venda de Mercadoria (NF-e)\n" +
                     "• Valor Total: R$ " + valTotal + "\n" +
                     "• Status do Pedido: " + pedido.getStatus() + "\n\n" +
-                    "O pedido está pronto para transmissão à SEFAZ. Clique no botão abaixo para revisar e concluir na tela de NF-e.",
+                    "Clique no botão abaixo para revisar e transmitir a NF-e à SEFAZ com o nome do consumidor acima.",
                     "/fiscal/nfe",
                     "Fiscal > Documentos Fiscais > NF-e",
                     "Ir para Emissão de NF-e",
@@ -325,12 +325,12 @@ public class AssistenteAcaoService {
         return new ComandoResponse(
                 "ACAO",
                 "SUCESSO",
-                "Pedido de Serviços Identificado (NFS-e)",
-                "O Pedido #" + pedidoNumero + " foi identificado como prestação de serviços municipais:\n" +
+                "NFS-e pronta — tomador: " + clienteNome,
+                "Pedido #" + pedidoNumero + " identificado como serviço municipal.\n\n" +
+                "• Tomador / Consumidor: " + clienteNome + "\n" +
                 "• Operação: NFS-e (Prefeitura)\n" +
-                "• Tomador (Cliente): " + clienteNome + "\n" +
                 "• Valor dos Serviços: R$ " + valServicos + "\n\n" +
-                "Para emitir o RPS/NFS-e municipal com os dados do provedor da prefeitura, acerte os códigos municipais na tela de NFS-e.",
+                "Clique no botão abaixo para emitir o RPS/NFS-e com o nome do tomador acima.",
                 "/fiscal/nfse",
                 "Fiscal > Documentos Fiscais > NFS-e",
                 "Ir para Emissão de NFS-e",
