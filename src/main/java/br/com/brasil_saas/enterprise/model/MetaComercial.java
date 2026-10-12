@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-@Entity
+@Entity(name = "EnterpriseMetaComercial")
 @Table(name = "bc_ent_meta_comercial", schema = "brasil_saas")
 @Getter
 @Setter
