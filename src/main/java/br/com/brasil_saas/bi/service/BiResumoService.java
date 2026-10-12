@@ -1,11 +1,14 @@
 package br.com.brasil_saas.bi.service;
 
+import br.com.brasil_saas.bi.config.BiDataSourceConfig.BiReadClient;
 import br.com.brasil_saas.bi.dto.BiResumo;
 import br.com.brasil_saas.bi.dto.BiResumo.Area;
 import br.com.brasil_saas.bi.dto.BiResumo.Indicador;
 import br.com.brasil_saas.shared.exception.BusinessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,11 +21,22 @@ import java.util.Map;
 public class BiResumoService {
     private final NamedParameterJdbcTemplate jdbc;
 
+    /** Compatibilidade com testes e modo legado sem BI dedicado. */
     public BiResumoService(NamedParameterJdbcTemplate jdbc) {
+        this.jdbc = withTimeout(jdbc);
+    }
+
+    @Autowired
+    public BiResumoService(NamedParameterJdbcTemplate jdbc, ObjectProvider<BiReadClient> biClient) {
+        BiReadClient dedicated = biClient.getIfAvailable();
+        this.jdbc = dedicated == null ? withTimeout(jdbc) : dedicated.jdbc();
+    }
+
+    private static NamedParameterJdbcTemplate withTimeout(NamedParameterJdbcTemplate jdbc) {
         var consultas = new org.springframework.jdbc.core.JdbcTemplate(
                 java.util.Objects.requireNonNull(jdbc.getJdbcTemplate().getDataSource()));
         consultas.setQueryTimeout(5);
-        this.jdbc = new NamedParameterJdbcTemplate(consultas);
+        return new NamedParameterJdbcTemplate(consultas);
     }
 
     @Transactional(readOnly = true)
