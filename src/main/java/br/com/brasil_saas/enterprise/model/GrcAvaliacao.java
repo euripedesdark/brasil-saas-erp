@@ -31,7 +31,7 @@ public class GrcAvaliacao {
     @Column(name = "risco_id", nullable = false)
     private Long riscoId;
 
-    @Column(name = "periodo", length = 7, nullable = false)
+    @Column(name = "periodo", columnDefinition = "bpchar(7)", nullable = false)
     private String periodo;
 
     @Column(name = "probabilidade", precision = 8, scale = 2, nullable = false)
