@@ -16,7 +16,7 @@ class GerenciadorSqlServiceSecurityTest {
     @Test void multipleStatementsCannotBypassConfirmationThroughSelect() {
         JdbcTemplate jdbc = mock(JdbcTemplate.class);
         GerenciadorSqlService service = new GerenciadorSqlService(jdbc);
-        assertThrows(GerenciadorSqlService.ConfirmacaoNecessariaException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> service.executar("select 1; drop table pedidos", false, "admin"));
         verifyNoInteractions(jdbc);
     }
