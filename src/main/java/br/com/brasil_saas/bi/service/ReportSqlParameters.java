@@ -27,7 +27,7 @@ public final class ReportSqlParameters {
 
         String normalized = sql.strip();
         String upper = normalized.toUpperCase(Locale.ROOT);
-        if (!Pattern.compile("^(SELECT|WITH)\\\\b").matcher(upper).find()) {
+        if (!Pattern.compile("^(SELECT|WITH)\\b").matcher(upper).find()) {
             throw new IllegalArgumentException("Relatorios aceitam somente consultas SELECT ou WITH");
         }
         if (normalized.indexOf(';') >= 0 || normalized.contains("--")
