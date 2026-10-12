@@ -10,4 +10,5 @@ public interface CfopRepository extends JpaRepository<Cfop, Long> {
     List<Cfop> findByTipoOperacaoOrderByCodigo(String tipoOperacao);
     List<Cfop> findAllByOrderByCodigo();
     Optional<Cfop> findByCodigo(String codigo);
+    List<Cfop> findByTipoOperacaoAndCodigoInOrderByCodigo(String tipoOperacao, java.util.Collection<String> codigos);
 }

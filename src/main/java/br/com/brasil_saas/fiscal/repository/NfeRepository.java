@@ -23,4 +23,7 @@ public interface NfeRepository extends JpaRepository<Nfe, Long> {
     @Query(value = "select pg_advisory_xact_lock(hashtext(concat('brasil_saas:nfe:', :empresaId, ':', :serie)))", nativeQuery = true)
     void lockSequence(@Param("empresaId") Long empresaId, @Param("serie") String serie);
     java.util.List<Nfe> findByEmpresaIdAndTipoOperacaoAndDataEmissaoBetweenAndDeletedAtIsNull(Long empresaId, String tipoOperacao, java.time.LocalDateTime de, java.time.LocalDateTime ate);
+
+    @Query("select count(n) from Nfe n where n.empresaId = :empresaId and n.dataEmissao >= :de and n.dataEmissao < :ate and n.deletedAt is null")
+    long countNoPeriodo(@Param("empresaId") Long empresaId, @Param("de") java.time.LocalDateTime de, @Param("ate") java.time.LocalDateTime ate);
 }

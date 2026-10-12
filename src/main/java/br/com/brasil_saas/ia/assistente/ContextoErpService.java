@@ -1,8 +1,13 @@
 package br.com.brasil_saas.ia.assistente;
 
+import br.com.brasil_saas.cadastro.model.Produto;
+import br.com.brasil_saas.cadastro.repository.ProdutoRepository;
 import br.com.brasil_saas.fiscal.busca.BuscaFiscalService;
 import br.com.brasil_saas.fiscal.busca.NormalizacaoFiscal;
-import org.springframework.jdbc.core.JdbcTemplate;
+import br.com.brasil_saas.fiscal.model.Cfop;
+import br.com.brasil_saas.fiscal.repository.CfopRepository;
+import br.com.brasil_saas.fiscal.repository.NcmRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,14 +42,20 @@ public class ContextoErpService {
 
     private final BuscaFiscalService buscaFiscal;
     private final BuscaDocumentacao buscaDocs;
-    private final JdbcTemplate jdbc;
+    private final CfopRepository cfopRepository;
+    private final ProdutoRepository produtoRepository;
+    private final NcmRepository ncmRepository;
 
     public ContextoErpService(final BuscaFiscalService buscaFiscal,
                               final BuscaDocumentacao buscaDocs,
-                              final JdbcTemplate jdbc) {
+                              final CfopRepository cfopRepository,
+                              final ProdutoRepository produtoRepository,
+                              final NcmRepository ncmRepository) {
         this.buscaFiscal = buscaFiscal;
         this.buscaDocs = buscaDocs;
-        this.jdbc = jdbc;
+        this.cfopRepository = cfopRepository;
+        this.produtoRepository = produtoRepository;
+        this.ncmRepository = ncmRepository;
     }
 
     @Transactional(readOnly = true)
@@ -111,20 +122,16 @@ public class ContextoErpService {
             return List.of();
         }
         final List<Achado> achados = new ArrayList<>();
-        jdbc.query("SELECT codigo, descricao FROM bc_fis_cfop"
-                        + " WHERE tipo = 'SAIDA' AND codigo IN"
-                        + " ('5101','5102','5103','5104','5115','5405','5656','5933')"
-                        + " ORDER BY codigo",
-                (rs, n) -> {
-                    achados.add(new Achado("fiscal", "cfop",
-                            rs.getString("codigo"),
-                            rs.getString("codigo") + " — " + resumir(rs.getString("descricao")),
-                            rs.getString("codigo") + " — " + resumir(rs.getString("descricao")),
-                            rs.getString("codigo") + " | " + nulos(rs.getString("descricao")),
-                            "tabela oficial", rs.getString("codigo"),
-                            "media"));
-                    return null;
-                });
+        for (Cfop cfop : cfopRepository.findByTipoOperacaoAndCodigoInOrderByCodigo(
+                "SAIDA", List.of("5101","5102","5103","5104","5115","5405","5656","5933"))) {
+            achados.add(new Achado("fiscal", "cfop",
+                    cfop.getCodigo(),
+                    cfop.getCodigo() + " — " + resumir(cfop.getDescricao()),
+                    cfop.getCodigo() + " — " + resumir(cfop.getDescricao()),
+                    cfop.getCodigo() + " | " + nulos(cfop.getDescricao()),
+                    "tabela oficial", cfop.getCodigo(),
+                    "media"));
+        }
         return achados;
     }
 
@@ -141,38 +148,32 @@ public class ContextoErpService {
             return List.of();
         }
 
-        final StringBuilder sql = new StringBuilder(
-                "SELECT id, nome, ncm, cfop_padrao, cest FROM bc_cad_produto"
-                        + " WHERE deleted_at IS NULL AND empresa_id = ?"
-                        + " AND (lower(nome) LIKE ?");
-        final List<Object> args = new ArrayList<>();
-        args.add(empresaId);
-        args.add(padroes.get(0));
-        for (int i = 1; i < padroes.size(); i++) {
-            sql.append(" OR lower(nome) LIKE ?");
-            args.add(padroes.get(i));
-        }
-        sql.append(") ORDER BY nome LIMIT ?");
-        args.add(LIMITE_PRODUTO);
-
         final List<Achado> achados = new ArrayList<>();
-        jdbc.query(sql.toString(), (rs, n) -> {
-            final String ncm = rs.getString("ncm");
-            final String diagnostico = diagnosticoNcm(ncm);
-            achados.add(new Achado(
-                    "dados", "produto",
-                    ncm,
-                    rs.getString("nome"),
-                    "ncm=" + nulos(ncm) + ", cfop=" + nulos(rs.getString("cfop_padrao"))
-                            + ", cest=" + nulos(rs.getString("cest")),
-                    diagnostico,
-                    "cadastro de produto",
-                    "produto " + rs.getLong("id"),
-                    // NCM vazio, em formato errado ou inexistente: a classificação
-                    // não tem confiança nenhuma, e dizer "média" seria Falsear.
-                    "NCM válido".equals(diagnostico) ? "alta" : "nenhuma"));
-            return null;
-        }, args.toArray());
+        final java.util.Set<Long> vistos = new java.util.LinkedHashSet<>();
+        for (String padrao : padroes) {
+            if (achados.size() >= LIMITE_PRODUTO) break;
+            String termoLike = padrao.replace("%", "");
+            for (Produto prod : produtoRepository.buscar(
+                    empresaId, termoLike, null, null, null, null,
+                    PageRequest.of(0, LIMITE_PRODUTO)).getContent()) {
+                if (!vistos.add(prod.getId())) continue;
+                final String ncm = prod.getNcm();
+                final String diagnostico = diagnosticoNcm(ncm);
+                achados.add(new Achado(
+                        "dados", "produto",
+                        ncm,
+                        prod.getNome(),
+                        "ncm=" + nulos(ncm) + ", cfop=" + nulos(prod.getCfopPadrao())
+                                + ", cest=" + nulos(prod.getCest()),
+                        diagnostico,
+                        "cadastro de produto",
+                        "produto " + prod.getId(),
+                        // NCM vazio, em formato errado ou inexistente: a classificação
+                        // não tem confiança nenhuma, e dizer "média" seria Falsear.
+                        "NCM válido".equals(diagnostico) ? "alta" : "nenhuma"));
+                if (achados.size() >= LIMITE_PRODUTO) break;
+            }
+        }
         return achados;
     }
 
@@ -190,9 +191,7 @@ public class ContextoErpService {
         if (ncm.length() < 8) {
             return "NCM com " + ncm.length() + " dígitos; a coluna é varchar(8) e o NCM oficial tem 8";
         }
-        final Integer existe = jdbc.queryForObject(
-                "SELECT count(*) FROM bc_fis_ncm WHERE codigo = ?", Integer.class, ncm);
-        if (existe == null || existe == 0) {
+        if (ncmRepository.findByCodigo(ncm).isEmpty()) {
             return "NCM " + ncm + " não existe na tabela oficial";
         }
         return "NCM válido";

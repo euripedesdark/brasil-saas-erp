@@ -25,4 +25,7 @@ public interface NfseRepository extends JpaRepository<Nfse, Long> {
     Optional<Nfse> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     java.util.Optional<Nfse> findTop1ByEmpresaIdOrderByIdDesc(Long empresaId);
     java.util.List<Nfse> findByEmpresaIdAndDataEmissaoBetweenAndDeletedAtIsNull(Long empresaId, java.time.LocalDateTime de, java.time.LocalDateTime ate);
+
+    @Query("select count(n) from Nfse n where n.empresaId = :empresaId and n.dataEmissao >= :de and n.dataEmissao < :ate and n.deletedAt is null")
+    long countNoPeriodo(@Param("empresaId") Long empresaId, @Param("de") java.time.LocalDateTime de, @Param("ate") java.time.LocalDateTime ate);
 }
