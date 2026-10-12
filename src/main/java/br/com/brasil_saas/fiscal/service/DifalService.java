@@ -21,9 +21,7 @@ public class DifalService {
         BigDecimal inter = n(aliqInter);
         BigDecimal interna = n(aliqInterna);
         BigDecimal fcp = n(aliqFcp);
-        if (interna.compareTo(inter) < 0) {
-            // sem DIFAL se interna <= inter (caso atípico; ainda assim devolve zeros úteis)
-        }
+        // se interna < inter, difal fica zero no clamp abaixo
         BigDecimal icmsOrigem = base.multiply(inter).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         BigDecimal difal = base.multiply(interna.subtract(inter)).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         if (difal.signum() < 0) difal = BigDecimal.ZERO.setScale(2, RoundingMode.UNNECESSARY);

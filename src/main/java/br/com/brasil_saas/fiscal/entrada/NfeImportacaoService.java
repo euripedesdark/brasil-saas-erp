@@ -102,11 +102,7 @@ public class NfeImportacaoService {
 
     /**
      * Como cada item da nota foi resolvido contra o cadastro.
-     *
-     * @param porEan    casou pelo codigo de barras. O jeito que se confia.
-     * @param porCprod  casou pelo cProd do fornecedor e nome igual
-     * @param aCriar    nao existe no cadastro e sera criado
-     * @param semProduto nao casou e NAO sera criado sem o usuario pedir
+     * situacao: CADASTRADO (EAN/cProd), A_CRIAR, SEM_PRODUTO, CADASTRADO_COM_COMPLEMENTO.
      */
     public record SituacaoItem(
             int numeroItem, String descricao, String cProd, String ean,
@@ -344,10 +340,8 @@ public class NfeImportacaoService {
     }
 
     /**
-     * @param entradaEmEstoque false para registrar a nota sem mexer no saldo.
-     *                          A conciliação com o fornecedor depende da nota
-     *                          existir, e nem sempre o recebimento e na data
-     *                          da emissão.
+     * Resultado da confirmacao da NF-e de entrada.
+     * itensComEntrada: quantos itens geraram movimento de estoque (0 se so registrou a nota).
      */
     public record Confirmado(
             Long nfeId, String chave, String status,

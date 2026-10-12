@@ -29,7 +29,7 @@ public class PlanoContasController {
         p.setCodigo(r.codigo()); p.setDescricao(r.descricao()); p.setTipo(r.tipo()); p.setNatureza(r.natureza());
         p.setContaPaiId(r.contaPaiId());
         p.setNivel(r.nivel() == null ? 1 : r.nivel());
-        p.setAtiva(r.ativa() == null ? true : r.ativa());
+        p.setAtiva(r.ativa() == null || r.ativa());
         p = repo.save(p);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new PlanoContasResponse(p.getId(), p.getCodigo(), p.getDescricao(), p.getTipo(),

@@ -13,15 +13,15 @@ import java.util.List;
  * errada seria aceita pelo BCrypt e a pessoa entraria sem a senha que digitou.
  *
  * <ul>
- *   <li>{@link #RECUSADO} — o servico respondeu e recusou a credencial. A
+ *   <li>{@link Estado#RECUSADO} — o servico respondeu e recusou a credencial. A
  *       resposta e definitiva: nao ha caminho alternativo.
- *   <li>{@link #ACEITO} — identidade devolvida, com os grupos do contrato.
- *   <li>{@link #INDISPONIVEL} — o servico ou o AD nao respondeu. Nao se sabe
+ *   <li>{@link Estado#ACEITO} — identidade devolvida, com os grupos do contrato.
+ *   <li>{@link Estado#INDISPONIVEL} — o servico ou o AD nao respondeu. Nao se sabe
  *       nada sobre a senha, e quem chama decide se ha o que tentar antes.
  * </ul>
  *
  * @param estado  o que aconteceu
- * @param identidade a identidade devolvida, so no estado {@link #ACEITO}
+ * @param identidade a identidade devolvida, so no estado {@link Estado#ACEITO}
  */
 public record ResultadoAutenticacao(Estado estado, IdentityDto identidade) {
 

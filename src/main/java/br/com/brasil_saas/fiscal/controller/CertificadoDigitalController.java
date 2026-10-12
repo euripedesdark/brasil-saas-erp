@@ -36,10 +36,7 @@ public class CertificadoDigitalController {
     private final CertificadoDigitalService certificadoService;
 
     /**
-     * Le o certificado do caminho informado.
-     *
-     * @param salvar  true grava no MongoDB (colecao "documentos", modulo
-     *                fiscal). false devolve os bytes e nao persiste nada.
+     * Le o certificado do caminho informado e grava/devolve conforme o body.
      */
     @PostMapping("/carregar")
     public ResponseEntity<?> carregar(

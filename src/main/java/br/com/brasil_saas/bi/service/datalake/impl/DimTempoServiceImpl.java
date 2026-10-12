@@ -69,7 +69,7 @@ public class DimTempoServiceImpl implements DimTempoService {
         List<DimTempo> tempoList = new ArrayList<>();
 
         while (!currentDate.isAfter(endDate)) {
-            if (!dimTempoRepository.findByData(currentDate).isPresent()) {
+            if (dimTempoRepository.findByData(currentDate).isEmpty()) {
                 DimTempo dimTempo = createDimTempoFromDate(currentDate);
                 tempoList.add(dimTempo);
             }

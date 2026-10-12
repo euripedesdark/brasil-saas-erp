@@ -29,7 +29,7 @@ public class ContaBancariaController {
         c.setBanco(r.banco()); c.setAgencia(r.agencia()); c.setConta(r.conta()); c.setDigito(r.digito());
         c.setTipo(r.tipo());
         c.setSaldoInicial(r.saldoInicial() == null ? BigDecimal.ZERO : r.saldoInicial());
-        c.setAtiva(r.ativa() == null ? true : r.ativa());
+        c.setAtiva(r.ativa() == null || r.ativa());
         c = repo.save(c);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new ContaResponse(c.getId(), c.getBanco(), c.getAgencia(), c.getConta(), c.getDigito(),

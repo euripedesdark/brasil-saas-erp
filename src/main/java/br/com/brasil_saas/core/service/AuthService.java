@@ -25,7 +25,7 @@ public interface AuthService {
      * sem perfil e sem empresa.
      *
      * @param principal nome de usuário, já normalizado (sem {@code DOMINIO\})
-     * @throws BusinessException se não houver usuário ERP com esse nome
+     * @throws br.com.brasil_saas.shared.exception.BusinessException se não houver usuário ERP com esse nome
      */
     LoginResponse loginPorPrincipal(String principal);
 }

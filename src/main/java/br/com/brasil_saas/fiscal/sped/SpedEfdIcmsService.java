@@ -44,7 +44,7 @@ import org.springframework.stereotype.Service;
  * <h3>O fechamento e a parte que faz a SEFAZ recusar</h3>
  * O 9900 declara quantas linhas de cada registro existem. Se a contagem
  * divergir do que foi realmente escrito, o arquivo e recusado sem apontar o
- * registro. Por isso {@link #montarContadores} conta de verdade, em vez de
+ * registro. Por isso o metodo de contagem dos registros 9900 conta de verdade, em vez de
  * receber o numero de fora.
  */
 @Slf4j

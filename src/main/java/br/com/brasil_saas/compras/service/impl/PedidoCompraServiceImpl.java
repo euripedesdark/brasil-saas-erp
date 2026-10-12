@@ -64,7 +64,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
         PedidoCompra pedido = new PedidoCompra();
         pedido.setEmpresaId(request.empresaId());
         if (request.itens() == null || request.itens().isEmpty()) throw new BusinessException("O pedido de compra precisa possuir ao menos um item");
-        if (!fornecedorRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.fornecedorId(), request.empresaId()).isPresent()) throw new ResourceNotFoundException("Fornecedor nao encontrado para a empresa");
+        if (fornecedorRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(request.fornecedorId(), request.empresaId()).isEmpty()) throw new ResourceNotFoundException("Fornecedor nao encontrado para a empresa");
         pedido.setFornecedorId(request.fornecedorId());
         String numero = request.numero();
         if (numero == null || numero.isBlank()) numero = "PC-" + System.currentTimeMillis();

@@ -27,7 +27,7 @@ public class CentroCustoController {
         CentroCusto c = new CentroCusto();
         c.setEmpresaId(u.getEmpresaId());
         c.setCodigo(r.codigo()); c.setDescricao(r.descricao()); c.setCentroCustoPaiId(r.centroCustoPaiId());
-        c.setAtivo(r.ativo() == null ? true : r.ativo());
+        c.setAtivo(r.ativo() == null || r.ativo());
         c = repo.save(c);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new CentroCustoResponse(c.getId(), c.getCodigo(), c.getDescricao(),

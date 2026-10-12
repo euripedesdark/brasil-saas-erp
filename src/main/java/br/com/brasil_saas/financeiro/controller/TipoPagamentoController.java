@@ -26,7 +26,7 @@ public class TipoPagamentoController {
         TipoPagamento t = new TipoPagamento();
         t.setEmpresaId(u.getEmpresaId());
         t.setDescricao(r.descricao()); t.setCodigo(r.codigo());
-        t.setAtivo(r.ativo() == null ? true : r.ativo());
+        t.setAtivo(r.ativo() == null || r.ativo());
         t = repo.save(t);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new TipoPagamentoResponse(t.getId(), t.getDescricao(), t.getCodigo(), t.getAtivo()));

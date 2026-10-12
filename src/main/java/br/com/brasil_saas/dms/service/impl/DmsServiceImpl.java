@@ -36,8 +36,8 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override public List<DmsDocumento> documentos(Long empresaId, String categoria, String status) {
         List<DmsDocumento> base = documentos.findByEmpresaIdAndDeletedAtIsNull(empresaId);
-        if (categoria != null && !"".equals(categoria)) base = base.stream().filter(d -> categoria.equals(d.getCategoria())).toList();
-        if (status != null && !"".equals(status)) base = base.stream().filter(d -> status.equals(d.getStatus())).toList();
+        if (categoria != null && !categoria.isEmpty()) base = base.stream().filter(d -> categoria.equals(d.getCategoria())).toList();
+        if (status != null && !status.isEmpty()) base = base.stream().filter(d -> status.equals(d.getStatus())).toList();
         return base;
     }
     @Override @Transactional public DmsDocumento salvar(Long empresaId, DmsDocumento d) {

@@ -188,7 +188,7 @@ public class RelatorioServiceImpl implements RelatorioService {
             
             if (resultados != null && !resultados.isEmpty()) {
                 // Criar tabela
-                PdfPTable table = new PdfPTable(resultados.get(0).keySet().size());
+                PdfPTable table = new PdfPTable(resultados.get(0).size());
                 table.setWidthPercentage(100);
 
                 // Cabecalho
@@ -282,7 +282,7 @@ public class RelatorioServiceImpl implements RelatorioService {
                 }
 
                 // Ajustar colunas
-                for (int i = 0; i < resultados.get(0).keySet().size(); i++) {
+                for (int i = 0; i < resultados.get(0).size(); i++) {
                     sheet.autoSizeColumn(i);
                 }
             }

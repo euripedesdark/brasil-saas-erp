@@ -252,7 +252,7 @@ public class AdGroupService {
             for (int i = 0; i < mo.size(); i++) {
                 String dn = String.valueOf(mo.get(i));
                 String nome = nomeDoGrupo(dn);
-                if (nome != null && !nomes.contains(nome)) {
+                if (nome != null) {
                     nomes.add(nome);
                 }
                 if (dnsVisitados.add(dn)) {

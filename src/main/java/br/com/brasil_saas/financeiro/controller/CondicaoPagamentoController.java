@@ -26,7 +26,7 @@ public class CondicaoPagamentoController {
         CondicaoPagamento c = new CondicaoPagamento();
         c.setEmpresaId(u.getEmpresaId());
         c.setDescricao(r.descricao()); c.setDias(r.dias());
-        c.setAtivo(r.ativo() == null ? true : r.ativo());
+        c.setAtivo(r.ativo() == null || r.ativo());
         c = repo.save(c);
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new CondicaoResponse(c.getId(), c.getDescricao(), c.getDias(), c.getAtivo()));
