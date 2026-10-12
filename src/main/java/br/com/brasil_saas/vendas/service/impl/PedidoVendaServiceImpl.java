@@ -88,9 +88,8 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
         List<ItemPedidoVenda> itens = new ArrayList<>();
         List<CalculoDesconto.Item> paraCalculo = new ArrayList<>();
 
-        if (request.itens() != null) {
-            int num = 1;
-            for (var itemReq : request.itens()) {
+        int num = 1;
+        for (var itemReq : request.itens()) {
                 if (itemReq.quantidade() == null || itemReq.quantidade().signum() <= 0) throw new BusinessException("Quantidade deve ser maior que zero");
                 if (itemReq.valorUnitario() == null || itemReq.valorUnitario().signum() < 0) throw new BusinessException("Valor unitario invalido");
                 ItemPedidoVenda item = new ItemPedidoVenda();
@@ -109,7 +108,6 @@ public class PedidoVendaServiceImpl implements PedidoVendaService {
                 itens.add(item);
                 paraCalculo.add(new CalculoDesconto.Item(itemReq.quantidade(), itemReq.valorUnitario(), item.getValorDesconto()));
             }
-        }
 
         CalculoDesconto calculo = CalculoDesconto.de(paraCalculo, request.percentualDesconto(), request.valorDesconto(), request.valorFrete());
         pedido.setItens(itens);

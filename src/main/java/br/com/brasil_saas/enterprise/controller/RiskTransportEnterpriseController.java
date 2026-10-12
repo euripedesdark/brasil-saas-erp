@@ -83,7 +83,7 @@ public class RiskTransportEnterpriseController {
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> vinculo(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b){
         Long risco=longValue(b.get("riscoId")), controle=longValue(b.get("controleId"));
-        if(risco==null||controle==null||jdbc.queryForObject("select count(*) from brasil_saas.bc_grc_risco r join brasil_saas.bc_grc_controle c on c.empresa_id=r.empresa_id where r.id=? and c.id=? and r.empresa_id=?",Integer.class,risco,controle,u.getEmpresaId())==0)
+        if(risco==null||controle==null||java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_grc_risco r join brasil_saas.bc_grc_controle c on c.empresa_id=r.empresa_id where r.id=? and c.id=? and r.empresa_id=?", Integer.class,risco,controle,u.getEmpresaId())).orElse(0) == 0)
             throw new IllegalArgumentException("Risco/controle inválido para a empresa");
         jdbc.update("insert into brasil_saas.bc_grc_risco_controle(empresa_id,risco_id,controle_id) values(?,?,?) on conflict do nothing",u.getEmpresaId(),risco,controle);
         return Map.of("ok",true);
@@ -113,7 +113,7 @@ public class RiskTransportEnterpriseController {
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> teste(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody Map<String,Object> b) {
         Long controle = longValue(b.get("controleId"));
-        if (controle == null || jdbc.queryForObject("select count(*) from brasil_saas.bc_grc_controle where id=? and empresa_id=?", Integer.class, controle,u.getEmpresaId()) == 0)
+        if (controle == null || java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_grc_controle where id=? and empresa_id=?", Integer.class, controle,u.getEmpresaId())).orElse(0) == 0)
             throw new IllegalArgumentException("Controle inválido para a empresa");
         jdbc.update("insert into brasil_saas.bc_grc_teste_controle(empresa_id,controle_id,periodo,resultado,observacao,testado_por,testado_em) values(?,?,?,?,?,?,now()) on conflict (empresa_id,controle_id,periodo) do update set resultado=excluded.resultado,observacao=excluded.observacao,testado_por=excluded.testado_por,testado_em=now()",
                 u.getEmpresaId(), controle, required(b,"periodo"), b.getOrDefault("resultado","PENDENTE"), b.get("observacao"), b.get("testadoPor"));
@@ -219,7 +219,7 @@ public class RiskTransportEnterpriseController {
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> evento(@AuthenticationPrincipal AuthenticatedUser u, @RequestBody Map<String,Object> b) {
         Long ordem = longValue(b.get("ordemId"));
-        if (ordem == null || jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?", Integer.class, ordem,u.getEmpresaId()) == 0)
+        if (ordem == null || java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?", Integer.class, ordem,u.getEmpresaId())).orElse(0) == 0)
             throw new IllegalArgumentException("Ordem de transporte inválida para a empresa");
         jdbc.update("insert into brasil_saas.bc_tms_evento(empresa_id,ordem_id,tipo,data_evento,localizacao,descricao) values(?,?,?,?,?,?)",
                 u.getEmpresaId(),ordem,required(b,"tipo"),b.get("dataEvento"),b.get("localizacao"),b.get("descricao"));
@@ -237,7 +237,7 @@ public class RiskTransportEnterpriseController {
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> trackingSave(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b) {
         Long ordem=longValue(b.get("ordemId"));
-        if(ordem==null || jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?",Integer.class,ordem,u.getEmpresaId())==0)
+        if(ordem==null || java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?", Integer.class,ordem,u.getEmpresaId())).orElse(0) == 0)
             throw new IllegalArgumentException("Ordem de transporte inválida para a empresa");
         jdbc.update("insert into brasil_saas.bc_tms_tracking(empresa_id,ordem_id,codigo,transportadora,ultimo_status,ultima_atualizacao) values(?,?,?,?,?,now()) on conflict (empresa_id,ordem_id) do update set codigo=excluded.codigo,transportadora=excluded.transportadora,ultimo_status=excluded.ultimo_status,ultima_atualizacao=now()",
                 u.getEmpresaId(),ordem,required(b,"codigo"),b.get("transportadora"),b.get("ultimoStatus"));
@@ -254,7 +254,7 @@ public class RiskTransportEnterpriseController {
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     public Map<String,Object> frete(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object> b) {
         Long ordem=longValue(b.get("ordemId"));
-        if(ordem==null || jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?",Integer.class,ordem,u.getEmpresaId())==0)
+        if(ordem==null || java.util.Optional.ofNullable(jdbc.queryForObject("select count(*) from brasil_saas.bc_tms_ordem where id=? and empresa_id=?", Integer.class,ordem,u.getEmpresaId())).orElse(0) == 0)
             throw new IllegalArgumentException("Ordem de transporte inválida para a empresa");
         jdbc.update("insert into brasil_saas.bc_tms_frete(empresa_id,ordem_id,componente,valor,documento,status) values(?,?,?,?,?,?)",
                 u.getEmpresaId(),ordem,required(b,"componente"),number(b.get("valor")),b.get("documento"),b.getOrDefault("status","PENDENTE"));

@@ -56,7 +56,7 @@ public class GenericoImagemService {
 
         } catch (RuntimeException e) {
             log.error("Falha ao gravar a imagem '{}' no Mongo. Preservada em {} para recuperacao. Causa: {}",
-                    arquivo.getOriginalFilename(), temporario, e.toString(), e);
+                    arquivo.getOriginalFilename(), temporario, e);
             throw new ImagemNaoPersistidaException(
                     "Nao foi possivel comunicar com o banco de imagens. "
                             + "O arquivo foi preservado em: " + temporario, temporario, e);
@@ -139,7 +139,7 @@ public class GenericoImagemService {
                     .orElse(null);
         } catch (Exception e) {
             log.error("Falha ao buscar imagem de sistema '{}' no MongoDB (colecao 'imagens'): {}",
-                    tipoEntidade, e.toString(), e);
+                    tipoEntidade, e);
             return null;
         }
     }

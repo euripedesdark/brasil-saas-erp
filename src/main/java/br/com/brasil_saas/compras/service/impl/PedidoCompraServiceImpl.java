@@ -77,7 +77,7 @@ public class PedidoCompraServiceImpl implements PedidoCompraService {
 
         List<ItemPedidoCompra> itens = new ArrayList<>();
         BigDecimal totalProdutos = BigDecimal.ZERO;
-        if (request.itens() != null) {
+        {
             int num = 1;
             for (var itemReq : request.itens()) {
                 ItemPedidoCompra item = new ItemPedidoCompra();

@@ -82,7 +82,7 @@ public class GenericoDocumentoService {
 
         } catch (RuntimeException e) {
             log.error("Falha ao gravar no Mongo o documento '{}'. O arquivo ficou em {} para recuperacao. Causa: {}",
-                    arquivo.getOriginalFilename(), temporario, e.toString(), e);
+                    arquivo.getOriginalFilename(), temporario, e);
             throw new DocumentoNaoPersistidoException(
                     "Nao foi possivel comunicar com o banco de documentos. "
                             + "O arquivo foi preservado em: " + temporario, temporario, e);

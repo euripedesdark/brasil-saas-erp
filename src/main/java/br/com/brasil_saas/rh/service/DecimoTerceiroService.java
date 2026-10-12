@@ -60,6 +60,6 @@ public class DecimoTerceiroService {
         if (f.getDataAdmissao().getYear() < ano) return 12;
         int meses = 13 - f.getDataAdmissao().getMonthValue();
         if (f.getDataAdmissao().getDayOfMonth() > 15) meses--;
-        return Math.max(0, meses);
+        return meses; // ja >= 0 pela conta dos meses no ano
     }
 }

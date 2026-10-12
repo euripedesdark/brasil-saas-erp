@@ -192,7 +192,7 @@ public class IndicadorServiceImpl implements IndicadorService {
             // Se for uma query SQL
             if (formula.trim().toUpperCase().startsWith("SELECT")) {
                 List<Map<String, Object>> resultados = jdbcTemplate.queryForList(formula, empresaId);
-                if (resultados != null && !resultados.isEmpty() && resultados.get(0).containsKey("valor")) {
+                if (!resultados.isEmpty() && resultados.get(0).containsKey("valor")) {
                     Object valorObj = resultados.get(0).get("valor");
                     if (valorObj instanceof Number) {
                         return new BigDecimal(((Number) valorObj).doubleValue());
