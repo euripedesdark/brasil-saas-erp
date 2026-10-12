@@ -89,7 +89,7 @@
         <java-cte.version>4.00.14</java-cte.version>
         <testcontainers.version>1.20.2</testcontainers.version>
         <pgvector.version>0.1.6</pgvector.version>
-        <minio.version>8.5.12</minio.version>
+        <minio.version>8.5.17</minio.version>
         <stripe.version>34.0.0</stripe.version>
     </properties>
 
@@ -106,6 +106,12 @@
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
                 <version>${commons-beanutils.version}</version>
+            </dependency>
+            <!-- RabbitMQ Java client: CVE-2026-63337 (JSON-RPC Class.forName) -->
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>5.26.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -306,6 +312,13 @@
                     <groupId>org.apache.httpcomponents.core5</groupId>
                     <artifactId>httpcore5</artifactId>
                 </exclusion>
+                <!-- simple-xml 2.7.1 tem XXE (CVE-2017-1000190). A fincatto
+                     assina com Apache Santuario (xmlsec); simple-xml nao e
+                     necessario no classpath do ERP. -->
+                <exclusion>
+                    <groupId>org.simpleframework</groupId>
+                    <artifactId>simple-xml</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -373,7 +386,7 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-            <version>1.0.0-M3</version>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- ==== UTILITÁRIOS ==== -->

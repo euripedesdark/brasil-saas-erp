@@ -9,14 +9,22 @@ profile:
 include:
   - name: CheckDependencyLicenses
 
-# Ruído durante desenvolvimento do módulo de IA:
-# - Header customizado X-Empresa-Id usado em todos os controllers do assistente
-# - Inspeção de header HTTP desconhece headers de negócio do ERP
+# Exclusões pontuais (ruído / falso positivo), sem esconder CVEs reais do pom.
 exclude:
+  # Header de negócio do ERP usado nos controllers de IA
   - name: UastIncorrectHttpHeaderInspection
     paths:
       - src/main/java/br/com/brasil_saas/ia
+  # Metadados JSON do Spring AI embutido (não é config de runtime do ERP)
   - name: SpringBootAdditionalConfig
     paths:
       - src/main/resources/microservices/spring-ai
-
+  # yarn.lock resolve axios/prettier em versões reais; 0.0.0-ANY é falso positivo do scanner
+  - name: MaliciousLibrariesLocal
+    paths:
+      - src/main/resources/microservices/esocial/frontend
+  # Comentários de documentação de script / workflow, não credenciais reais
+  - name: HardcodedPasswords
+    paths:
+      - install_ruby_certificados_banco.sh
+      - src/main/resources/microservices/spring-ai

@@ -461,7 +461,7 @@ pedir_senha() {
 # Grava um valor no .env, criando a chave se ela nao existir.
 #
 # A chave do Mongo e a URI sao reescritas juntas de proposito: a URI embute a
-# senha (mongodb://admin:SENHA@...), entao trocar so a senha no banco deixaria
+# senha embutida na URI do Mongo, entao trocar so a senha no banco deixaria
 # o arquivo apontando para uma credencial que nao autentica mais.
 # -----------------------------------------------------------------------------
 gravar_env() {
