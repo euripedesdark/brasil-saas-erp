@@ -1,59 +1,90 @@
 package br.com.brasil_saas.enterprise.service;
 
+import br.com.brasil_saas.financeiro.model.IntercompanyLancamento;
+import br.com.brasil_saas.financeiro.repository.IntercompanyLancamentoRepository;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.sql.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.*;
 
 class IntercompanyServiceTest {
-    private final JdbcTemplate jdbc = mock(JdbcTemplate.class);
-    private final IntercompanyService service = new IntercompanyService(jdbc);
+    private final IntercompanyLancamentoRepository repository = mock(IntercompanyLancamentoRepository.class);
+    private final IntercompanyService service = new IntercompanyService(repository);
+
+    private static IntercompanyLancamento lancamento(Long empresa, BigDecimal valor, String moeda) {
+        IntercompanyLancamento l = new IntercompanyLancamento();
+        l.setEmpresaId(empresa);
+        l.setValor(valor);
+        l.setMoeda(moeda);
+        l.setNumero("IC-1");
+        l.setReconciliado(true);
+        l.setCompetencia(LocalDate.of(2026, 10, 1));
+        return l;
+    }
 
     @Test
     void consultaMesInteiroIsolandoEmpresaEMoedas() {
-        when(jdbc.queryForList(anyString(), eq(7L), eq(Date.valueOf("2026-10-01")), eq(Date.valueOf("2026-11-01"))))
-                .thenReturn(List.of(Map.of("valor", new BigDecimal("100.00"), "moeda", "BRL"),
-                        Map.of("valor", new BigDecimal("20.00"), "moeda", "USD"),
-                        Map.of("valor", new BigDecimal("50.00"), "moeda", "BRL")));
+        when(repository.findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                eq(7L), eq(LocalDate.of(2026, 10, 1)), eq(LocalDate.of(2026, 11, 1))))
+                .thenReturn(List.of(
+                        lancamento(7L, new BigDecimal("100.00"), "BRL"),
+                        lancamento(7L, new BigDecimal("20.00"), "USD"),
+                        lancamento(7L, new BigDecimal("50.00"), "BRL")));
         Map<String, Object> r = service.eliminacoes(7L, LocalDate.of(2026, 10, 15));
         assertEquals(Map.of("BRL", new BigDecimal("150.00"), "USD", new BigDecimal("20.00")), r.get("totaisPorMoeda"));
         assertNull(r.get("total"));
         assertEquals("2026-10-01", r.get("competencia"));
-        verify(jdbc).queryForList(contains("empresa_id=? and reconciliado=true and deleted_at is null and competencia>=? and competencia<?"),
-                eq(7L), eq(Date.valueOf("2026-10-01")), eq(Date.valueOf("2026-11-01")));
+        verify(repository).findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                eq(7L), eq(LocalDate.of(2026, 10, 1)), eq(LocalDate.of(2026, 11, 1)));
     }
 
     @Test
     void preservaTotalParaMoedaUnica() {
-        when(jdbc.queryForList(anyString(), any(Object[].class))).thenReturn(List.of(
-                Map.of("valor", new BigDecimal("5.00"), "moeda", "USD")));
+        when(repository.findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                anyLong(), any(), any())).thenReturn(List.of(
+                        lancamento(7L, new BigDecimal("5.00"), "USD")));
         assertEquals(new BigDecimal("5.00"), service.eliminacoes(7L, LocalDate.of(2026, 10, 1)).get("total"));
     }
 
     @Test
     void semLinhasRetornaZero() {
-        when(jdbc.queryForList(anyString(), any(Object[].class))).thenReturn(List.of());
+        when(repository.findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                anyLong(), any(), any())).thenReturn(List.of());
         Map<String, Object> r = service.eliminacoes(7L, LocalDate.of(2026, 12, 31));
         assertEquals(BigDecimal.ZERO, r.get("total"));
         assertEquals(Map.of(), r.get("totaisPorMoeda"));
-        verify(jdbc).queryForList(anyString(), eq(7L), eq(Date.valueOf("2026-12-01")), eq(Date.valueOf("2027-01-01")));
+        verify(repository).findByEmpresaIdAndReconciliadoTrueAndDeletedAtIsNullAndCompetenciaGreaterThanEqualAndCompetenciaLessThanOrderByNumero(
+                eq(7L), eq(LocalDate.of(2026, 12, 1)), eq(LocalDate.of(2027, 1, 1)));
     }
+
     @Test
     void reconciliacaoExigeCompetenciaIgualNoEspelho() {
-        Date competencia = Date.valueOf("2026-10-01");
-        when(jdbc.queryForList(anyString(), eq(7L), eq(99L))).thenReturn(List.of(
-                Map.of("empresa_parceira_id", 8L, "numero", "IC-99", "valor", new BigDecimal("100"),
-                        "moeda", "BRL", "competencia", competencia)));
-        when(jdbc.queryForList(anyString(), eq(8L), eq(7L), eq("IC-99"), eq(competencia))).thenReturn(List.of());
-        when(jdbc.queryForMap(anyString(), eq(7L), eq(99L))).thenReturn(Map.of("status", "SEM_CONTRAPARTIDA"));
+        LocalDate competencia = LocalDate.of(2026, 10, 1);
+        IntercompanyLancamento meu = new IntercompanyLancamento();
+        meu.setId(99L);
+        meu.setEmpresaId(7L);
+        meu.setEmpresaParceiraId(8L);
+        meu.setNumero("IC-99");
+        meu.setValor(new BigDecimal("100"));
+        meu.setMoeda("BRL");
+        meu.setCompetencia(competencia);
+        when(repository.findByIdAndEmpresaIdAndDeletedAtIsNull(eq(99L), eq(7L)))
+                .thenReturn(Optional.of(meu));
+        when(repository.findEspelho(eq(8L), eq(7L), eq("IC-99"), eq(competencia)))
+                .thenReturn(List.of());
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         assertEquals("SEM_CONTRAPARTIDA", service.reconciliar(7L, 10L, 99L).get("status"));
-        verify(jdbc).queryForList(contains("competencia is not distinct from ?"), eq(8L), eq(7L), eq("IC-99"), eq(competencia));
-        verify(jdbc).update(anyString(), eq("SEM_CONTRAPARTIDA"), eq(false), isNull(), isNull(), eq(false), eq(10L), eq(7L), eq(99L));
+        verify(repository).findEspelho(eq(8L), eq(7L), eq("IC-99"), eq(competencia));
+        ArgumentCaptor<IntercompanyLancamento> captor = ArgumentCaptor.forClass(IntercompanyLancamento.class);
+        verify(repository).save(captor.capture());
+        assertEquals("SEM_CONTRAPARTIDA", captor.getValue().getStatus());
+        assertEquals(false, captor.getValue().getReconciliado());
+        assertNull(captor.getValue().getContrapartidaId());
     }
 }

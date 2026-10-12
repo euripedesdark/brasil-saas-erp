@@ -6,18 +6,21 @@ import static org.mockito.Mockito.*;
 
 import br.com.brasil_saas.contabilidade.model.CtbLancamento;
 import br.com.brasil_saas.contabilidade.model.CtbPartida;
+import br.com.brasil_saas.contabilidade.model.CtbPendencia;
+import br.com.brasil_saas.contabilidade.model.RegraLancamento;
 import br.com.brasil_saas.contabilidade.repository.CtbLancamentoRepository;
+import br.com.brasil_saas.contabilidade.repository.CtbPendenciaRepository;
+import br.com.brasil_saas.contabilidade.repository.RegraLancamentoRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,18 +28,30 @@ class EventoContabilServiceTest {
 
     @Mock ContabilidadeService contabilidade;
     @Mock CtbLancamentoRepository lancamentos;
-    @Mock JdbcTemplate jdbc;
+    @Mock RegraLancamentoRepository regras;
+    @Mock CtbPendenciaRepository pendencias;
     EventoContabilService svc;
 
     @BeforeEach
-    void setUp() { svc = new EventoContabilService(contabilidade, lancamentos, jdbc); }
+    void setUp() { svc = new EventoContabilService(contabilidade, lancamentos, regras, pendencias); }
+
+    private RegraLancamento regra(Long debito, Long credito) {
+        RegraLancamento r = new RegraLancamento();
+        r.setContaDebitoId(debito);
+        r.setContaCreditoId(credito);
+        r.setCentroCustoId(0L);
+        r.setHistorico("Baixa auto");
+        return r;
+    }
 
     @Test
     void geraLancamentoPartidaDobradaQuandoHaRegra() {
         when(lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
                 anyLong(), anyString(), anyLong(), anyCollection())).thenReturn(List.of());
-        when(jdbc.queryForList(anyString(), eq(1L), eq(EventoContabilService.EVT_BAIXA_TITULO)))
-                .thenReturn(List.of(Map.of("conta_debito_id", 10L, "conta_credito_id", 20L, "centro_custo_id", 0L, "historico", "Baixa auto")));
+        when(regras.findFirstByEmpresaIdAndCodigoAndAtivoTrue(eq(1L), eq(EventoContabilService.EVT_BAIXA_TITULO)))
+                .thenReturn(Optional.of(regra(10L, 20L)));
+        when(pendencias.findByEmpresaIdAndOrigemTipoAndOrigemIdAndEventoAndStatus(
+                anyLong(), anyString(), anyLong(), anyString(), eq("ABERTA"))).thenReturn(Optional.empty());
         when(contabilidade.salvar(eq(1L), any(CtbLancamento.class))).thenAnswer(inv -> {
             CtbLancamento l = inv.getArgument(1); l.setId(100L); return l;
         });
@@ -44,7 +59,6 @@ class EventoContabilServiceTest {
         CtbLancamento lancado = new CtbLancamento(); lancado.setId(100L); lancado.setStatus("LANCADO");
         when(contabilidade.lancar(1L, 100L)).thenReturn(lancado);
         when(contabilidade.totais(1L, 100L)).thenReturn(new BigDecimal[]{new BigDecimal("50.00"), new BigDecimal("50.00")});
-        when(jdbc.update(anyString(), any(), any(), any(), any())).thenReturn(0);
 
         var r = svc.contabilizar(1L, EventoContabilService.EVT_BAIXA_TITULO, "BAIXA", 7L,
                 LocalDate.of(2026, 10, 10), new BigDecimal("50.00"), "teste");
@@ -73,26 +87,36 @@ class EventoContabilServiceTest {
     void semRegraGeraPendenciaSemFalhar() {
         when(lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
                 anyLong(), anyString(), anyLong(), anyCollection())).thenReturn(List.of());
-        when(jdbc.queryForList(anyString(), eq(1L), eq(EventoContabilService.EVT_FATURAMENTO_VENDA)))
-                .thenReturn(List.of());
-        when(jdbc.update(anyString(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(regras.findFirstByEmpresaIdAndCodigoAndAtivoTrue(eq(1L), eq(EventoContabilService.EVT_FATURAMENTO_VENDA)))
+                .thenReturn(Optional.empty());
+        when(pendencias.findByEmpresaIdAndOrigemTipoAndOrigemIdAndEvento(
+                anyLong(), anyString(), anyLong(), anyString())).thenReturn(Optional.empty());
+        when(pendencias.save(any(CtbPendencia.class))).thenAnswer(inv -> inv.getArgument(0));
         var r = svc.contabilizar(1L, EventoContabilService.EVT_FATURAMENTO_VENDA, "PEDIDO", 9L,
                 LocalDate.now(), new BigDecimal("100"), null);
         assertTrue(r.pendente());
         assertTrue(r.lancamento().isEmpty());
-        verify(jdbc).update(contains("bc_ctb_pendencia"), eq(1L), eq(EventoContabilService.EVT_FATURAMENTO_VENDA),
-                eq("PEDIDO"), eq(9L), anyString(), any());
+        ArgumentCaptor<CtbPendencia> captor = ArgumentCaptor.forClass(CtbPendencia.class);
+        verify(pendencias).save(captor.capture());
+        CtbPendencia p = captor.getValue();
+        assertEquals(1L, p.getEmpresaId());
+        assertEquals(EventoContabilService.EVT_FATURAMENTO_VENDA, p.getEvento());
+        assertEquals("PEDIDO", p.getOrigemTipo());
+        assertEquals(9L, p.getOrigemId());
+        assertEquals("ABERTA", p.getStatus());
     }
 
     @Test
     void periodoFechadoPropagaExcecao() {
         when(lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
                 anyLong(), anyString(), anyLong(), anyCollection())).thenReturn(List.of());
-        when(jdbc.queryForList(anyString(), eq(1L), eq(EventoContabilService.EVT_BAIXA_TITULO)))
-                .thenReturn(List.of(Map.of("conta_debito_id", 1L, "conta_credito_id", 2L)));
+        when(regras.findFirstByEmpresaIdAndCodigoAndAtivoTrue(eq(1L), eq(EventoContabilService.EVT_BAIXA_TITULO)))
+                .thenReturn(Optional.of(regra(1L, 2L)));
         when(contabilidade.salvar(eq(1L), any())).thenThrow(
                 new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Periodo fechado"));
-        when(jdbc.update(anyString(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+        when(pendencias.findByEmpresaIdAndOrigemTipoAndOrigemIdAndEvento(
+                anyLong(), anyString(), anyLong(), anyString())).thenReturn(Optional.empty());
+        when(pendencias.save(any(CtbPendencia.class))).thenAnswer(inv -> inv.getArgument(0));
         assertThrows(ResponseStatusException.class, () ->
                 svc.contabilizar(1L, EventoContabilService.EVT_BAIXA_TITULO, "BAIXA", 1L,
                         LocalDate.now(), new BigDecimal("10"), null));
