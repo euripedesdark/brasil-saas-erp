@@ -35,10 +35,10 @@ public class CenarioTributario extends AuditableEntity {
     @Column(name = "regime", length = 30)
     private String regime;
 
-    @Column(name = "uf_origem", length = 2)
+    @Column(name = "uf_origem", columnDefinition = "bpchar(2)")
     private String ufOrigem;
 
-    @Column(name = "uf_destino", length = 2)
+    @Column(name = "uf_destino", columnDefinition = "bpchar(2)")
     private String ufDestino;
 
     @Column(name = "cst", length = 10)

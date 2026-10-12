@@ -29,7 +29,7 @@ public class GrcTesteControle {
     @Column(name = "controle_id", nullable = false)
     private Long controleId;
 
-    @Column(name = "periodo", length = 7, nullable = false)
+    @Column(name = "periodo", columnDefinition = "bpchar(7)", nullable = false)
     private String periodo;
 
     @Column(name = "resultado", length = 30, nullable = false)

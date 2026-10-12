@@ -42,7 +42,7 @@ public class IntercompanyLancamento extends AuditableEntity {
     @Column(name = "valor", precision = 18, scale = 2, nullable = false)
     private BigDecimal valor = BigDecimal.ZERO;
 
-    @Column(name = "moeda", length = 3, nullable = false)
+    @Column(name = "moeda", columnDefinition = "bpchar(3)", nullable = false)
     private String moeda = "BRL";
 
     @Column(name = "status", length = 25, nullable = false)
