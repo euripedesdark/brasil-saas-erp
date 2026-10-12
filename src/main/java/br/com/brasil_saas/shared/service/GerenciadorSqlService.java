@@ -159,6 +159,17 @@ public class GerenciadorSqlService {
         if (comando.endsWith(";")) {
             comando = comando.substring(0, comando.length() - 1).strip();
         }
+        // Cada chamada executa exatamente um statement. Scripts multiplos
+        // passam por executarScript(), que separa e valida cada comando.
+        // Rejeitar ponto-e-virgula interno impede empilhar comandos no endpoint
+        // de execucao unica, inclusive quando o driver JDBC permite multiplos.
+        if (comando.indexOf(';') >= 0) {
+            throw new IllegalArgumentException(
+                    "Envie um unico comando por chamada; use /script para comandos separados.");
+        }
+        if (comando.contains("--") || comando.contains("/*") || comando.contains("*/")) {
+            throw new IllegalArgumentException("Comentarios SQL nao sao aceitos pelo console.");
+        }
 
         boolean temEscrita = QUALQUER_ESCRITA.matcher(comando).find();
         boolean soLeitura = SO_LEITURA.matcher(comando).find() && !temEscrita;
