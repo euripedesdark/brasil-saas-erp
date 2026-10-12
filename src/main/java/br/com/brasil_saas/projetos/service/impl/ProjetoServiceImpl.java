@@ -212,8 +212,9 @@ public class ProjetoServiceImpl implements ProjetoService {
         if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Tomador sem documento");
         long proximoRps = 1L;
         java.util.Optional<br.com.brasil_saas.fiscal.model.Nfse> ult = nfseRepo.findTop1ByEmpresaIdOrderByIdDesc(empresaId);
-        if (ult.isPresent() && ult.get().getNumeroRps() != null) {
-            try { proximoRps = Long.parseLong(ult.get().getNumeroRps()) + 1; } catch (NumberFormatException ignored) { proximoRps = ult.get().getId() + 1; }
+        String numeroRps = ult.map(br.com.brasil_saas.fiscal.model.Nfse::getNumeroRps).orElse(null);
+        if (numeroRps != null) {
+            try { proximoRps = Long.parseLong(numeroRps) + 1; } catch (NumberFormatException ignored) { proximoRps = ult.map(br.com.brasil_saas.fiscal.model.Nfse::getId).orElse(0L) + 1; }
         }
         NfseEmissaoDtos.Emitir req = NfseEmissaoDtos.Emitir.builder()
             .empresaId(empresaId)

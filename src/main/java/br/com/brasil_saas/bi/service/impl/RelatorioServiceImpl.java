@@ -1,5 +1,7 @@
 package br.com.brasil_saas.bi.service.impl;
 
+
+import java.nio.charset.StandardCharsets;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import br.com.brasil_saas.bi.dto.RelatorioRequest;
@@ -322,7 +324,7 @@ public class RelatorioServiceImpl implements RelatorioService {
                     sb.append(String.join(",", values)).append("\n");
                 }
 
-                baos.write(sb.toString().getBytes("UTF-8"));
+                baos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             throw new RuntimeException("Erro ao gerar CSV: " + e.getMessage(), e);

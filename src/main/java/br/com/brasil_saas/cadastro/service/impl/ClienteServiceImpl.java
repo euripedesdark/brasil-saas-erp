@@ -39,7 +39,7 @@ public class ClienteServiceImpl implements ClienteService {
     @Override
     @Transactional
     public ClienteDtos.Response criar(Long empresaId, ClienteDtos.Request request) {
-        if (repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isPresent()) {
+        if (!repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isEmpty()) {
             throw new BusinessException("Pessoa já possui cadastro de cliente nesta empresa");
         }
         Cliente cliente = mapper.toEntity(request);

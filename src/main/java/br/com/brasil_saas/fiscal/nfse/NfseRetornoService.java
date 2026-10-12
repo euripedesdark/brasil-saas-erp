@@ -181,13 +181,13 @@ public class NfseRetornoService {
         if (resposta != null) {
             Object mensagem = resposta.get("erro");
             if (mensagem != null && !String.valueOf(mensagem).isBlank()) {
-                if (texto.length() > 0) {
+                if (!texto.isEmpty()) {
                     texto.append(" | ");
                 }
                 texto.append(mensagem);
             }
         }
-        return texto.length() == 0 ? null : texto.toString();
+        return texto.isEmpty() ? null : texto.toString();
     }
 
     /**

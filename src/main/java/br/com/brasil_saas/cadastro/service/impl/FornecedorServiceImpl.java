@@ -39,7 +39,7 @@ public class FornecedorServiceImpl implements FornecedorService {
     @Override
     @Transactional
     public FornecedorDtos.Response criar(Long empresaId, FornecedorDtos.Request request) {
-        if (repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isPresent()) {
+        if (!repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isEmpty()) {
             throw new BusinessException("Pessoa já possui cadastro de fornecedor nesta empresa");
         }
         Fornecedor fornecedor = mapper.toEntity(request);

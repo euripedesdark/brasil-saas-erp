@@ -133,11 +133,12 @@ public class DmsServiceImpl implements DmsService {
     @Override @Transactional public void excluir(Long empresaId, Long id) {
         DmsDocumento d = exigir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Documento inexistente");
         if (d.getReterAte() != null && d.getReterAte().isAfter(LocalDate.now())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Documento em retencao");
-        for (DmsVersao v : versoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) {
+        var versoesDoc = versoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
+        for (DmsVersao v : versoesDoc) {
             mongo.findByEmpresaIdAndTipoEntidadeAndEntidadeId(empresaId, "dms-versao", v.getId()).ifPresent(mongo::delete);
-            versoes.delete(v);
         }
-        for (DmsAprovacao a : aprovacoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) aprovacoes.delete(a);
+        versoes.deleteAll(versoesDoc);
+        aprovacoes.deleteAll(aprovacoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId));
         documentos.delete(d);
     }
 }

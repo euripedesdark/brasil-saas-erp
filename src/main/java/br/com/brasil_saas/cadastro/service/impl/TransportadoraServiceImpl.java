@@ -39,7 +39,7 @@ public class TransportadoraServiceImpl implements TransportadoraService {
     @Override
     @Transactional
     public TransportadoraDtos.Response criar(Long empresaId, TransportadoraDtos.Request request) {
-        if (repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isPresent()) {
+        if (!repository.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, request.pessoaId()).isEmpty()) {
             throw new BusinessException("Pessoa já possui cadastro de transportadora nesta empresa");
         }
         Transportadora t = mapper.toEntity(request);

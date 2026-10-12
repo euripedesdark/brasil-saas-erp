@@ -32,7 +32,7 @@ public class LogoService {
      */
     public byte[] obterLogoEmpresa(Long empresaId) {
         Optional<Empresa> empresaOpt = empresaRepository.findById(empresaId);
-        if (empresaOpt.isPresent()) {
+        if (!empresaOpt.isEmpty()) {
             ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "empresa_logo", empresaId);
             return imagem != null ? imagem.getConteudo() : null;
         }
@@ -43,35 +43,32 @@ public class LogoService {
      * Obter logo do cliente
      */
     public byte[] obterLogoCliente(Long empresaId, Long clienteId) {
-        Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
-        if (clienteOpt.isPresent() && clienteOpt.get().getEmpresaId().equals(empresaId)) {
-            ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "cliente_logo", clienteId);
-            return imagem != null ? imagem.getConteudo() : null;
+        if (clienteRepository.findById(clienteId).filter(c -> empresaId.equals(c.getEmpresaId())).isEmpty()) {
+            return null;
         }
-        return null;
+        ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "cliente_logo", clienteId);
+        return imagem != null ? imagem.getConteudo() : null;
     }
 
     /**
      * Obter logo do fornecedor
      */
     public byte[] obterLogoFornecedor(Long empresaId, Long fornecedorId) {
-        Optional<Fornecedor> fornecedorOpt = fornecedorRepository.findById(fornecedorId);
-        if (fornecedorOpt.isPresent() && fornecedorOpt.get().getEmpresaId().equals(empresaId)) {
-            ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "fornecedor_logo", fornecedorId);
-            return imagem != null ? imagem.getConteudo() : null;
+        if (fornecedorRepository.findById(fornecedorId).filter(f -> empresaId.equals(f.getEmpresaId())).isEmpty()) {
+            return null;
         }
-        return null;
+        ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "fornecedor_logo", fornecedorId);
+        return imagem != null ? imagem.getConteudo() : null;
     }
 
     /**
      * Obter foto do funcionário
      */
     public byte[] obterFotoFuncionario(Long empresaId, Long funcionarioId) {
-        Optional<Funcionario> funcionarioOpt = funcionarioRepository.findById(funcionarioId);
-        if (funcionarioOpt.isPresent() && funcionarioOpt.get().getEmpresaId().equals(empresaId)) {
-            ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "funcionario_foto", funcionarioId);
-            return imagem != null ? imagem.getConteudo() : null;
+        if (funcionarioRepository.findById(funcionarioId).filter(f -> empresaId.equals(f.getEmpresaId())).isEmpty()) {
+            return null;
         }
-        return null;
+        ImagemDocumento imagem = imagemService.buscarImagem(empresaId, "funcionario_foto", funcionarioId);
+        return imagem != null ? imagem.getConteudo() : null;
     }
 }

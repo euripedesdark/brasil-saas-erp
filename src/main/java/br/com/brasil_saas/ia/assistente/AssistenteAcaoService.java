@@ -77,7 +77,7 @@ public class AssistenteAcaoService {
     private ComandoResponse responderDuvida(String pergunta, Long empresaId) {
         Optional<CatalogoNavegacaoService.ItemNavegacao> achado = catalogoNavegacao.buscarMaisRelevante(pergunta);
 
-        if (achado.isPresent()) {
+        if (!achado.isEmpty()) {
             CatalogoNavegacaoService.ItemNavegacao item = achado.get();
             Map<String, Object> extras = new LinkedHashMap<>();
             extras.put("modulo", item.modulo());
@@ -132,7 +132,7 @@ public class AssistenteAcaoService {
 
         // Se não for comando de nota de pedido, tenta encontrar a ação correspondente no catálogo
         Optional<CatalogoNavegacaoService.ItemNavegacao> item = catalogoNavegacao.buscarMaisRelevante(comando);
-        if (item.isPresent()) {
+        if (!item.isEmpty()) {
             CatalogoNavegacaoService.ItemNavegacao i = item.get();
             return new ComandoResponse(
                     "ACAO",
@@ -304,7 +304,7 @@ public class AssistenteAcaoService {
         extras.put("valorTotal", valTotal);
         extras.put("tipoDocumento", "NF-e");
 
-        if (nfeService.isPresent()) {
+        if (!nfeService.isEmpty()) {
             try {
                 String protocolo = nfeService.get().emitirNFe(empresaId, pedido);
                 extras.put("protocolo", protocolo);

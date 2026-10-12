@@ -46,7 +46,7 @@ public class ProducaoServiceImpl implements ProducaoService {
         p.setEmpresaId(empresaId);
         String numero = request.numero();
         if (numero == null || numero.isBlank()) numero = "OP-" + System.currentTimeMillis();
-        if (producaoRepository.findByNumeroAndEmpresaId(numero, empresaId).isPresent()) throw new BusinessException("Número de OP já utilizado nesta empresa: " + numero);
+        if (!producaoRepository.findByNumeroAndEmpresaId(numero, empresaId).isEmpty()) throw new BusinessException("Número de OP já utilizado nesta empresa: " + numero);
         p.setNumero(numero);
         p.setTipoProducao(request.tipoProducao());
         p.setProdutoFinalId(request.produtoFinalId());

@@ -162,7 +162,7 @@ public class AssistenteService {
      */
     private String modeloDe(final Long empresaId) {
         final Optional<AIConfig> config = configs.findFirstByEmpresaIdAndIsEnabledTrueOrderByIdAsc(empresaId);
-        if (config.isPresent()) {
+        if (!config.isEmpty()) {
             final String m = config.get().getDefaultModel();
             if (m != null && !m.isBlank() && !m.toUpperCase().startsWith("SEED")) {
                 return m;

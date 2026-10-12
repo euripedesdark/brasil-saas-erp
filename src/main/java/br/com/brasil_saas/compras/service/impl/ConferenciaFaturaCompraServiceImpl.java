@@ -506,14 +506,14 @@ public class ConferenciaFaturaCompraServiceImpl implements ConferenciaFaturaComp
         StringBuilder texto = new StringBuilder();
         if (totalItens == 0) texto.append("Conferencia sem itens do recebimento ou da NF-e");
         if (!totaisOk) {
-            if (texto.length() > 0) texto.append(" | ");
+            if (!texto.isEmpty()) texto.append(" | ");
             texto.append("Divergencia 3-way: pedido=").append(valorPedido)
                     .append(", recebido=").append(valorRecebido)
                     .append(", fatura=").append(valorFatura)
                     .append(", tolerancia=").append(tolerancia);
         }
         if (divergentes > 0) {
-            if (texto.length() > 0) {
+            if (!texto.isEmpty()) {
                 texto.append(" | ");
             }
             texto.append(divergentes).append(" de ").append(totalItens).append(" item(ns) com divergencia");

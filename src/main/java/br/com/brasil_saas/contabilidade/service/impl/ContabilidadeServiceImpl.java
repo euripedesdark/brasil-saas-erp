@@ -233,7 +233,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
                 .filter(x -> "RASCUNHO".equals(x.getStatus())).toList().isEmpty())
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo com lancamentos em rascunho: lance ou exclua antes de fechar");
         Optional<CtbFechamento> atual = fechamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
-        if (atual.isPresent()) {
+        if (!atual.isEmpty()) {
             CtbFechamento f = atual.get();
             f.setStatus("FECHADO");
             f.setFechadoPor(userId);

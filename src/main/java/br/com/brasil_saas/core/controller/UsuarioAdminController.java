@@ -189,7 +189,7 @@ public class UsuarioAdminController {
         if (senha == null || senha.length() < 6) {
             throw new BusinessException("A senha precisa de pelo menos 6 caracteres");
         }
-        if (usuarioRepository.findByUsernameWithAuthorities(username).isPresent()) {
+        if (!usuarioRepository.findByUsernameWithAuthorities(username).isEmpty()) {
             throw new BusinessException("Já existe um usuário com esse nome de usuário");
         }
 

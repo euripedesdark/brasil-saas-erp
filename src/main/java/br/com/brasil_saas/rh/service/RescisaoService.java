@@ -35,7 +35,7 @@ public class RescisaoService {
         if (f.getDataDemissao() != null || Boolean.FALSE.equals(f.getAtivo())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Funcionario ja desligado");
         }
-        if (rescisoes.findByEmpresaIdAndFuncionarioIdAndDeletedAtIsNull(empresaId, funcionarioId).isPresent()) {
+        if (!rescisoes.findByEmpresaIdAndFuncionarioIdAndDeletedAtIsNull(empresaId, funcionarioId).isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ja existe rescisao para este funcionario");
         }
 

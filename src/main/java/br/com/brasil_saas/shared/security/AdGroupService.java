@@ -341,7 +341,7 @@ public class AdGroupService {
 
     private ArquivoCache lerTudo() {
         File f = new File(props.getArquivoCache());
-        if (!f.isFile() || f.length() == 0) {
+        if (!f.isFile() || f.isEmpty()) {
             return new ArquivoCache();
         }
         try {

@@ -100,7 +100,7 @@ public class PortalServiceImpl implements PortalService {
         if ("CLIENTE".equals(tipo)) {
             List<Map<String, Object>> peds = new ArrayList<>();
             var cli = clientes.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, a.getPessoaId());
-            if (cli.isPresent()) {
+            if (!cli.isEmpty()) {
                 for (var pv : pedidosVenda.findByEmpresaIdAndClienteId(empresaId, cli.get().getId())) {
                     Map<String, Object> x = new LinkedHashMap<>();
                     x.put("id", pv.getId());
@@ -113,7 +113,7 @@ public class PortalServiceImpl implements PortalService {
         if ("FORNECEDOR".equals(tipo)) {
             List<Map<String, Object>> peds = new ArrayList<>();
             var forn = fornecedores.findByEmpresaIdAndPessoaIdAndDeletedAtIsNull(empresaId, a.getPessoaId());
-            if (forn.isPresent()) {
+            if (!forn.isEmpty()) {
                 for (var pc : pedidosCompra.findByEmpresaIdOrderByDataEmissaoDesc(empresaId)) {
                     if (!forn.get().getId().equals(pc.getFornecedorId())) continue;
                     Map<String, Object> x = new LinkedHashMap<>();

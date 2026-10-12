@@ -122,8 +122,7 @@ public class LancamentoContabilServiceImpl implements LancamentoContabilService 
         LancamentoContabil l = lancamentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)
             .orElseThrow(() -> new ResourceNotFoundException("Lançamento não encontrado"));
         if (l.getOrigem() != null && !l.getOrigem().isBlank()) throw new BusinessException("Lançamento integrado não pode ser excluído");
-        partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id)
-            .forEach(partidaRepository::delete);
+        partidaRepository.deleteAll(partidaRepository.findByLancamentoIdAndDeletedAtIsNull(id));
         lancamentoRepository.delete(l);
     }
 

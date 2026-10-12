@@ -172,7 +172,7 @@ public class NfeImportacaoService {
             Optional<Pessoa> achada = l.emitenteCnpj() == null
                     ? Optional.empty()
                     : pessoaRepo.findByEmpresaIdAndDocumentoAndDeletedAtIsNull(empresaId, l.emitenteCnpj());
-            if (achada.isPresent()) {
+            if (!achada.isEmpty()) {
                 pessoa = achada.get().getId();
                 sitPessoa = "ACHADO_PELO_CNPJ";
             } else {
@@ -184,9 +184,8 @@ public class NfeImportacaoService {
         }
 
         // --- chave ja registrada ---------------------------------------
-        if (l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave())
-                .isPresent()) {
+        if (!l.chave() != null && nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
         if (l.chave() == null) {
@@ -225,7 +224,7 @@ public class NfeImportacaoService {
             Long produtoId = achado.map(Produto::getId).orElse(null);
             String nomeProduto = achado.map(Produto::getNome).orElse(null);
 
-            if (achado.isPresent()) {
+            if (!achado.isEmpty()) {
                 // O produto existe mas pode estar sem o dado fiscal que a nota
                 // traz. Isso e comum — o cadastro foi feito antes de a nota
                 // aparecer — e e a opportunidade de corrigir sem digitar.
@@ -294,12 +293,12 @@ public class NfeImportacaoService {
         if (it.ean() != null) {
             Optional<Produto> porEan = produtoRepo
                     .findByEmpresaIdAndCodigoBarrasAndDeletedAtIsNull(empresaId, it.ean());
-            if (porEan.isPresent()) return porEan;
+            if (!porEan.isEmpty()) return porEan;
         }
         if (it.cProd() != null) {
             Optional<Produto> porCodigo = produtoRepo
                     .findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(it.cProd());
-            if (porCodigo.isPresent()) return porCodigo;
+            if (!porCodigo.isEmpty()) return porCodigo;
         }
         return Optional.empty();
     }
@@ -353,9 +352,8 @@ public class NfeImportacaoService {
 
     private Confirmado confirmar(Long empresaId, NfeXmlReader.Leitura l, Long pessoaId,
                                  boolean criarProdutos) {
-        if (l.chave() != null && nfeRepo
-                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave())
-                .isPresent()) {
+        if (!l.chave() != null && nfeRepo
+                .findByEmpresaIdAndChaveAcessoAndDeletedAtIsNull(empresaId, l.chave()).isEmpty()) {
             throw new BusinessException("Esta nota ja foi registrada. Chave " + l.chave());
         }
 
@@ -482,10 +480,10 @@ public class NfeImportacaoService {
     private String codigoLivre(Long empresaId, String cProd, String ean) {
         String base = cProd != null && !cProd.isBlank() ? cProd
                 : (ean != null ? "EAN" + ean : null);
-        if (base == null) return null;
+        if (!base == null) return null;
         String codigo = base;
         int n = 2;
-        while (produtoRepo.findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(codigo).isPresent()) {
+        while (produtoRepo.findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(codigo).isEmpty()) {
             codigo = base + "-" + n++;
             if (n > 50) {
                 // 50 colisoes com o mesmo cProd nao acontecem em vida real.

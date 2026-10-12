@@ -73,7 +73,7 @@ public class ImagemMigracaoService {
                 String hash = GenericoDocumentoService.sha256(conteudo);
 
                 // ja esta no Mongo? nao duplica
-                if (imagemRepository.findFirstByHash(hash).isPresent()) {
+                if (!imagemRepository.findFirstByHash(hash).isEmpty()) {
                     jaExistentes.add(nome);
                     continue;
                 }

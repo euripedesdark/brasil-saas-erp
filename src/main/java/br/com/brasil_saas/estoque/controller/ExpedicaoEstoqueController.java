@@ -37,7 +37,7 @@ public class ExpedicaoEstoqueController {
                                   @Valid @RequestBody AbrirRequest request) {
         depositoRepository.findByIdAndEmpresaIdAndAtivoTrue(request.depositoId(), user.getEmpresaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Deposito nao encontrado"));
-        if (repository.findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(user.getEmpresaId(), request.pedidoVendaId()).isPresent())
+        if (!repository.findByEmpresaIdAndPedidoVendaIdAndDeletedAtIsNull(user.getEmpresaId(), request.pedidoVendaId()).isEmpty())
             throw new BusinessException("Ja existe expedicao ativa para este pedido");
 
         List<ReservaEstoque> reservas = reservaRepository

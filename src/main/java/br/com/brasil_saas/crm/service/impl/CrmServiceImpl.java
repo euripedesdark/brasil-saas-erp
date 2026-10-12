@@ -47,7 +47,7 @@ public class CrmServiceImpl implements CrmService {
     }
     @Override @Transactional public void excluirLead(Long empresaId, Long id) {
         CrmLead l = exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lead inexistente");
-        for (CrmAtividade a : atividades.findByLeadIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId)) atividades.delete(a);
+        atividades.deleteAll(atividades.findByLeadIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId));
         leads.delete(l);
     }
     @Override public List<Map<String, Object>> pipeline(Long empresaId) {

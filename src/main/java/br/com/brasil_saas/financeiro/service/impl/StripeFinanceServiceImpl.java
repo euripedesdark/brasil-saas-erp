@@ -226,7 +226,7 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
             throw new IllegalArgumentException("Webhook Stripe malformado: " + e.getMessage(), e);
         }
 
-        if (webhookRepository.findByStripeEventId(event.getId()).isPresent()) {
+        if (!webhookRepository.findByStripeEventId(event.getId()).isEmpty()) {
             return;
         }
 
@@ -307,7 +307,7 @@ public class StripeFinanceServiceImpl implements StripeFinanceService {
         EventDataObjectDeserializer deserializer = event.getDataObjectDeserializer();
 
         Optional<StripeObject> tipado = deserializer.getObject();
-        if (tipado.isPresent()) {
+        if (!tipado.isEmpty()) {
             return tipo.cast(tipado.get());
         }
 

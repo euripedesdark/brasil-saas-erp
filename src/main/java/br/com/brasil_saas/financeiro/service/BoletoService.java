@@ -259,7 +259,7 @@ public class BoletoService {
                     ? java.util.Optional.<Boleto>empty()
                     : boletoRepository.findByEmpresaIdAndBancoAndNossoNumeroChave(
                             empresaId, bank, chaveNn);
-            if (boleto.isPresent()) {
+            if (!boleto.isEmpty()) {
                 item.setBoletoId(boleto.get().getId());
                 item.setAplicado(true);
                 casados++;
