@@ -137,8 +137,9 @@ public class EsocialFilaService {
             }
         } catch (RestClientResponseException ex) {
             e.setStatus("FALHA");
-            String msg = ex.getResponseBodyAsString();
-            if (msg == null || msg.isBlank()) msg = ex.getMessage();
+            String body = ex.getResponseBodyAsString();
+            String msg = (body != null && !body.isBlank()) ? body : ex.getMessage();
+            if (msg == null || msg.isBlank()) msg = ex.getClass().getSimpleName();
             e.setErro(trim(msg, 2000));
         } catch (Exception ex) {
             e.setStatus("FALHA");

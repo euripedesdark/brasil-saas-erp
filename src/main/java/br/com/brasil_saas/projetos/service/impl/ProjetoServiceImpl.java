@@ -71,7 +71,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     }
     @Override @Transactional public PrjEtapa salvarEtapa(Long empresaId, Long projetoId, PrjEtapa e) {
         exigirProjeto(empresaId, projetoId);
-        if (e.getPaiId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(e.getPaiId(), empresaId), "Etapa pai inexistente");
+        if (e.getPaiId() != null) garantir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(e.getPaiId(), empresaId), "Etapa pai inexistente");
         e.setId(null);
         e.setEmpresaId(empresaId);
         e.setProjetoId(projetoId);
@@ -98,7 +98,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjMovimento lancarMovimento(Long empresaId, Long projetoId, PrjMovimento m) {
         exigirProjeto(empresaId, projetoId);
         if (!"CUSTO".equals(m.getTipo()) && !"RECEITA".equals(m.getTipo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
-        if (m.getEtapaId() != null) exigir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
+        if (m.getEtapaId() != null) garantir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
         m.setId(null);
         m.setEmpresaId(empresaId);
         m.setProjetoId(projetoId);

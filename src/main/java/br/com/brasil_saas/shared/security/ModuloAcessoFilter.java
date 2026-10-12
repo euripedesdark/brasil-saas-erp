@@ -143,8 +143,8 @@ public class ModuloAcessoFilter extends OncePerRequestFilter {
      * e' de modulo.
      *
      * <p>O segundo retorno — um prefixo desconhecido — e' o que impede o
-     * vazamento. {@link #DESCONHECIDO} e' o valor devolvido para
-     * {@code /api/naoExiste/...}: o filtro trata como bloqueio e diz o nome na
+     * vazamento. Um prefixo desconhecido e' devolvido como o proprio segmento
+     * para {@code /api/naoExiste/...}: o filtro trata como bloqueio e diz o nome na
      * mensagem, em vez de deixar passar em silencio.
      */
     private String segmentoDaUrl(String uri) {

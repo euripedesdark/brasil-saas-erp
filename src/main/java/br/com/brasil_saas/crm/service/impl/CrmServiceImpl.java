@@ -88,7 +88,7 @@ public class CrmServiceImpl implements CrmService {
         return base;
     }
     @Override @Transactional public CrmAtividade salvarAtividade(Long empresaId, CrmAtividade a) {
-        if (a.getLeadId() != null) exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(a.getLeadId(), empresaId), "Lead inexistente");
+        if (a.getLeadId() != null) garantir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(a.getLeadId(), empresaId), "Lead inexistente");
         a.setId(null);
         a.setConcluida(false);
         return atividades.save(a);
