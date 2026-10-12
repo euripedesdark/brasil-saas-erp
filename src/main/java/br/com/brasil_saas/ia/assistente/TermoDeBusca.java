@@ -63,7 +63,7 @@ public final class TermoDeBusca {
         final StringBuilder frase = new StringBuilder();
         for (final String p : palavras) {
             if (p.length() >= MINIMO && !PALAVRAS_DA_PERGUNTA.contains(p)) {
-                if (frase.length() > 0) {
+                if (!frase.isEmpty()) {
                     frase.append(' ');
                 }
                 frase.append(p);

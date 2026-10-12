@@ -24,7 +24,6 @@ public interface EmbeddingRepository extends TenantRepository<Embedding, Long> {
     @Query("SELECT COUNT(e) FROM Embedding e WHERE e.empresaId = :empresaId AND e.entidadeTipo = :entidadeTipo")
     long countByEntidadeTipo(Long empresaId, String entidadeTipo);
 
-    @Query(value = "SELECT e FROM Embedding e WHERE e.empresaId = :empresaId AND e.entidadeTipo = :entidadeTipo AND e.embeddingVector <> NULL", 
-           nativeQuery = false)
+    @Query("SELECT e FROM Embedding e WHERE e.empresaId = :empresaId AND e.entidadeTipo = :entidadeTipo AND e.embeddingVector <> NULL")
     List<Embedding> findWithVectors(Long empresaId, String entidadeTipo);
 }

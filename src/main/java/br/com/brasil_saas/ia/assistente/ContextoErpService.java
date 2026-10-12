@@ -104,11 +104,8 @@ public class ContextoErpService {
     }
 
     /**
-     * O produto que a pessoa está falando. É o que permite responder "por que
-     * este produto não emite nota" com o NCM que está gravado, em vez de com o
-     * NCM que a pessoa acha que é.
+     * Os CFOP de saída mais comuns, para quando a pergunta é sobre CFOP sem dizer qual operação.
      */
-    /** Os CFOP de saída mais comuns, para quando a pergunta é sobre CFOP sem dizer qual operação. */
     private List<Achado> cfopsDeSaida(final String pergunta) {
         if (!NormalizacaoFiscal.texto(pergunta).contains("cfop")) {
             return List.of();

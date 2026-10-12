@@ -35,7 +35,7 @@ public class AssistenteController {
 
     @Operation(summary = "Pergunta ao assistente do ERP")
     @PostMapping
-    @PreAuthorize("hasAuthority(IA_READ)")
+    @PreAuthorize("hasAuthority('IA_READ')")
     public AssistenteService.Resposta perguntar(
             @RequestHeader("X-Empresa-Id") final Long empresaId,
             final Authentication auth,
@@ -45,7 +45,7 @@ public class AssistenteController {
 
     @Operation(summary = "Executa um comando de dúvida ou ação no assistente do ERP")
     @PostMapping("/comando")
-    @PreAuthorize("hasAuthority(IA_READ)")
+    @PreAuthorize("hasAuthority('IA_READ')")
     public ResponseEntity<AssistenteAcaoService.ComandoResponse> processarComando(
             @RequestHeader("X-Empresa-Id") final Long empresaId,
             final Authentication auth,
@@ -56,7 +56,7 @@ public class AssistenteController {
 
     @Operation(summary = "Histórico do assistente com a auditoria de cada resposta")
     @GetMapping("/auditoria")
-    @PreAuthorize("hasAuthority(IA_READ)")
+    @PreAuthorize("hasAuthority('IA_READ')")
     public List<Object> auditoria(@RequestHeader("X-Empresa-Id") final Long empresaId) {
         return service.auditoria(empresaId);
     }
