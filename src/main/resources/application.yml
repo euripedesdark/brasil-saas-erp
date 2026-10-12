@@ -228,3 +228,14 @@ stripe:
 app:
   security:
     secret-encryption-key: ${APP_SECURITY_SECRET_ENCRYPTION_KEY:}
+
+# Banco analitico separado: usa a mesma CA PostgreSQL do ERP.
+# A role de leitura do BI autentica com credenciais proprias; nao reutiliza o
+# certificado de cliente da role tecnica sa.
+# Habilitar somente depois de implantar o ETL e validar a conexao.
+bi:
+  datasource:
+    enabled: ${BI_DATASOURCE_ENABLED:false}
+    url: "jdbc:postgresql://localhost:5432/brasil_saas_bi?sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt"
+    username: ${BI_DB_USER:brasil_saas_bi_reader}
+    password: ${BI_DB_PASSWORD:}
