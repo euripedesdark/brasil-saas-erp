@@ -83,7 +83,7 @@ public class CrmServiceImpl implements CrmService {
     }
     @Override public List<CrmAtividade> atividades(Long empresaId, Long leadId, Boolean pendentes) {
         List<CrmAtividade> base = (leadId == null) ? atividades.findByEmpresaIdAndDeletedAtIsNull(empresaId) : atividades.findByLeadIdAndEmpresaIdAndDeletedAtIsNull(leadId, empresaId);
-        if (Boolean.TRUE.equals(pendentes)) base = base.stream().filter(a -> !Boolean.TRUE.equals(a.getConcluida())).toList();
+        if (Boolean.TRUE.equals(pendentes)) base = base.stream().filter(a -> !Boolean.TRUE.equals(a.getConcluida())).collect(java.util.stream.Collectors.toList());
         base.sort(Comparator.comparing(CrmAtividade::getDataAgendada, Comparator.nullsLast(Comparator.naturalOrder())));
         return base;
     }
