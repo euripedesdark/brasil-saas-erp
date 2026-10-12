@@ -100,9 +100,16 @@ public class ArmazenamentoAdminController {
             @RequestParam("arquivo") String arquivo,
             @RequestParam(value = "empresaId", required = false) Long empresaId) throws IOException {
 
-        Path caminho = Paths.get(arquivo);
-        if (!Files.isRegularFile(caminho)) {
-            return Map.of("erro", "arquivo nao encontrado: " + caminho.toAbsolutePath());
+        // O endpoint aceita apenas arquivos dentro da pasta de imagens configurada.
+        // Normalizar os caminhos antes da verificacao impede ../ e caminhos absolutos
+        // externos de fazer o superadmin importar arquivos arbitrarios do servidor.
+        Path raizPermitida = Paths.get(pastaImagens).toAbsolutePath().normalize();
+        Path caminho = Paths.get(arquivo).toAbsolutePath().normalize();
+        if (!caminho.startsWith(raizPermitida)) {
+            throw new IllegalArgumentException("O arquivo deve estar dentro da pasta de imagens configurada");
+        }
+        if (!Files.isRegularFile(caminho) || !Files.isReadable(caminho)) {
+            return Map.of("erro", "arquivo nao encontrado ou sem permissao de leitura");
         }
 
         String nome = caminho.getFileName().toString();
