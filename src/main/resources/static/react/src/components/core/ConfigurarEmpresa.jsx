@@ -498,7 +498,7 @@ export const ConfigurarEmpresa = () => {
                             <div className="col-12">
                                 <ImagemRegistro
                                     registroId={empresaId}
-                                    lerUrl={`/api/core/empresas/logo/${empresaId}`}
+                                    lerUrl={`/api/core/empresas/${empresaId}/logo`}
                                     enviarUrl={`/api/core/empresas/${empresaId}/logo`}
                                     removerUrl={`/api/core/empresas/${empresaId}/logo`}
                                     campo="logo"
