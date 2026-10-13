@@ -1,5 +1,6 @@
-<jasperReport name="BrasilCloud_financeiro" language="java" pageWidth="842" pageHeight="595" columnWidth="794" leftMargin="24" rightMargin="24" topMargin="24" bottomMargin="24" whenNoDataType="AllSectionsNoDetail">
-    <style name="Base" default="true" fontName="DejaVu Sans" fontSize="8.0"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport name="BrasilCloud_financeiro" language="java" pageWidth="842" pageHeight="595" columnWidth="794" leftMargin="24" rightMargin="24" topMargin="20" bottomMargin="20" whenNoDataType="AllSectionsNoDetail">
+    <style name="Base" default="true" fontName="DejaVu Sans" fontSize="8.0" forecolor="#1e293b"/>
     <parameter name="TITLE" class="java.lang.String"/>
     <parameter name="SUBTITLE" class="java.lang.String"/>
     <parameter name="EMPRESA" class="java.lang.String"/>
@@ -13,39 +14,43 @@
     <field name="valor_original" class="java.lang.String"/>
     <field name="valor_saldo" class="java.lang.String"/>
     <field name="status" class="java.lang.String"/>
-    <title height="100">
-        <element kind="staticText" x="0" y="0" width="794" height="25" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="15.0" bold="true" vTextAlign="Middle"><text>BrasilCloud ERP</text></element>
-        <element kind="textField" x="0" y="33" width="794" height="25" fontSize="14.0" bold="true" forecolor="#2c3e50"><expression><![CDATA[$P{TITLE}]]></expression></element>
-        <element kind="textField" x="0" y="61" width="794" height="18"><expression><![CDATA[$P{SUBTITLE}]]></expression></element>
-        <element kind="textField" x="0" y="81" width="794" height="18"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
+    <title height="110">
+        <element kind="staticText" x="0" y="0" width="794" height="28" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="14.0" bold="true" vTextAlign="Middle" leftPadding="10"><text>BrasilCloud ERP  ·  Financeiro</text></element>
+        <element kind="staticText" x="0" y="28" width="794" height="4" mode="Opaque" backcolor="#3498db"><text> </text></element>
+        <element kind="textField" x="0" y="40" width="794" height="22" fontSize="13.0" bold="true" forecolor="#2c3e50" leftPadding="2"><expression><![CDATA[$P{TITLE}]]></expression></element>
+        <element kind="textField" x="0" y="64" width="520" height="16" fontSize="9.0" forecolor="#475569" leftPadding="2"><expression><![CDATA[$P{SUBTITLE}]]></expression></element>
+        <element kind="textField" x="520" y="64" width="274" height="16" fontSize="9.0" forecolor="#475569" hTextAlign="Right"><expression><![CDATA[$P{GENERATED}]]></expression></element>
+        <element kind="textField" x="0" y="84" width="794" height="16" fontSize="10.0" bold="true" forecolor="#1e293b" leftPadding="2"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
     </title>
-    <columnHeader height="24">
-        <element kind="staticText" x="0" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Documento</text></element>
-        <element kind="staticText" x="99" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Emissão</text></element>
-        <element kind="staticText" x="198" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Vencimento</text></element>
-        <element kind="staticText" x="297" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Descrição</text></element>
-        <element kind="staticText" x="396" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Tipo</text></element>
-        <element kind="staticText" x="495" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Valor Original</text></element>
-        <element kind="staticText" x="594" y="0" width="99" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Saldo</text></element>
-        <element kind="staticText" x="693" y="0" width="101" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Status</text></element>
+    <columnHeader height="26">
+        <element kind="staticText" x="0" y="0" width="95" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Documento</text></element>
+        <element kind="staticText" x="95" y="0" width="85" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Emissão</text></element>
+        <element kind="staticText" x="180" y="0" width="85" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Vencimento</text></element>
+        <element kind="staticText" x="265" y="0" width="170" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Descrição</text></element>
+        <element kind="staticText" x="435" y="0" width="70" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Tipo</text></element>
+        <element kind="staticText" x="505" y="0" width="95" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" hTextAlign="Right" rightPadding="4"><text>Valor Original</text></element>
+        <element kind="staticText" x="600" y="0" width="95" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" hTextAlign="Right" rightPadding="4"><text>Saldo</text></element>
+        <element kind="staticText" x="695" y="0" width="99" height="26" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle" leftPadding="4"><text>Status</text></element>
     </columnHeader>
     <detail>
         <band height="22" splitType="Stretch">
-        <element kind="textField" x="0" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{numero_documento}]]></expression></element>
-        <element kind="textField" x="99" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{data_emissao}]]></expression></element>
-        <element kind="textField" x="198" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{data_vencimento}]]></expression></element>
-        <element kind="textField" x="297" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{descricao}]]></expression></element>
-        <element kind="textField" x="396" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{tipo}]]></expression></element>
-        <element kind="textField" x="495" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{valor_original}]]></expression></element>
-        <element kind="textField" x="594" y="0" width="99" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{valor_saldo}]]></expression></element>
-        <element kind="textField" x="693" y="0" width="101" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{status}]]></expression></element>
+            <element kind="textField" x="0" y="0" width="95" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{numero_documento}]]></expression></element>
+            <element kind="textField" x="95" y="0" width="85" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{data_emissao}]]></expression></element>
+            <element kind="textField" x="180" y="0" width="85" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{data_vencimento}]]></expression></element>
+            <element kind="textField" x="265" y="0" width="170" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{descricao}]]></expression></element>
+            <element kind="textField" x="435" y="0" width="70" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{tipo}]]></expression></element>
+            <element kind="textField" x="505" y="0" width="95" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" hTextAlign="Right" rightPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{valor_original}]]></expression></element>
+            <element kind="textField" x="600" y="0" width="95" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" bold="true" textAdjust="StretchHeight" hTextAlign="Right" rightPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{valor_saldo}]]></expression></element>
+            <element kind="textField" x="695" y="0" width="99" height="22" mode="Opaque" backcolor="#f8f9fa" fontSize="8.0" textAdjust="StretchHeight" leftPadding="4" vTextAlign="Middle"><expression><![CDATA[$F{status}]]></expression></element>
         </band>
     </detail>
-    <pageFooter height="22">
-        <element kind="textField" x="0" y="2" width="650" height="18" forecolor="#64748B"><expression><![CDATA["BrasilCloud ERP | " + $P{GENERATED}]]></expression></element>
-        <element kind="textField" x="650" y="2" width="144" height="18" hTextAlign="Right"><expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression></element>
+    <pageFooter height="26">
+        <element kind="staticText" x="0" y="0" width="794" height="1" mode="Opaque" backcolor="#e2e8f0"><text> </text></element>
+        <element kind="textField" x="0" y="6" width="560" height="16" fontSize="8.0" forecolor="#64748b"><expression><![CDATA["BrasilCloud ERP  ·  Relatório financeiro  ·  " + $P{GENERATED}]]></expression></element>
+        <element kind="textField" x="560" y="6" width="234" height="16" fontSize="8.0" forecolor="#64748b" hTextAlign="Right"><expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression></element>
     </pageFooter>
-    <summary height="65" splitType="Stretch">
-        <element kind="textField" x="0" y="5" width="794" height="55" textAdjust="StretchHeight"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
+    <summary height="70" splitType="Stretch">
+        <element kind="staticText" x="0" y="8" width="794" height="18" mode="Opaque" backcolor="#3498db" forecolor="#FFFFFF" fontSize="9.0" bold="true" leftPadding="8" vTextAlign="Middle"><text>RESUMO</text></element>
+        <element kind="textField" x="0" y="26" width="794" height="40" mode="Opaque" backcolor="#f8f9fa" textAdjust="StretchHeight" fontSize="9.0" leftPadding="8" topPadding="6"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
     </summary>
 </jasperReport>
