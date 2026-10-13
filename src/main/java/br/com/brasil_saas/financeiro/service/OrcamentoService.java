@@ -39,7 +39,7 @@ public class OrcamentoService {
     }
     @Transactional public OrcamentoRealizado lancarRealizado(Long empresaId, Long orcamentoId, Integer mes, BigDecimal valor) {
         garantir(orcamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(orcamentoId, empresaId), "Orcamento inexistente");
-        if (mes == null || mes < 1 || mes > 12) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Mes invalido");
+        if (mes == null || mes < 1 || mes > 12) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Mes invalido");
         OrcamentoRealizado r = new OrcamentoRealizado();
         r.setOrcamentoId(orcamentoId);
         r.setMes(mes);

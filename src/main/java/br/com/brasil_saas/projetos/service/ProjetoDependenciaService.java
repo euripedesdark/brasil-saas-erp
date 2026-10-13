@@ -14,19 +14,19 @@ public class ProjetoDependenciaService {
  @Transactional(readOnly=true) public List<PrjDependencia> listar(Long emp,Long pid){projeto(emp,pid);return deps.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(pid,emp);}
  @Transactional public PrjDependencia adicionar(Long emp,Long pid,Long anterior,Long posterior,Integer espera){
   projeto(emp,pid);
-  if(anterior==null||posterior==null||anterior.equals(posterior))throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Etapas invalidas");
+  if(anterior==null||posterior==null||anterior.equals(posterior))throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Etapas invalidas");
   PrjEtapa a=etapa(emp,pid,anterior),b=etapa(emp,pid,posterior);
   int lag=espera==null?0:espera;
-  if(lag<0||lag>3650)throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Defasagem invalida");
+  if(lag<0||lag>3650)throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Defasagem invalida");
   List<PrjDependencia> all=deps.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(pid,emp);
   for(PrjDependencia d:all)if(anterior.equals(d.getAntecessoraId())&&posterior.equals(d.getSucessoraId()))throw erro(HttpStatus.CONFLICT,"Dependencia duplicada");
   Deque<Long> q=new ArrayDeque<>();Set<Long> visitados=new HashSet<>();q.add(posterior);
   while(!q.isEmpty()){
    Long cur=q.removeFirst();if(!visitados.add(cur))continue;
-   if(cur.equals(anterior))throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Ciclo de dependencias");
+   if(cur.equals(anterior))throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Ciclo de dependencias");
    for(PrjDependencia d:all)if(cur.equals(d.getAntecessoraId()))q.addLast(d.getSucessoraId());
   }
-  if(a.getDataFim()!=null&&b.getDataInicio()!=null&&b.getDataInicio().isBefore(a.getDataFim().plusDays(lag)))throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Cronograma viola dependencia");
+  if(a.getDataFim()!=null&&b.getDataInicio()!=null&&b.getDataInicio().isBefore(a.getDataFim().plusDays(lag)))throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Cronograma viola dependencia");
   PrjDependencia d=new PrjDependencia();d.setEmpresaId(emp);d.setProjetoId(pid);
   d.setAntecessoraId(anterior);d.setSucessoraId(posterior);d.setDefasagemDias(lag);return deps.save(d);
  }
@@ -38,9 +38,9 @@ public class ProjetoDependenciaService {
   for(PrjDependencia d:deps.findByProjetoIdAndEmpresaIdAndDeletedAtIsNull(pid,emp)){
    if(!eid.equals(d.getSucessoraId()))continue;
    PrjEtapa a=etapa(emp,pid,d.getAntecessoraId());
-   if(!"CONCLUIDA".equals(a.getStatus()))throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Predecessora incompleta");
+   if(!"CONCLUIDA".equals(a.getStatus()))throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Predecessora incompleta");
    int lag=d.getDefasagemDias()==null?0:d.getDefasagemDias();
-   if(lag>0&&(a.getConcluidaEm()==null||LocalDate.now().isBefore(a.getConcluidaEm().toLocalDate().plusDays(lag))))throw erro(HttpStatus.UNPROCESSABLE_ENTITY,"Defasagem nao cumprida");
+   if(lag>0&&(a.getConcluidaEm()==null||LocalDate.now().isBefore(a.getConcluidaEm().toLocalDate().plusDays(lag))))throw erro(HttpStatus.UNPROCESSABLE_CONTENT,"Defasagem nao cumprida");
   }
  }
 }

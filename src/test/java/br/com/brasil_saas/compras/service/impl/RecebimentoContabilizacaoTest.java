@@ -115,7 +115,7 @@ class RecebimentoContabilizacaoTest {
     void faltaDeRegraContabilNaoBloqueiaORecebimento() {
         var p = pedido();
         when(evento.contabilizar(anyLong(), anyString(), anyString(), anyLong(), any(), any(), anyString()))
-                .thenThrow(new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "sem regra"));
+                .thenThrow(new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "sem regra"));
         assertDoesNotThrow(() -> svc.receber(11L, EMPRESA));
         assertEquals("RECEBIDO", p.getStatus());
         assertEquals(70L, p.getTituloId());

@@ -51,10 +51,10 @@ public class DevolucaoService {
     @Transactional public VenDevolucao solicitar(Long empresaId, Long pedidoId, String motivo, Map<Long, BigDecimal> itensQtd) {
         // A trava do pedido serializa solicitacoes concorrentes sobre o mesmo pedido.
         PedidoVenda p = exigir(pedidos.findByIdForUpdateAndEmpresaId(pedidoId, empresaId), "Pedido inexistente");
-        if (!"FATURADO".equals(p.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente pedido faturado");
-        if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo obrigatorio");
-        if (itensQtd == null || itensQtd.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Informe ao menos um item");
-        if (motivo.length() > 100) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Motivo deve ter no maximo 100 caracteres");
+        if (!"FATURADO".equals(p.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Somente pedido faturado");
+        if (motivo == null || motivo.isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Motivo obrigatorio");
+        if (itensQtd == null || itensQtd.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Informe ao menos um item");
+        if (motivo.length() > 100) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Motivo deve ter no maximo 100 caracteres");
         // Quantidade ja comprometida por outras devolucoes (solicitadas, aprovadas ou recebidas).
         Map<Long, BigDecimal> jaDevolvido = new HashMap<>();
         for (VenDevolucao anterior : devolucoes.findByPedidoIdAndEmpresaIdAndStatusInAndDeletedAtIsNull(
@@ -69,10 +69,10 @@ public class DevolucaoService {
                     .subtract(jaDevolvido.getOrDefault(e.getKey(), BigDecimal.ZERO));
             if (e.getKey() == null || e.getValue() == null || e.getValue().signum() <= 0
                     || e.getValue().stripTrailingZeros().scale() > 3 || e.getValue().compareTo(saldo) > 0)
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade invalida, acima do saldo ou com mais de 3 casas decimais");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Quantidade invalida, acima do saldo ou com mais de 3 casas decimais");
         }
         VenDevolucao d = new VenDevolucao(); d.setEmpresaId(empresaId); d.setPedidoId(pedidoId);
-        if (p.getClienteId() == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Pedido sem cliente");
+        if (p.getClienteId() == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Pedido sem cliente");
         d.setClienteId(p.getClienteId());
         d.setNumero("DV-" + UUID.randomUUID().toString().replace("-", "").substring(0, 24));
         d.setMotivo(motivo); d.setStatus("SOLICITADA"); d = devolucoes.save(d);
@@ -84,7 +84,7 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao decidir(Long empresaId, Long userId, Long id, boolean aprovar) {
         VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
-        if (!"SOLICITADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao ja decidida");
+        if (!"SOLICITADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Devolucao ja decidida");
         d.setStatus(aprovar ? "APROVADA" : "REJEITADA");
         d.setDecididaPor(userId);
         d.setDecididaEm(LocalDateTime.now());
@@ -92,19 +92,19 @@ public class DevolucaoService {
     }
     @Transactional public VenDevolucao receber(Long empresaId, Long id) {
         VenDevolucao d = exigir(devolucoes.findByIdForUpdate(id, empresaId), "Devolucao inexistente");
-        if (!"APROVADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprove antes de receber");
+        if (!"APROVADA".equals(d.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Aprove antes de receber");
         Long depId = depositos.findFirstByEmpresaIdAndTipoAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId, "PADRAO")
                 .or(() -> depositos.findFirstByEmpresaIdAndAtivoTrueAndDeletedAtIsNullOrderByIdAsc(empresaId))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nenhum deposito ativo para receber devolucao")).getId();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Nenhum deposito ativo para receber devolucao")).getId();
         depositos.findAtivoForUpdate(depId, empresaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Deposito indisponivel"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Deposito indisponivel"));
         var linhas = new ArrayList<>(itens.findByDevolucaoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId));
-        if (linhas.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Devolucao sem itens");
+        if (linhas.isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Devolucao sem itens");
         for (var i : linhas) {
             if (i.getProdutoId() == null || i.getQuantidade() == null || i.getQuantidade().signum() <= 0
                     || i.getQuantidade().stripTrailingZeros().scale() > 3
                     || (i.getQtdRecebida() != null && i.getQtdRecebida().signum() != 0))
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Item de devolucao inconsistente");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Item de devolucao inconsistente");
         }
         linhas.sort(Comparator.comparing(VenDevolucaoItem::getProdutoId));
         for (VenDevolucaoItem i : linhas) {

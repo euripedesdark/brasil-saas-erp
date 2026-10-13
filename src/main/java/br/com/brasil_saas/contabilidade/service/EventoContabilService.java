@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -70,7 +69,7 @@ public class EventoContabilService {
         try {
             l = contabilidade.salvar(empresaId, l);
         } catch (ResponseStatusException ex) {
-            if (ex.getStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY
+            if (ex.getStatusCode() == HttpStatus.UNPROCESSABLE_CONTENT
                     || (ex.getReason() != null && ex.getReason().toLowerCase().contains("fechado"))) {
                 registrarPendencia(empresaId, evento, origemTipo, origemId, valor, "Periodo fechado: " + ex.getReason());
                 throw ex;
@@ -99,7 +98,7 @@ public class EventoContabilService {
         CtbLancamento lancado = contabilidade.lancar(empresaId, l.getId());
         BigDecimal[] t = contabilidade.totais(empresaId, lancado.getId());
         if (t[0].compareTo(t[1]) != 0) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Partida dobrada nao fecha");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Partida dobrada nao fecha");
         }
         resolverPendenciaSeHouver(empresaId, origemTipo, origemId, evento);
         return Resultado.ok(lancado);

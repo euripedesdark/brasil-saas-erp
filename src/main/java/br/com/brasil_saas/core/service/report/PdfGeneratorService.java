@@ -167,7 +167,7 @@ public class PdfGeneratorService {
         subTable.addCell(new Phrase("Empresa: " + empresaNome, TABLE_CELL_FONT));
         
         subTable.addCell(new Phrase("Data: " + dataGeracao.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), TABLE_CELL_FONT));
-        subTable.addCell(new Phrase("Hora: " + LocalDate.now().toString(), TABLE_CELL_FONT));
+        subTable.addCell(new Phrase("Hora: " + LocalDate.now(), TABLE_CELL_FONT));
         
         subtitleCell.addElement(subTable);
         subtitleCell.setPadding(10);

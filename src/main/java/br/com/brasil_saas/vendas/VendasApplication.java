@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 )
 public class VendasApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(VendasApplication.class, args);
     }
 }

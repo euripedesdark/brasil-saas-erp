@@ -35,7 +35,7 @@ public class PortalServiceImpl implements PortalService {
     }
     @Override @Transactional public PtlAcesso gerar(Long empresaId, Long userId, String tipo, Long pessoaId, Integer diasValidade) {
         List<String> tipos = List.of("CLIENTE", "FORNECEDOR", "FUNCIONARIO");
-        if (!tipos.contains(tipo)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo invalido");
+        if (!tipos.contains(tipo)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo invalido");
         Pessoa p = exigir(pessoas.findById(pessoaId), "Pessoa inexistente");
         if (p.getEmpresaId() == null || !p.getEmpresaId().equals(empresaId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Pessoa de outra empresa");
         byte[] b = new byte[24];

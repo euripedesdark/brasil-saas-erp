@@ -3,7 +3,7 @@ package br.com.brasil_saas.shared.security;
 import java.io.IOException;
 import java.util.Set;
 
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;

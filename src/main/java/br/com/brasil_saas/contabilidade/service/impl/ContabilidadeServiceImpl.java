@@ -31,7 +31,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     private void exigirAberto(Long empresaId, String periodo) {
         boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
             .anyMatch(f -> periodo.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
-        if (fechado) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo fechado: " + periodo);
+        if (fechado) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Periodo fechado: " + periodo);
     }
     private String nomeConta(Long empresaId, Long contaId) {
         return contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaId, empresaId).map(c -> c.getCodigo() + " - " + c.getDescricao()).orElse("Conta " + contaId);
@@ -51,7 +51,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     }
     private CtbLancamento exigirRascunho(Long empresaId, Long id) {
         CtbLancamento l = exigir(lancamentos.findByIdForUpdate(id, empresaId), "Lancamento inexistente");
-        if (!"RASCUNHO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente rascunho pode ser alterado");
+        if (!"RASCUNHO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Somente rascunho pode ser alterado");
         exigirAberto(empresaId, l.getPeriodo());
         return l;
     }
@@ -92,18 +92,18 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
             ps.stream().map(CtbPartida::getDebito).reduce(BigDecimal.ZERO, BigDecimal::add),
             ps.stream().map(CtbPartida::getCredito).reduce(BigDecimal.ZERO, BigDecimal::add)
         };
-        if (t[0].signum() <= 0 || t[0].compareTo(t[1]) != 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Lancamento desbalanceado");
+        if (t[0].signum() <= 0 || t[0].compareTo(t[1]) != 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Lancamento desbalanceado");
         l.setStatus("LANCADO");
         return lancamentos.save(l);
     }
     private void validarValoresPartida(BigDecimal debito, BigDecimal credito) {
         if (debito == null || credito == null || debito.signum() < 0 || credito.signum() < 0
                 || !(debito.signum() > 0 ^ credito.signum() > 0))
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Partida deve ter debito OU credito positivo, sem valores negativos");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Partida deve ter debito OU credito positivo, sem valores negativos");
     }
     @Override @Transactional public CtbLancamento estornar(Long empresaId, Long id, String motivo) {
         CtbLancamento l = exigir(lancamentos.findByIdForUpdate(id, empresaId), "Lancamento inexistente");
-        if (!"LANCADO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Somente lancado pode ser estornado");
+        if (!"LANCADO".equals(l.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Somente lancado pode ser estornado");
         exigirAberto(empresaId, l.getPeriodo());
         CtbLancamento e = new CtbLancamento();
         e.setData(LocalDate.now());
@@ -196,10 +196,10 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
         garantir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaCreditoId, empresaId), "Conta credito inexistente");
         // O lancamento de emissao usa o valor original; o saldo muda a cada baixa.
         BigDecimal valor = t.getValorOriginal() != null && t.getValorOriginal().signum() > 0 ? t.getValorOriginal() : t.getValorSaldo();
-        if (valor == null || valor.signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo sem valor para contabilizar");
+        if (valor == null || valor.signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Titulo sem valor para contabilizar");
         if (!lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
                 empresaId, "TITULO", t.getId(), List.of("RASCUNHO", "LANCADO")).isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo ja contabilizado");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Titulo ja contabilizado");
         CtbLancamento l = new CtbLancamento();
         l.setData(t.getDataEmissao() == null ? LocalDate.now() : t.getDataEmissao());
         l.setPeriodo(periodoDe(l.getData()));
@@ -231,7 +231,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Periodo deve estar no formato AAAA-MM");
         if (!lancamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNullOrderByDataDescIdDesc(empresaId, periodo).stream()
                 .filter(x -> "RASCUNHO".equals(x.getStatus())).toList().isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo com lancamentos em rascunho: lance ou exclua antes de fechar");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Periodo com lancamentos em rascunho: lance ou exclua antes de fechar");
         Optional<CtbFechamento> atual = fechamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
         if (!atual.isEmpty()) {
             CtbFechamento f = atual.get();
@@ -279,29 +279,29 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     public CtbLancamento apurarResultado(Long empresaId, Long userId, int exercicio, Long contaLucrosId) {
         int anoAtual = LocalDate.now().getYear();
         if (exercicio < 2000 || exercicio >= anoAtual) {
-            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Apuracao somente de exercicio encerrado");
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Apuracao somente de exercicio encerrado");
         }
         var lucros = exigir(contas.findByIdAndEmpresaIdAndDeletedAtIsNull(contaLucrosId, empresaId), "Conta de lucros acumulados inexistente");
         String codigoLucros = lucros.getCodigo() == null ? "" : lucros.getCodigo();
         if (codigoLucros.startsWith("3")) {
-            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Conta de lucros acumulados nao pode ser de resultado");
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Conta de lucros acumulados nao pode ser de resultado");
         }
         for (int mes = 1; mes <= 11; mes++) {
             String periodo = String.format("%04d-%02d", exercicio, mes);
             boolean fechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
                     .anyMatch(f -> periodo.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
-            if (!fechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Periodo " + periodo + " precisa estar fechado");
+            if (!fechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Periodo " + periodo + " precisa estar fechado");
         }
         String dezembro = String.format("%04d-12", exercicio);
         boolean dezembroFechado = fechamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
                 .anyMatch(f -> dezembro.equals(f.getPeriodo()) && "FECHADO".equals(f.getStatus()));
-        if (dezembroFechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Dezembro precisa estar aberto para receber a apuracao");
+        if (dezembroFechado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Dezembro precisa estar aberto para receber a apuracao");
         boolean jaApurado = lancamentos.findByEmpresaIdAndPeriodoAndDeletedAtIsNullOrderByDataDescIdDesc(empresaId, dezembro).stream()
                 .anyMatch(l -> "ENCERRAMENTO".equals(l.getOrigemTipo()) && !"ESTORNADO".equals(l.getStatus()));
-        if (jaApurado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Exercicio ja apurado");
+        if (jaApurado) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Exercicio ja apurado");
         boolean rascunhoNoAno = lancamentos.findByEmpresaIdAndDeletedAtIsNull(empresaId).stream()
                 .anyMatch(l -> "RASCUNHO".equals(l.getStatus()) && l.getPeriodo() != null && l.getPeriodo().startsWith(String.valueOf(exercicio)));
-        if (rascunhoNoAno) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Exercicio com lancamentos em rascunho");
+        if (rascunhoNoAno) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Exercicio com lancamentos em rascunho");
         Map<Long, BigDecimal> saldoPorConta = new LinkedHashMap<>();
         for (int mes = 1; mes <= 12; mes++) {
             LocalDate de = LocalDate.of(exercicio, mes, 1);
@@ -316,7 +316,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
             }
         }
         saldoPorConta.entrySet().removeIf(e -> e.getValue().setScale(2, java.math.RoundingMode.HALF_UP).signum() == 0);
-        if (saldoPorConta.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem movimento de resultado no exercicio");
+        if (saldoPorConta.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Sem movimento de resultado no exercicio");
         CtbLancamento l = new CtbLancamento();
         l.setData(LocalDate.of(exercicio, 12, 31));
         l.setPeriodo(dezembro);
@@ -348,7 +348,7 @@ public class ContabilidadeServiceImpl implements ContabilidadeService {
     @Override @Transactional
     public ContabilidadeService.EspelhoContabil espelharAjusteDevolucao(Long empresaId, Long tituloOrigemId, Long tituloDestinoId, BigDecimal proporcao, String historico) {
         if (proporcao == null || proporcao.signum() <= 0 || proporcao.compareTo(BigDecimal.ONE) > 0) {
-            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Proporcao do ajuste invalida");
+            throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Proporcao do ajuste invalida");
         }
         var originais = lancamentos.findByEmpresaIdAndOrigemTipoAndOrigemIdAndStatusInAndDeletedAtIsNull(
                 empresaId, "TITULO", tituloOrigemId, List.of("LANCADO"));

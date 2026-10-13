@@ -54,9 +54,9 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsOndaItem addItem(Long empresaId, Long ondaId, WmsOndaItem i) {
         WmsOnda o = exigirOnda(empresaId, ondaId);
-        if (!"ABERTA".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda ja liberada");
+        if (!"ABERTA".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Onda ja liberada");
         if (i.getProdutoId() == null || produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Produto inexistente para a empresa");
         if (i.getQtdSolicitada() == null || i.getQtdSolicitada().signum() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade solicitada deve ser positiva");
         i.setId(null);
@@ -74,7 +74,7 @@ public class WmsServiceImpl implements WmsService {
             if ("RESERVA".equals(i.getOrigemTipo()) && i.getOrigemId() != null && !"SEPARADO".equals(i.getStatus())) emOnda.add(i.getOrigemId());
         }
         List<ReservaEstoque> novas = rs.stream().filter(r -> !emOnda.contains(r.getId())).toList();
-        if (novas.isEmpty()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem reservas pendentes no deposito");
+        if (novas.isEmpty()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Sem reservas pendentes no deposito");
         WmsOnda o = new WmsOnda();
         o.setDepositoId(depositoId);
         o.setCodigo("ONDA-" + java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")));
@@ -104,7 +104,7 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsOnda liberar(Long empresaId, Long id) {
         WmsOnda o = exigirOnda(empresaId, id);
-        if (itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda sem itens");
+        if (itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).isEmpty()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Onda sem itens");
         o.setStatus("EM_SEPARACAO");
         o.setLiberadaEm(LocalDateTime.now());
         return ondas.save(o);
@@ -113,16 +113,16 @@ public class WmsServiceImpl implements WmsService {
         if (qtd == null || qtd.signum() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade separada deve ser positiva");
         WmsOnda o = exigirOnda(empresaId, ondaId);
-        if (!"EM_SEPARACAO".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Onda nao esta em separacao");
+        if (!"EM_SEPARACAO".equals(o.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Onda nao esta em separacao");
         WmsOndaItem i = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(itemId, empresaId), "Item inexistente");
         if (!ondaId.equals(i.getOndaId())) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item de outra onda");
         BigDecimal nova = (i.getQtdSeparada() == null ? BigDecimal.ZERO : i.getQtdSeparada()).add(qtd);
-        if (nova.compareTo(i.getQtdSolicitada()) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade acima da solicitada");
+        if (nova.compareTo(i.getQtdSolicitada()) > 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Quantidade acima da solicitada");
         i.setQtdSeparada(nova);
         if (enderecoId != null) {
             EnderecoEstoque endereco = exigir(enderecos.findByIdAndEmpresaIdAndAtivoTrue(enderecoId, empresaId), "Endereco inexistente");
             if (!Objects.equals(endereco.getDepositoId(), o.getDepositoId()))
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Endereco pertence a outro deposito");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Endereco pertence a outro deposito");
             i.setEnderecoId(enderecoId);
         }
         i.setStatus(nova.compareTo(i.getQtdSolicitada()) >= 0 ? "SEPARADO" : "PARCIAL");
@@ -133,7 +133,7 @@ public class WmsServiceImpl implements WmsService {
         if ("CONCLUIDA".equals(o.getStatus())) return o;
         var itensOnda = itens.findByOndaIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
         boolean ok = itensOnda.stream().allMatch(i -> "SEPARADO".equals(i.getStatus()));
-        if (!ok) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Ha itens nao separados");
+        if (!ok) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Ha itens nao separados");
         for (WmsOndaItem i : itensOnda) {
             consumirReservaDaOnda(empresaId, i);
         }
@@ -178,7 +178,7 @@ public class WmsServiceImpl implements WmsService {
     @Override @Transactional public WmsVolume criarVolume(Long empresaId, WmsVolume v) {
         ExpedicaoEstoque exp = exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(v.getExpedicaoId(), empresaId), "Expedicao inexistente");
         if ("EXPEDIDA".equals(exp.getStatus()) || "CANCELADA".equals(exp.getStatus()))
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Expedicao encerrada nao aceita novos volumes");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Expedicao encerrada nao aceita novos volumes");
         if (v.getCodigo() == null || v.getCodigo().isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Codigo do volume obrigatorio");
         v.setId(null);
@@ -188,22 +188,22 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public WmsVolumeItem embalar(Long empresaId, Long volumeId, WmsVolumeItem i) {
         WmsVolume v = exigir(volumes.findByIdAndEmpresaIdAndDeletedAtIsNull(volumeId, empresaId), "Volume inexistente");
-        if (!"ABERTO".equals(v.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Volume fechado");
+        if (!"ABERTO".equals(v.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Volume fechado");
         if (i.getProdutoId() == null || produtos.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getProdutoId(), empresaId).isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto inexistente para a empresa");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Produto inexistente para a empresa");
         if (i.getQuantidade() == null || i.getQuantidade().signum() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Quantidade embalada deve ser positiva");
         if (i.getOndaItemId() != null) {
             WmsOndaItem oi = exigir(itens.findByIdAndEmpresaIdAndDeletedAtIsNull(i.getOndaItemId(), empresaId), "Item da onda inexistente");
             if (!Objects.equals(oi.getProdutoId(), i.getProdutoId()))
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Produto nao corresponde ao item da onda");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Produto nao corresponde ao item da onda");
             // Nao embalar mais do que foi separado, somando todos os volumes.
             BigDecimal jaEmbalado = volumeItens.findByOndaItemIdAndEmpresaIdAndDeletedAtIsNull(oi.getId(), empresaId).stream()
                 .map(x -> x.getQuantidade() == null ? BigDecimal.ZERO : x.getQuantidade())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal separado = oi.getQtdSeparada() == null ? BigDecimal.ZERO : oi.getQtdSeparada();
             if (jaEmbalado.add(i.getQuantidade()).compareTo(separado) > 0)
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade embalada acima da separada");
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Quantidade embalada acima da separada");
         }
         i.setId(null);
         i.setEmpresaId(empresaId);
@@ -214,7 +214,7 @@ public class WmsServiceImpl implements WmsService {
         WmsVolume v = exigir(volumes.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Volume inexistente");
         if ("FECHADO".equals(v.getStatus())) return v;
         if (volumeItens.findByVolumeIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).isEmpty())
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Volume vazio nao pode ser fechado");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Volume vazio nao pode ser fechado");
         v.setStatus("FECHADO");
         return volumes.save(v);
     }
@@ -249,7 +249,7 @@ public class WmsServiceImpl implements WmsService {
     }
     @Override @Transactional public Map<String, Object> finalizarExpedicao(Long empresaId, Long expedicaoId, String codigoRastreio) {
         Map<String, Object> conf = conferir(empresaId, expedicaoId);
-        if (!Boolean.TRUE.equals(conf.get("conferido"))) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Conferencia com divergencia");
+        if (!Boolean.TRUE.equals(conf.get("conferido"))) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Conferencia com divergencia");
         ExpedicaoEstoque e = exigir(expedicoes.findByIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId), "Expedicao inexistente");
         if ("EXPEDIDA".equals(e.getStatus())) {
             Map<String, Object> jaFinalizada = new LinkedHashMap<>();
@@ -258,10 +258,10 @@ public class WmsServiceImpl implements WmsService {
             return jaFinalizada;
         }
         if (!"EMBALAGEM".equals(e.getStatus()))
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Expedicao precisa estar em EMBALAGEM");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Expedicao precisa estar em EMBALAGEM");
         List<WmsVolume> volumesFechados = volumes.findByExpedicaoIdAndEmpresaIdAndDeletedAtIsNull(expedicaoId, empresaId);
         if (volumesFechados.stream().anyMatch(v -> !"FECHADO".equals(v.getStatus())))
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Todos os volumes precisam estar fechados");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Todos os volumes precisam estar fechados");
         for (ExpedicaoEstoqueItem item : expedicaoItens.findByEmpresaIdAndExpedicaoIdOrderByIdAsc(empresaId, expedicaoId)) {
             item.setStatus("EXPEDIDO");
             expedicaoItens.save(item);

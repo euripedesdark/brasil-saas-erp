@@ -22,7 +22,7 @@ public class NfseSpExceptionHandler {
     @ExceptionHandler(NfseSpException.class)
     public ResponseEntity<?> nfse(NfseSpException e) {
         log.warn("NFS-e recusada ou nao executada: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT)
                 .body(Map.of("sucesso", false, "erro", e.getMessage()));
     }
 

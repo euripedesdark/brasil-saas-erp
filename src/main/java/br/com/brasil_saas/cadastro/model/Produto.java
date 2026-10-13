@@ -7,8 +7,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
 
 @Entity
 @Table(name = "bc_cad_produto", schema = "brasil_saas")
@@ -61,8 +59,7 @@ public class Produto extends TenantEntity {
     private String tipo = "PRODUTO";
     @Column(nullable = false)
     private Boolean ativo = Boolean.TRUE;
-    @OneToMany(mappedBy = "produto", orphanRemoval = true)
-    @Cascade(CascadeType.ALL)
+    @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProdutoVariacao> variacoes = new ArrayList<>();
     @OneToMany(mappedBy = "produto")
     private List<ProdutoImagem> imagens = new ArrayList<>();

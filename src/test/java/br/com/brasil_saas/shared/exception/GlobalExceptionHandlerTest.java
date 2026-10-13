@@ -19,7 +19,7 @@ class GlobalExceptionHandlerTest {
     void statusProprioPreservado() {
         when(req.getRequestURI()).thenReturn("/api/x");
         var r = handler.comStatusProprio(
-                new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "periodo"), req);
+                new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "periodo"), req);
         assertEquals(422, r.getStatusCode().value());
         assertEquals("periodo", r.getBody().getErrors().get(0).getMessage());
     }

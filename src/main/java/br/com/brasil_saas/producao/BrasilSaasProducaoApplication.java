@@ -23,7 +23,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 public class BrasilSaasProducaoApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(BrasilSaasProducaoApplication.class, args);
     }
 }

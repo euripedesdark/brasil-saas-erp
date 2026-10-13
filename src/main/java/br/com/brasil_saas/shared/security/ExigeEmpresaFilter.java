@@ -2,7 +2,7 @@ package br.com.brasil_saas.shared.security;
 
 import br.com.brasil_saas.shared.model.ApiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

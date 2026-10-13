@@ -4,8 +4,6 @@ import br.com.brasil_saas.enterprise.model.TmsParada;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TmsParadaRepository extends JpaRepository<TmsParada, Long> {

@@ -24,8 +24,8 @@ public class RenegociacaoService {
     }
     @Transactional public Renegociacao renegociar(Long empresaId, Long tituloId, LocalDate novoVencimento, BigDecimal acrescimo, String observacao) {
         Titulo t = exigir(titulos.findByIdAndEmpresaIdAndDeletedAtIsNull(tituloId, empresaId), "Titulo inexistente");
-        if (!"ABERTO".equals(t.getStatus()) && !"PARCIAL".equals(t.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Titulo nao esta em aberto");
-        if (novoVencimento == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Novo vencimento obrigatorio");
+        if (!"ABERTO".equals(t.getStatus()) && !"PARCIAL".equals(t.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Titulo nao esta em aberto");
+        if (novoVencimento == null) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Novo vencimento obrigatorio");
         BigDecimal ac = acrescimo == null ? BigDecimal.ZERO : acrescimo;
         BigDecimal novoValor = (t.getValorSaldo() == null ? BigDecimal.ZERO : t.getValorSaldo()).add(ac);
         Titulo n = new Titulo();

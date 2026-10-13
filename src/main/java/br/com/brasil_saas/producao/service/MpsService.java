@@ -21,7 +21,7 @@ public class MpsService {
         return repo.findByEmpresaIdAndPeriodoAndDeletedAtIsNull(empresaId, periodo);
     }
     @Transactional public List<MpsItem> gerar(Long empresaId, String periodo) {
-        if (periodo == null || !periodo.matches("\\d{4}-\\d{2}")) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Periodo AAAA-MM obrigatorio");
+        if (periodo == null || !periodo.matches("\\d{4}-\\d{2}")) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Periodo AAAA-MM obrigatorio");
         int ano = Integer.parseInt(periodo.substring(0, 4));
         int mes = Integer.parseInt(periodo.substring(5, 7));
         LocalDate ini = LocalDate.of(ano, mes, 1);
@@ -61,8 +61,8 @@ public class MpsService {
     }
     @Transactional public MpsItem confirmar(Long empresaId, Long id) {
         MpsItem m = repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Item MPS inexistente"));
-        if ("CONFIRMADO".equals(m.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Item MPS já está confirmado");
-        if (m.getQtdPlanejada() == null || m.getQtdPlanejada().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Quantidade planejada inválida");
+        if ("CONFIRMADO".equals(m.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Item MPS já está confirmado");
+        if (m.getQtdPlanejada() == null || m.getQtdPlanejada().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Quantidade planejada inválida");
         m.setStatus("CONFIRMADO");
         return repo.save(m);
     }

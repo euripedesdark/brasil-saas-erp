@@ -113,7 +113,7 @@ class EventoContabilServiceTest {
         when(regras.findFirstByEmpresaIdAndCodigoAndAtivoTrue(eq(1L), eq(EventoContabilService.EVT_BAIXA_TITULO)))
                 .thenReturn(Optional.of(regra(1L, 2L)));
         when(contabilidade.salvar(eq(1L), any())).thenThrow(
-                new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Periodo fechado"));
+                new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Periodo fechado"));
         when(pendencias.findByEmpresaIdAndOrigemTipoAndOrigemIdAndEvento(
                 anyLong(), anyString(), anyLong(), anyString())).thenReturn(Optional.empty());
         when(pendencias.save(any(CtbPendencia.class))).thenAnswer(inv -> inv.getArgument(0));

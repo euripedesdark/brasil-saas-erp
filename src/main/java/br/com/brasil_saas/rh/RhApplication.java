@@ -30,7 +30,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 )
 public class RhApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(RhApplication.class, args);
     }
 }

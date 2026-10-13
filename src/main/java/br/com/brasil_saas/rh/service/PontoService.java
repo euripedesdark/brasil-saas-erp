@@ -24,7 +24,7 @@ public class PontoService {
     private void exigirAtivo(Long empresaId, Long funcionarioId) {
         Funcionario f = exigir(funcionarios.findById(funcionarioId), "Funcionario inexistente");
         if (f.getEmpresaId() == null || !f.getEmpresaId().equals(empresaId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionario de outra empresa");
-        if (!Boolean.TRUE.equals(f.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Funcionario inativo");
+        if (!Boolean.TRUE.equals(f.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Funcionario inativo");
     }
     public List<Ponto> espelho(Long empresaId, Long funcionarioId, Integer ano, Integer mes) {
         exigirAtivo(empresaId, funcionarioId);
@@ -45,7 +45,7 @@ public class PontoService {
         else if (p.getS1() == null) p.setS1(agora);
         else if (p.getE2() == null) p.setE2(agora);
         else if (p.getS2() == null) p.setS2(agora);
-        else throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Dia ja fechado");
+        else throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Dia ja fechado");
         p.setHorasTrabalhadas(horas(p));
         p.setFalta(false);
         return repo.save(p);

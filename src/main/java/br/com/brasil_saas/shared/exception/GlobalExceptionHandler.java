@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> business(BusinessException ex, HttpServletRequest req) {
         log.warn("Regra de negócio: {}", ex.getMessage());
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), ex.getCode(), req);
+        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), ex.getCode(), req);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

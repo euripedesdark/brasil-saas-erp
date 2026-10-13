@@ -60,8 +60,8 @@ public class ProjetoServiceImpl implements ProjetoService {
     @Override @Transactional public PrjProjeto salvar(Long empresaId, PrjProjeto p) {
         p.setId(null);
         p.setEmpresaId(empresaId);
-        if (p.getNome() == null || p.getNome().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Nome do projeto é obrigatório");
-        if (p.getOrcamentoTotal() != null && p.getOrcamentoTotal().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Orçamento não pode ser negativo");
+        if (p.getNome() == null || p.getNome().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Nome do projeto é obrigatório");
+        if (p.getOrcamentoTotal() != null && p.getOrcamentoTotal().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Orçamento não pode ser negativo");
         if (p.getStatus() == null) p.setStatus("PLANEJADO");
         return projetos.save(p);
     }
@@ -97,12 +97,12 @@ public class ProjetoServiceImpl implements ProjetoService {
     }
     @Override @Transactional public PrjMovimento lancarMovimento(Long empresaId, Long projetoId, PrjMovimento m) {
         exigirProjeto(empresaId, projetoId);
-        if (!"CUSTO".equals(m.getTipo()) && !"RECEITA".equals(m.getTipo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo deve ser CUSTO ou RECEITA");
+        if (!"CUSTO".equals(m.getTipo()) && !"RECEITA".equals(m.getTipo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo deve ser CUSTO ou RECEITA");
         if (m.getEtapaId() != null) garantir(etapas.findByIdAndEmpresaIdAndDeletedAtIsNull(m.getEtapaId(), empresaId), "Etapa inexistente");
         m.setId(null);
         m.setEmpresaId(empresaId);
         m.setProjetoId(projetoId);
-        if (m.getValor() == null || m.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Valor do movimento não pode ser negativo");
+        if (m.getValor() == null || m.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Valor do movimento não pode ser negativo");
         if (m.getData() == null) m.setData(LocalDate.now());
         return movimentos.save(m);
     }
@@ -115,7 +115,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         r.setId(null);
         r.setEmpresaId(empresaId);
         r.setProjetoId(projetoId);
-        if (r.getProbabilidade() != null && (r.getProbabilidade() < 0 || r.getProbabilidade() > 100)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Probabilidade deve estar entre 0 e 100");
+        if (r.getProbabilidade() != null && (r.getProbabilidade() < 0 || r.getProbabilidade() > 100)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Probabilidade deve estar entre 0 e 100");
         if (r.getStatus() == null) r.setStatus("ABERTO");
         return riscos.save(r);
     }
@@ -128,7 +128,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         m.setId(null);
         m.setEmpresaId(empresaId);
         m.setProjetoId(projetoId);
-        if (m.getDescricao() == null || m.getDescricao().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Descrição da mudança é obrigatória");
+        if (m.getDescricao() == null || m.getDescricao().isBlank()) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Descrição da mudança é obrigatória");
         m.setStatus("SOLICITADA");
         return mudancas.save(m);
     }
@@ -136,7 +136,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         exigirProjeto(empresaId, projetoId);
         PrjMudanca m = exigir(mudancas.findByIdAndEmpresaIdAndDeletedAtIsNull(mudancaId, empresaId), "Mudanca inexistente");
         if (!m.getProjetoId().equals(projetoId)) throw new ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Mudanca de outro projeto");
-        if (!"SOLICITADA".equals(m.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Mudanca ja decidida");
+        if (!"SOLICITADA".equals(m.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Mudanca ja decidida");
         WkfDefinition d = workflow.definitions(empresaId).stream().filter(x -> "MUDANCA_PROJETO".equals(x.getEntidadeAlvo()) && Boolean.TRUE.equals(x.getAtivo())).findFirst().orElseGet(() -> {
             WkfDefinition n = new WkfDefinition();
             n.setCodigo("PRJ-MUDANCA");
@@ -153,7 +153,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         });
         WkfInstance inst = workflow.instanciaPara(empresaId, "MUDANCA_PROJETO", mudancaId).filter(x -> "EM_ANDAMENTO".equals(x.getStatus())).orElseGet(() -> workflow.abrir(empresaId, userId, "MUDANCA_PROJETO", mudancaId, d.getId(), m.getDescricao()));
         java.util.List<WkfTask> pend = workflow.tasks(empresaId, inst.getId()).stream().filter(x -> "PENDENTE".equals(x.getStatus())).toList();
-        if (pend.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Sem tarefa pendente no workflow");
+        if (pend.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Sem tarefa pendente no workflow");
         workflow.decidir(empresaId, userId, pend.get(0).getId(), aprovar, null);
         WkfInstance atual = workflow.instanciaPara(empresaId, "MUDANCA_PROJETO", mudancaId).orElse(inst);
         if ("REJEITADA".equals(atual.getStatus())) { m.setStatus("REJEITADA"); }
@@ -172,7 +172,7 @@ public class ProjetoServiceImpl implements ProjetoService {
         f.setId(null);
         f.setEmpresaId(empresaId);
         f.setProjetoId(projetoId);
-        if (f.getValor() == null || f.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Valor do faturamento não pode ser negativo");
+        if (f.getValor() == null || f.getValor().signum() < 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Valor do faturamento não pode ser negativo");
         if (f.getStatus() == null) f.setStatus("PREVISTO");
         return faturamentos.save(f);
     }
@@ -186,8 +186,8 @@ public class ProjetoServiceImpl implements ProjetoService {
         exigirProjeto(empresaId, projetoId);
         PrjFaturamento f = exigir(faturamentos.findByIdAndEmpresaIdAndDeletedAtIsNull(faturamentoId, empresaId), "Faturamento inexistente");
         if (!f.getProjetoId().equals(projetoId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Faturamento de outro projeto");
-        if ("FATURADO".equalsIgnoreCase(f.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento já foi realizado");
-        if (f.getValor() == null || f.getValor().signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Faturamento deve possuir valor positivo");
+        if ("FATURADO".equalsIgnoreCase(f.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Faturamento já foi realizado");
+        if (f.getValor() == null || f.getValor().signum() <= 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Faturamento deve possuir valor positivo");
         Titulo t = new Titulo();
         t.setEmpresaId(empresaId);
         t.setDescricao("Projeto #" + f.getProjetoId() + " - " + f.getDescricao());
@@ -209,7 +209,7 @@ public class ProjetoServiceImpl implements ProjetoService {
     private Long emitirNfseMarco(Long empresaId, PrjFaturamento f, Long servicoId, Long clienteId) {
         Cliente cli = clientes.findByIdAndEmpresaIdAndDeletedAtIsNull(clienteId, empresaId).orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Cliente inexistente"));
         Pessoa pess = cli.getPessoa();
-        if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Tomador sem documento");
+        if (pess == null || pess.getDocumento() == null || pess.getDocumento().isBlank()) throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Tomador sem documento");
         long proximoRps = 1L;
         java.util.Optional<br.com.brasil_saas.fiscal.model.Nfse> ult = nfseRepo.findTop1ByEmpresaIdOrderByIdDesc(empresaId);
         String numeroRps = ult.map(br.com.brasil_saas.fiscal.model.Nfse::getNumeroRps).orElse(null);

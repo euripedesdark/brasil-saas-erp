@@ -87,7 +87,7 @@ public class EsocialFilaService {
     public EsocialEvento registrar(Long empresaId, String tipo, Long funcionarioId, String payload) {
         String t = tipo == null ? "" : tipo.trim().toUpperCase();
         if (!TIPO_JT.containsKey(t)) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
                     "Tipo invalido: " + tipo + ". Use um dos: " + TIPO_JT.keySet());
         }
         EsocialEvento e = new EsocialEvento();
@@ -103,12 +103,12 @@ public class EsocialFilaService {
     public EsocialEvento transmitir(Long empresaId, Long id) {
         EsocialEvento e = exigir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Evento inexistente");
         if ("ENVIADO".equals(e.getStatus()) || "PROCESSADO".equals(e.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,
                     "Evento ja transmitido (status=" + e.getStatus() + ")");
         }
         String tipoJt = TIPO_JT.get(e.getTipo());
         if (tipoJt == null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tipo nao mapeado: " + e.getTipo());
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Tipo nao mapeado: " + e.getTipo());
         }
 
         Map<String, Object> corpo = new LinkedHashMap<>();
@@ -157,7 +157,7 @@ public class EsocialFilaService {
         EsocialEvento e = exigir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Evento inexistente");
         String proto = e.getProtocolo();
         if (proto == null || !proto.startsWith("JT-")) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Sem id JT no protocolo — transmita antes");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Sem id JT no protocolo — transmita antes");
         }
         try {
             Map<?, ?> body = rest.getForObject(baseUrl() + "/ocorrencias/" + proto.substring(3), Map.class);
@@ -190,7 +190,7 @@ public class EsocialFilaService {
     public void excluir(Long empresaId, Long id) {
         EsocialEvento e = exigir(repo.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Evento inexistente");
         if ("ENVIADO".equals(e.getStatus()) || "PROCESSADO".equals(e.getStatus())) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Evento ja enviado");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Evento ja enviado");
         }
         repo.delete(e);
     }

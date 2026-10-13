@@ -48,8 +48,8 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override @Transactional public DmsVersao novaVersao(Long empresaId, Long documentoId, String nomeArquivo, String contentType, byte[] conteudo, String comentario) {
         DmsDocumento d = exigir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId), "Documento inexistente");
-        if (conteudo == null || conteudo.length == 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Arquivo vazio");
-        if (conteudo.length > MAX_BYTES) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Arquivo acima de 25MB");
+        if (conteudo == null || conteudo.length == 0) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Arquivo vazio");
+        if (conteudo.length > MAX_BYTES) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Arquivo acima de 25MB");
         int v = versoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(documentoId, empresaId).stream().mapToInt(x -> x.getVersao() == null ? 0 : x.getVersao()).max().orElse(0) + 1;
         DmsVersao ver = new DmsVersao();
         ver.setDocumentoId(documentoId);
@@ -111,7 +111,7 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override @Transactional public DmsAprovacao decidir(Long empresaId, Long userId, Long aprovacaoId, boolean aprovar, String comentario) {
         DmsAprovacao a = exigir(aprovacoes.findByIdAndEmpresaIdAndDeletedAtIsNull(aprovacaoId, empresaId), "Aprovacao inexistente");
-        if (!"PENDENTE".equals(a.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Aprovacao ja decidida");
+        if (!"PENDENTE".equals(a.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Aprovacao ja decidida");
         a.setStatus(aprovar ? "APROVADA" : "REJEITADA");
         a.setDecididoPor(userId);
         a.setDecididoEm(LocalDateTime.now());
@@ -132,7 +132,7 @@ public class DmsServiceImpl implements DmsService {
     }
     @Override @Transactional public void excluir(Long empresaId, Long id) {
         DmsDocumento d = exigir(documentos.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Documento inexistente");
-        if (d.getReterAte() != null && d.getReterAte().isAfter(LocalDate.now())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Documento em retencao");
+        if (d.getReterAte() != null && d.getReterAte().isAfter(LocalDate.now())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Documento em retencao");
         var versoesDoc = versoes.findByDocumentoIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId);
         for (DmsVersao v : versoesDoc) {
             mongo.findByEmpresaIdAndTipoEntidadeAndEntidadeId(empresaId, "dms-versao", v.getId()).ifPresent(mongo::delete);

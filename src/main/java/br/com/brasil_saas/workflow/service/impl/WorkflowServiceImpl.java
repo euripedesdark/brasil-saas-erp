@@ -46,7 +46,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     @Override @Transactional public WkfInstance abrir(Long empresaId, Long userId, String entidadeTipo, Long entidadeId, Long definitionId, String observacao) {
         WkfDefinition d = exigir(definitions.findByIdAndEmpresaIdAndDeletedAtIsNull(definitionId, empresaId), "Definicao inexistente");
-        if (Boolean.FALSE.equals(d.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Definicao inativa");
+        if (Boolean.FALSE.equals(d.getAtivo())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Definicao inativa");
         WkfInstance i = new WkfInstance();
         i.setDefinitionId(d.getId());
         i.setEntidadeTipo(entidadeTipo);
@@ -105,16 +105,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     @Override @Transactional public WkfTask delegar(Long empresaId,Long userId,Long taskId,Long destinoId){
         WkfTask t=exigir(tasks.findByIdAndEmpresaIdAndDeletedAtIsNull(taskId,empresaId),"Tarefa inexistente");
-        if(!"PENDENTE".equals(t.getStatus()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Tarefa nao pendente");
+        if(!"PENDENTE".equals(t.getStatus()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,"Tarefa nao pendente");
         WkfInstance i=exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(t.getInstanceId(),empresaId),"Instancia inexistente");
-        if(!"EM_ANDAMENTO".equals(i.getStatus()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Instancia encerrada");
-        if(destinoId==null||destinoId<=0||String.valueOf(destinoId).equals(t.getResponsavel()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,"Destino invalido");
+        if(!"EM_ANDAMENTO".equals(i.getStatus()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,"Instancia encerrada");
+        if(destinoId==null||destinoId<=0||String.valueOf(destinoId).equals(t.getResponsavel()))throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT,"Destino invalido");
         t.setResponsavelAnterior(t.getResponsavel());t.setResponsavel(String.valueOf(destinoId));
         t.setDelegadoPor(userId);t.setDelegadoEm(LocalDateTime.now());return tasks.save(t);
     }
     @Override @Transactional public WkfTask decidir(Long empresaId, Long userId, Long taskId, boolean aprovar, String comentario) {
         WkfTask t = exigir(tasks.findByIdAndEmpresaIdAndDeletedAtIsNull(taskId, empresaId), "Tarefa inexistente");
-        if (!"PENDENTE".equals(t.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Tarefa ja decidida");
+        if (!"PENDENTE".equals(t.getStatus())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Tarefa ja decidida");
         if(t.getDelegadoEm()!=null&&!String.valueOf(userId).equals(t.getResponsavel()))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Tarefa delegada a outro usuario");
         WkfInstance i = exigir(instances.findByIdAndEmpresaIdAndDeletedAtIsNull(t.getInstanceId(), empresaId), "Instancia inexistente");
         t.setStatus(aprovar ? "APROVADA" : "REJEITADA");

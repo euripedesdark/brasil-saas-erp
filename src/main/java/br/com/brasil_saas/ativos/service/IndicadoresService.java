@@ -68,7 +68,7 @@ public class IndicadoresService {
             Manutencao n = new Manutencao();
             n.setEmpresaId(empresaId);
             n.setAtivoId(a.getId());
-            n.setNumero("PREV-" + a.getId() + "-" + String.valueOf(prevista));
+            n.setNumero("PREV-" + a.getId() + "-" + prevista);
             n.setTipo("PREVENTIVA"); n.setStatus("ABERTA"); n.setPrioridade("MEDIA");
             n.setDescricao("Preventiva gerada pelo MTBF");
             n.setDataProgramada(prevista);

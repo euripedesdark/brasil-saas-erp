@@ -35,11 +35,11 @@ public class CrmServiceImpl implements CrmService {
         l.setId(null);
         if (l.getEtapa() == null) l.setEtapa("PROSPECCAO");
         if (l.getStatus() == null) l.setStatus("ABERTO");
-        if (!ETAPAS.contains(l.getEtapa())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Etapa invalida");
+        if (!ETAPAS.contains(l.getEtapa())) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Etapa invalida");
         return leads.save(l);
     }
     @Override @Transactional public CrmLead moverEtapa(Long empresaId, Long id, String etapa) {
-        if (!ETAPAS.contains(etapa)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Etapa invalida");
+        if (!ETAPAS.contains(etapa)) throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Etapa invalida");
         CrmLead l = exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresaId), "Lead inexistente");
         l.setEtapa(etapa);
         if ("FECHAMENTO".equals(etapa)) l.setStatus("GANHO");
@@ -101,7 +101,7 @@ public class CrmServiceImpl implements CrmService {
     }
     @Override @Transactional public java.util.Map<String, Object> gerarPedido(Long empresaId, Long leadId, Long clienteId) {
         CrmLead l = exigir(leads.findByIdAndEmpresaIdAndDeletedAtIsNull(leadId, empresaId), "Lead inexistente");
-        if (!"ABERTO".equals(l.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY, "Lead nao esta aberto");
+        if (!"ABERTO".equals(l.getStatus())) throw new ResponseStatusException(org.springframework.http.HttpStatus.UNPROCESSABLE_CONTENT, "Lead nao esta aberto");
         PedidoVendaRequest req = new PedidoVendaRequest(empresaId, clienteId, null, "PEDIDO", "ABERTO", java.time.LocalDate.now(), null, null, null, java.math.BigDecimal.ZERO, null, "CRM", "Lead #" + l.getId() + " " + (l.getNome() == null ? "" : l.getNome()), java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO, java.util.List.of());
         PedidoVendaResponse pv = pedidos.criar(req.comEmpresaDa(empresaId));
         l.setEtapa("FECHAMENTO");

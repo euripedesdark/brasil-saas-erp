@@ -2,7 +2,6 @@ package br.com.brasil_saas.core.service;
 
 import br.com.brasil_saas.core.model.RelatorioResponse;
 import br.com.brasil_saas.financeiro.repository.LancamentoPartidaRepository;
-import br.com.brasil_saas.financeiro.repository.PlanoContasRepository;
 import br.com.brasil_saas.financeiro.repository.ProjecaoFluxoCaixaRepository;
 import br.com.brasil_saas.financeiro.repository.TituloRepository;
 import br.com.brasil_saas.fiscal.repository.NfeRepository;

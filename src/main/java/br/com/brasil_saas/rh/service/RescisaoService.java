@@ -81,7 +81,7 @@ public class RescisaoService {
 
     private Map<String, Object> montarCalculo(Funcionario f, LocalDate desligamento, String motivo) {
         if (f.getDataAdmissao() == null) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Sem data de admissao");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Sem data de admissao");
         }
         if (desligamento == null) desligamento = LocalDate.now();
         if (motivo == null || motivo.isBlank()) motivo = "SEM_JUSTA_CAUSA";
