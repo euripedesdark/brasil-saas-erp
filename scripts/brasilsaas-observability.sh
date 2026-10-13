@@ -78,7 +78,6 @@ install_dependencies() {
     
     # Instalar dependencias necessarias
     local deps=(
-        "openjdk-21-jdk"
         "postgresql"
         "postgresql-client"
         "netcat-openbsd"
@@ -106,130 +105,21 @@ install_dependencies() {
 setup_graylog() {
     log_header "Configurando Graylog"
     
-    # Verificar se Graylog ja esta instalado
-    if command -v graylog-server &> /dev/null; then
-        log_info "Graylog ja esta instalado"
-    else
-        log_info "Instalando Graylog..."
-        
-        # Adicionar repositorio Graylog
-        sudo apt-get install -y apt-transport-https -qq
-        wget -qO - https://packages.graylog2.org/repo/deb/graylog-key.pub | sudo apt-key add -
-        echo "deb https://packages.graylog2.org/repo/deb/ stable main" | sudo tee /etc/apt/sources.list.d/graylog.list
-        
-        sudo apt-get update -qq
-        sudo apt-get install -y graylog-server -qq
-        
-        log_info "Graylog instalado"
-    fi
-    
-    # Configurar Graylog
-    log_info "Configurando Graylog..."
-    
-    # Backup do arquivo original
-    sudo cp /etc/graylog-server/server.conf /etc/graylog-server/server.conf.bak
-    
-    # Configurar server.conf
-    sudo sed -i 's/^#http_bind_address.*/http_bind_address = 0.0.0.0:9000/' /etc/graylog-server/server.conf
-    sudo sed -i 's/^#http_external_uri.*/http_external_uri = http:\/\/localhost:9000\/' /etc/graylog-server/server.conf
-    sudo sed -i 's/^#elasticsearch_hosts.*/elasticsearch_hosts = http:\/\/localhost:9200/' /etc/graylog-server/server.conf
-    
-    # Configurar password secret
-    local secret=$(pwgen -N 1 -s 96 2>/dev/null || openssl rand -hex 96)
-    sudo sed -i "s/^#password_secret.*/password_secret = $secret/" /etc/graylog-server/server.conf
-    
-    # Configurar root password sha2
-    local root_password_hash=$(echo -n "brasil-saas2026" | sha256sum | awk '{print $1}')
-    sudo sed -i "s/^#root_password_sha2.*/root_password_sha2 = $root_password_hash/" /etc/graylog-server/server.conf
-    
-    # Reiniciar Graylog
-    sudo systemctl restart graylog-server
-    sudo systemctl enable graylog-server
-    
-    log_info "Graylog configurado"
-    log_info "Acesse: http://localhost:9000"
-    log_info "Usuario: admin"
-    log_info "Senha: brasil-saas2026"
+    local reuse_status=0
+    reuse_observability_service graylog graylog-server.service || reuse_status=$?
+    [[ "$reuse_status" == 0 ]] && return 0
+    [[ "$reuse_status" == 1 ]] || return "$reuse_status"
+    log_error "Graylog ausente. Use o instalador Astral atualizado; este script nao provisiona uma pilha paralela."
+    return 1
 }
 
-# Configurar Elasticsearch
-setup_elasticsearch() {
-    log_header "Configurando Elasticsearch"
-    
-    # Verificar se Elasticsearch ja esta instalado
-    if command -v elasticsearch &> /dev/null; then
-        log_info "Elasticsearch ja esta instalado"
-    else
-        log_info "Instalando Elasticsearch..."
-        
-        # Adicionar repositorio Elasticsearch
-        wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
-        echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
-        
-        sudo apt-get update -qq
-        sudo apt-get install -y elasticsearch -qq
-        
-        log_info "Elasticsearch instalado"
-    fi
-    
-    # Configurar Elasticsearch
-    log_info "Configurando Elasticsearch..."
-    
-    # Backup
-    sudo cp /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.bak
-    
-    # Configurar cluster name
-    sudo sed -i 's/^#cluster.name.*/cluster.name: graylog/' /etc/elasticsearch/elasticsearch.yml
-    
-    # Configurar network host
-    sudo sed -i 's/^#network.host.*/network.host: 0.0.0.0/' /etc/elasticsearch/elasticsearch.yml
-    
-    # Configurar discovery type
-    sudo sed -i 's/^#discovery.type.*/discovery.type: single-node/' /etc/elasticsearch/elasticsearch.yml
-    
-    # Configurar JVM heap size
-    sudo sed -i 's/^-Xms1g/-Xms2g/' /etc/elasticsearch/jvm.options.d/jvm.options
-    sudo sed -i 's/^-Xmx1g/-Xmx2g/' /etc/elasticsearch/jvm.options.d/jvm.options
-    
-    # Reiniciar Elasticsearch
-    sudo systemctl restart elasticsearch
-    sudo systemctl enable elasticsearch
-    
-    log_info "Elasticsearch configurado"
-    
-    # Aguardar Elasticsearch iniciar
-    log_info "Aguardando Elasticsearch iniciar..."
-    sleep 30
-}
-
-# Configurar MongoDB
 setup_mongodb() {
-    log_header "Configurando MongoDB"
-    
-    # Verificar se MongoDB ja esta instalado
-    if command -v mongod &> /dev/null; then
-        log_info "MongoDB ja esta instalado"
-    else
-        log_info "Instalando MongoDB..."
-        
-        # Adicionar repositorio MongoDB
-        wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
-        echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-        
-        sudo apt-get update -qq
-        sudo apt-get install -y mongodb-org -qq
-        
-        log_info "MongoDB instalado"
-    fi
-    
-    # Configurar MongoDB
-    log_info "Configurando MongoDB..."
-    
-    # Iniciar MongoDB
-    sudo systemctl start mongod
-    sudo systemctl enable mongod
-    
-    log_info "MongoDB configurado"
+    local reuse_status=0
+    reuse_observability_service mongo mongod.service || reuse_status=$?
+    [[ "$reuse_status" == 0 ]] && return 0
+    [[ "$reuse_status" == 1 ]] || return "$reuse_status"
+    log_error "MongoDB ausente. Provisione uma unica instancia compativel com o Graylog instalado."
+    return 1
 }
 
 # Configurar Prometheus
@@ -559,6 +449,9 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+source "$BASE_DIR/scripts/shared-observability.sh"
+observability_lock
+
 # Parsing de argumentos
 COMMAND="${1:-all}"
 
@@ -567,7 +460,6 @@ case "$COMMAND" in
         log_header "INICIANDO CONFIGURACAO COMPLETA DE OBSERVABILIDADE"
         
         install_dependencies
-        setup_elasticsearch
         setup_mongodb
         setup_graylog
         setup_prometheus
@@ -580,13 +472,12 @@ case "$COMMAND" in
         
         log_header "CONFIGURACAO CONCLUIDA"
         log_info "Acesse:"
-        log_info "  Graylog: http://localhost:9000 (admin/brasil-saas2026)"
+        log_info "  Graylog: endereco e credenciais da instalacao existente"
         log_info "  Prometheus: http://localhost:9090"
         log_info "  Grafana: http://localhost:3000 (admin/admin)"
         log_info "  Alertmanager: http://localhost:9093"
         ;;
     graylog)
-        setup_elasticsearch
         setup_mongodb
         setup_graylog
         ;;
@@ -634,7 +525,7 @@ case "$COMMAND" in
         echo "Uso: $0 [COMMAND]"
         echo ""
         echo "Comandos:"
-        echo "  all         - Configurar tudo (Elasticsearch, MongoDB, Graylog, Prometheus, Grafana)"
+        echo "  all         - Reutilizar MongoDB/Graylog e configurar Prometheus/Grafana"
         echo "  graylog    - Configurar apenas Graylog"
         echo "  prometheus - Configurar apenas Prometheus"
         echo "  grafana    - Configurar apenas Grafana"
