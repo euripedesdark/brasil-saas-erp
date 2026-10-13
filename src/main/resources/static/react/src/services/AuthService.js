@@ -42,17 +42,21 @@ export const authService = {
             const message =
                 error.response?.data?.message ||
                 error.response?.data?.data?.message ||
-                error.message ||
-                'Erro de conexão';
+                (error.response?.status === 401 || error.response?.status === 422
+                    ? 'Usuário ou senha inválidos'
+                    : error.response?.status >= 500
+                        ? 'Serviço de autenticação indisponível. Tente novamente mais tarde.'
+                        : error.response
+                            ? 'Não foi possível autenticar. Verifique os dados e tente novamente.'
+                            : 'Não foi possível conectar ao servidor de autenticação.');
             throw new Error(message);
         }
     },
 
     async logout() {
         try {
-            await api.post('/auth/logout');
-        } catch (error) {
-            console.error('Erro ao fazer logout:', error);
+            // Logout local: não há endpoint de revogação /auth/logout no backend.
+            // O access token permanece válido até expirar; revogação exige suporte no servidor.
         } finally {
             localStorage.removeItem('brasil-saas_token');
             localStorage.removeItem('brasil-saas_refresh_token');
