@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RomaneioProducaoRepository extends JpaRepository<RomaneioProducao, Long> {
-    @EntityGraph(attributePaths = {"producao", "producao.itens"})
+    @EntityGraph(attributePaths = {"itens", "producao", "producao.itens"})
     List<RomaneioProducao> findByEmpresaIdAndDeletedAtIsNullOrderByDataRomaneioDesc(Long empresaId);
 }
