@@ -48,7 +48,7 @@ export const EmpresaLogo = () => {
 
         setLoading(true);
         try {
-            await EmpresaLogoService.uploadLogo(selectedFile);
+            await EmpresaLogoService.uploadLogo(user?.empresaId, selectedFile);
             toast.current?.show({
                 severity: 'success',
                 summary: 'Sucesso',
@@ -72,7 +72,7 @@ export const EmpresaLogo = () => {
     const removerLogo = async () => {
         setLoading(true);
         try {
-            await EmpresaLogoService.deleteLogo();
+            await EmpresaLogoService.deleteLogo(user?.empresaId);
             toast.current?.show({
                 severity: 'success',
                 summary: 'Sucesso',

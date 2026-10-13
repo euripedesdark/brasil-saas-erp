@@ -3,11 +3,11 @@ import ApiConfig, { apiFetch } from './ApiConfig';
 const BASE_URL = ApiConfig.API_BASE_URL;
 
 export const EmpresaLogoService = {
-    async uploadLogo(file) {
+    async uploadLogo(id, file) {
         const formData = new FormData();
         formData.append('logo', file);
 
-        const response = await apiFetch(`${BASE_URL}/core/empresas/logo`, {
+        const response = await apiFetch(`${BASE_URL}/core/empresas/${id}/logo`, {
             method: 'POST',
             body: formData,
         });
@@ -19,7 +19,7 @@ export const EmpresaLogoService = {
     },
 
     async getLogo(id) {
-        const response = await apiFetch(`${BASE_URL}/core/empresas/logo/${id}`, {
+        const response = await apiFetch(`${BASE_URL}/core/empresas/${id}/logo`, {
             method: 'GET',
         });
         if (!response.ok) {
@@ -28,8 +28,8 @@ export const EmpresaLogoService = {
         return await response.blob();
     },
 
-    async deleteLogo() {
-        const response = await apiFetch(`${BASE_URL}/core/empresas/logo`, {
+    async deleteLogo(id) {
+        const response = await apiFetch(`${BASE_URL}/core/empresas/${id}/logo`, {
             method: 'DELETE',
         });
         if (!response.ok) {
