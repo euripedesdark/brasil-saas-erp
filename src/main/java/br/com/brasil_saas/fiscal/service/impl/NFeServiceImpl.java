@@ -31,7 +31,6 @@ import br.com.swconsultoria.nfe.util.XmlImpostoUtil;
 import br.com.swconsultoria.nfe.util.XmlNfeUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,7 +42,6 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(name = "brasil-saas.fiscal.sefaz.enabled", havingValue = "true")
 public class NFeServiceImpl implements NFeService {
 
     private final SefazConfig sefazConfig;
