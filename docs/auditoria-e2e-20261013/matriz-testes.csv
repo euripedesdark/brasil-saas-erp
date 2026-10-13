@@ -1,0 +1,79 @@
+ID,Tela,Rota,Teste,Resultado,Evidencia,Severidade
+AUTH-001,Login,/login,Carregamento da página,APROVADO,screenshot login pb,-
+AUTH-002,Login,/login,Login válido emilly → /inicio,APROVADO,200 login/ad + redirect,-
+AUTH-003,Login,/login,Login inválido permanece + mensagem,APROVADO,422 + msg (obs: texto cru axios),Baixa
+AUTH-004,Sessão,/api/auth/me,Persistência (200),APROVADO,me 200,-
+AUTH-005,Logout,menu Sair,Logout → /login + /me 401,APROVADO,redirect + 401,-
+AUTH-006,Logout,/api/auth/logout,Endpoint retorna 404,REPROVADO,404 POST logout,Média
+AUTH-007,Rotas,*,Proteção sem auth,NÃO EXECUTADO,perfil compartilhado,-
+AUTH-008,Sessão,*,Expiração/rotação completa,NÃO EXECUTADO,preservar sessão do audit,-
+AUTH-009,Refresh,/api/auth/refresh,Token falso rejeitado 422,APROVADO,INVALID_REFRESH_TOKEN,-
+AUTH-010,Permissões,*,403 por perfil respeitado,APROVADO,vários 403 ACESSO_NEGADO,-
+AUTH-011,Tenant,*,Isolamento entre empresas,NÃO EXECUTADO,1 empresa no perfil,-
+AUTH-012,i18n,header,Troca para English + persistência,APROVADO,localStorage en-US + screenshot,-
+AUTH-013,i18n,header,7 labels sem tradução EN,REPROVADO,Ativos/Metais/Portais etc em PT,Baixa
+AUTH-014,i18n,*,ES/FR via UI,NÃO EXECUTADO,arquivos verificados (40 chaves),-
+NAV-001,Início,/inicio,Carregamento sem erros,APROVADO,0 console/rede,-
+NAV-002,Dashboard,/dashboard,Tabela 5 linhas sem erros,APROVADO,snapshot,-
+CAD-001,Clientes,/cadastro/clientes,Lista bloqueada 403 p/ perfil,BLOQUEADO,403 ACESSO_NEGADO,-
+CAD-002,Produtos,/cadastro/produtos,Lista 10 linhas + dados,APROVADO,sample preços,-
+CAD-003,Produtos,filtros,Categorias/marcas/unidades 403,BLOQUEADO (parcial),3x 403,-
+CAD-004,Produtos API,*,Paginação/ordenação,APROVADO,175 itens asc/desc/page999 vazio,-
+CAD-005,Fornecedores/Pessoas,*,Lista 403 p/ perfil,BLOQUEADO,403,-
+VEN-001,Vendas,/vendas,10 pedidos com valores,APROVADO,PV-* Cancelado,-
+VEN-002,Vendas,*,Resolução de nomes 403 parcial,APROVADO com ressalva,clientes 403,-
+COM-001,Compras,/compras,Pedidos/fornecedores 403,BLOQUEADO,2x 403,-
+EST-001,Estoque,/estoque,15 linhas sem erros,APROVADO,,-
+EST-002,Saldos,/estoque/saldos,15 saldos com qtde real,APROVADO,740.714459,-
+EST-003,Movimentações,/estoque/movimentacoes,15 sem erros,APROVADO,,-
+EST-004,Depósitos,/estoque/depositos,10 sem erros,APROVADO,,-
+EST-005,Endereços,/estoque/enderecos,10 sem erros,APROVADO,,-
+EST-006,Lotes,/estoque/lotes,1 linha sem erros,APROVADO,,-
+EST-007,Inventários,/estoque/inventarios,1 linha sem erros,APROVADO,,-
+EST-008,Transferências,/estoque/transferencias,11 em 2 tabelas,APROVADO,,-
+EST-009,Expedições,/estoque/expedicoes,1 linha sem erros,APROVADO,,-
+FIN-001,Títulos,/financeiro/titulos,12 sem erros,APROVADO,,-
+FIN-002,Plano de contas,/financeiro/plano-contas,10 (dados SEED),APROVADO,obs dados teste,-
+FIN-003,Conciliação,/financeiro/conciliacao,10 sem erros,APROVADO,,-
+FIN-004,Caixa,/financeiro/caixa,20 sem erros,APROVADO,,-
+FIS-001,Painel,/fiscal/painel,NCM 10515 + tabelas,APROVADO,contagem confere,-
+FIS-002,NCM,/fiscal/ncm,50 linhas sem erros,APROVADO,,-
+FIS-003,NFe API,/api/fiscal/nfe,404 (controller condicional),REPROVADO,ConditionalOnProperty sefaz,Alta
+CRM-001,CRM,/crm,Leads [] sem erros,APROVADO,,-
+CRM-002,Atividades API,*,?pendentes=true → 500,REPROVADO (CORRIGIDO),UnsupportedOperationException,Alta
+RH-001,RH,/rh,10 sem erros,APROVADO,,-
+PRO-001,Produção,/producao,11 em 2 tabelas,APROVADO,,-
+PRO-002,Romaneios API,*,500 LazyInit Producao.itens,REPROVADO (CORRIGIDO),stack no log,Alta
+PRO-003,Roteiros,/producao/roteiros,Vazio [] sem erros,APROVADO,,-
+SRV-001,Ordens,/servicos/ordens,20 sem erros,APROVADO,,-
+CTB-001,Contabilidade,/contabilidade,Carrega sem erros,APROVADO,,-
+ADM-001,Usuários,/admin/usuarios,403 superadmin (correto),APROVADO (bloqueio correto),,-
+ADM-002,SQL,/admin/sql,Tela controlada sem erros,APROVADO,,-
+ADM-003,Usuários API,*,Base GET 404 (sem mapping),REPROVADO,contract mismatch,Média
+ADM-004,Empresas API,*,Base GET 404 (sem mapping),REPROVADO,contract mismatch,Média
+BI-001,BI,/bi,403 p/ perfil (ADMIN-only correto),BLOQUEADO (correto),,-
+BI-002,KPIs,/bi/kpis,Carrega sem erros,APROVADO,,-
+BI-003,Reports API,*,500 LazyInit parameters,REPROVADO (CORRIGIDO),stack no log,Alta
+BI-004,Resumo API,*,400 sem inicio/fim (validação ok),APROVADO,REQUISICAO_INVALIDA,-
+BI-005,ETL,banco,775 registros = referência,APROVADO,275/116/268/116,-
+BI-006,Views,banco,Views retornam dados,APROVADO,v_fin 275 v_vendas 268,-
+BI-007,Datasource,config,Dedicado desabilitado (opt-in),APROVADO com ressalva,env ausente,-
+BI-008,Dashboards UI,*,BLOQUEADO p/ perfil,NÃO EXECUTADO,depende ADM,-
+HLP-001,Helpdesk,/helpdesk,Carrega sem erros,APROVADO,,-
+AGD-001,Agenda,/agenda,Carrega sem erros,APROVADO,,-
+DMS-001,DMS,/dms,2 tabelas 2 linhas,APROVADO,,-
+PRJ-001,Projetos,/projetos,1 linha sem erros,APROVADO,,-
+QLD-001,Qualidade,/qualidade,1 linha sem erros,APROVADO,,-
+ATV-001,Ativos,/ativos,1 linha sem erros,APROVADO,,-
+GLV-001,Go-live,/golive,Carrega sem erros,APROVADO,,-
+CFG-001,Empresa,/configurar-empresa,Dados + Stripe sem erros,APROVADO,,-
+CFG-002,Logo API,*,GET logo 404 (path invertido),REPROVADO (CORRIGIDO),frontend vs backend,Média
+ENT-001,GRC/TMS,/riscos-tms-enterprise,Carrega sem erros,APROVADO,,-
+ENT-002,Supply,/supply-chain-enterprise,Carrega sem erros,APROVADO,,-
+ENT-003,EHS UI,*,Rota /enterprise/ehs/riscos/ dá 404 app,TESTE INVÁLIDO (prefixo de API),-
+ENT-004,Intercompany API,*,eliminacoes 200 shape correto,APROVADO,,-
+ENT-005,Enterprise APIs,*,grc/tms/corporate/plm/demanda 200 [],APROVADO,,-
+CAD-W,Cadastros,*,Criar/editar/excluir>NÃO EXECUTADO,sem autorização escrita em prod,-
+INT-W,Integrações,*,Fluxos ponta a ponta com escrita,NÃO EXECUTADO,sem autorização escrita em prod,-
+FIS-W,Fiscal,*,Emissão/transmissão real,NÃO EXECUTADO,homologação requerida,-
+PAY-W,Financeiro,*,Pagamentos/cobranças reais,NÃO EXECUTADO,sem autorização,-

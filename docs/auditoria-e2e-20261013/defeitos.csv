@@ -1,0 +1,15 @@
+ID,Titulo,Modulo,Severidade,Status,Endpoint/Evidencia,Causa provável,Correção
+BUG-001,Endpoints leitura NFe retornam 404,Fiscal,Alta,ABERTO,GET /api/fiscal/nfe → 404,@ConditionalOnProperty sefaz.enabled=false desliga controller inteiro,Separar leitura (sempre ativa) da emissão (condicional)
+BUG-002,GET /api/bi/reports → 500 LazyInitializationException,BI,Alta,CORRIGIDO (f9e2d6c9 — reteste pós-deploy pendente),stack GlobalExceptionHandler Report.parameters,Serializar coleção lazy fora da sessão,EntityGraph parameters em findByEmpresaId/findByIdAndEmpresaId
+BUG-003,GET /api/crm/atividades?pendentes=true → 500,CRM,Alta,CORRIGIDO (61e96a15 — reteste pendente),UnsupportedOperationException CrmServiceImpl:87,Stream.toList() imutável + sort mutável,collect(Collectors.toList())
+BUG-004,GET /api/producao/romaneios → 500,Produção,Alta,CORRIGIDO (067a146e — reteste pendente),LazyInit Producao.itens via romaneio,EntityGraph producao.itens no finder
+BUG-005,Logo da empresa 404 (GET/POST/DELETE),Core,Média,CORRIGIDO (a86c49d2 — reteste pendente),frontend chama /core/empresas/logo/{id} vs backend /core/empresas/{id}/logo,Alinhar frontend ao backend (3 calls + lerUrl)
+BUG-006,POST /api/auth/logout → 404,Auth,Média,ABERTO,404 mas sessão é invalidada client-side,Endpoint inexistente/renomeado,Corrigir rota ou remover chamada
+BUG-007,GET /api/core/usuarios e /api/core/empresas → 404,Admin,Média,ABERTO,frontend chama base inexistente no backend,Mapear endpoints ou ajustar frontend
+BUG-008,Mensagem de login inválido expõe texto cru axios,Auth,Baixa,ABERTO,"Request failed with status code 422",Falta tratamento amigável,Traduzir erro de auth no frontend
+BUG-009,7 labels sem tradução EN (fallback PT),i18n,Baixa,ABERTO,"Ativos e Manutenção, Portais, Metas..." ,Chaves ausentes em en-US.json,Completar locales
+BUG-010,Relatórios SEED com SQL placeholder inválido (11.919 erros),BI/Dados,Média,ABERTO,scheduler hourly falha validação,Limpar/corrigir query_sql dos SEED
+INFRA-001,Login AD fora do ar (auth-service LDAP 192.168.2.10:636 fechada + truststore),Infra,Crítica,CORRIGIDO E RETESTADO (login 200),samba não escuta .2.10 + CA fora do cacerts,Apontar p/ 127.0.0.1:636 + importar CA + restart
+INFRA-002,RabbitMQ caído desde o boot,Infra,Alta,CORRIGIDO (restart 10:2x — health UP),failed 06:07,Restart + investigar causa do boot
+INFRA-003,Deploy marca falha por health-check curto,Deploy,Baixa,DOCUMENTADO,curl imediato pós-restart,Aumentar janela do health-check no script
+INFRA-004,Memória do host em 80% (6.3/7.8GB),Infra,Baixa,OBSERVAÇÃO,,Monitorar; ERP 1.34GB de 2GB Xmx
