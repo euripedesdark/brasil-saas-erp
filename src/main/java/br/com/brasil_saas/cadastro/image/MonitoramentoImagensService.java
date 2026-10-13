@@ -3,6 +3,7 @@ package br.com.brasil_saas.cadastro.image;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
@@ -14,9 +15,17 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchService;
 import java.util.Locale;
 
+/**
+ * Monitora pasta de entrada de imagens e vincula documentos Mongo pendentes
+ * ao produto correspondente no SQL.
+ *
+ * <p>O agendamento e o watcher podem ser desligados com
+ * {@code brasil-saas.imagens.monitoramento-enabled=false} (perfil de teste).
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(prefix = "brasil-saas.imagens", name = "monitoramento-enabled", havingValue = "true", matchIfMissing = true)
 public class MonitoramentoImagensService {
     private final ProdutoImagemService imagemService;
 
@@ -56,12 +65,19 @@ public class MonitoramentoImagensService {
 
     @Scheduled(fixedDelayString = "${brasil-saas.imagens.monitoramento-intervalo-ms:5000}")
     void vincularImagensPendentes() {
-        imagemService.vincularPendentes();
+        try {
+            imagemService.vincularPendentes();
+        } catch (Exception e) {
+            // Mongo indisponível / sem auth em ambiente de teste ou bootstrap:
+            // não deixa o LoggingErrorHandler do scheduler despejar stack a cada 5s.
+            log.debug("Vinculação de imagens pendentes adiada: {}", e.toString());
+        }
     }
 
     private boolean ehImagem(Path arquivo) {
         String nome = arquivo.getFileName().toString().toLowerCase(Locale.ROOT);
-        return nome.endsWith(".jpg") || nome.endsWith(".jpeg") || nome.endsWith(".png") || nome.endsWith(".gif") || nome.endsWith(".webp");
+        return nome.endsWith(".jpg") || nome.endsWith(".jpeg") || nome.endsWith(".png")
+                || nome.endsWith(".gif") || nome.endsWith(".webp");
     }
 
     private void importar(Path arquivo) {
@@ -73,7 +89,8 @@ public class MonitoramentoImagensService {
             byte[] conteudo = Files.readAllBytes(arquivo);
             String contentType = tipo;
             imagemService.localizarProduto(arquivo.getFileName().toString())
-                    .ifPresentOrElse(produto -> imagemService.salvar(produto, arquivo.getFileName().toString(), contentType, conteudo, false),
+                    .ifPresentOrElse(
+                            produto -> imagemService.salvar(produto, arquivo.getFileName().toString(), contentType, conteudo, false),
                             () -> imagemService.armazenarPendente(arquivo.getFileName().toString(), contentType, conteudo));
         } catch (Exception e) {
             log.warn("Falha ao importar imagem {}.", arquivo, e);
@@ -82,6 +99,7 @@ public class MonitoramentoImagensService {
 
     private String extensao(Path arquivo) {
         String nome = arquivo.getFileName().toString();
-        return nome.substring(nome.lastIndexOf('.') + 1);
+        int i = nome.lastIndexOf('.');
+        return i >= 0 ? nome.substring(i + 1) : "bin";
     }
 }

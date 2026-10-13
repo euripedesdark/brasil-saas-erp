@@ -64,3 +64,8 @@ logging:
   level:
     root: WARN
     br.com.brasil_saas: INFO
+
+# Monitor de imagens Mongo: desligado nos testes (sem Mongo autenticado)
+brasil-saas:
+  imagens:
+    monitoramento-enabled: false
