@@ -198,41 +198,34 @@ public class ReportServiceImpl implements ReportService {
         }
 
         Map<String, Object> values = parameters == null ? Map.of() : parameters;
-        String normalized = query;
-        ReportSqlParameters.validate(normalized);
-        MapSqlParameterSource source = new MapSqlParameterSource();
-
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
-            String key = entry.getKey();
-            String parameterName = "p_" + key.replaceAll("[^A-Za-z0-9_]", "_");
-            normalized = normalized
-                    .replace("{{" + key + "}}", ":" + parameterName)
-                    .replace(" + key + ", ":" + parameterName)
-                    .replace("{" + key + "}", ":" + parameterName)
-                    .replace(":" + key, ":" + parameterName);
-            source.addValue(parameterName, entry.getValue());
-        }
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(normalized, source);
-        List<String> columns = rows.isEmpty()
-                ? extractColumnsFromMetadata(normalized, source)
-                : new ArrayList<>(rows.get(0).keySet());
-
-        return new QueryData(columns, rows);
-    }
-
-    private List<String> extractColumnsFromMetadata(String sql, MapSqlParameterSource source) {
-        return jdbcTemplate.query(sql, source, rs -> {
-            var metadata = rs.getMetaData();
+        String normalized = ReportSqlParameters.bind(query, values);
+        MapSqlParameterSource source = new MapSqlParameterSource(values);
+        org.springframework.jdbc.core.JdbcTemplate limited = new org.springframework.jdbc.core.JdbcTemplate(
+                Objects.requireNonNull(jdbcTemplate.getJdbcTemplate().getDataSource()));
+        limited.setMaxRows(10001);
+        limited.setQueryTimeout(30);
+        limited.setFetchSize(200);
+        return new NamedParameterJdbcTemplate(limited).query(normalized, source, rs -> {
             List<String> columns = new ArrayList<>();
-            for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                columns.add(metadata.getColumnLabel(i));
+            for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) columns.add(rs.getMetaData().getColumnLabel(i));
+            List<Map<String, Object>> rows = new ArrayList<>();
+            var mapper = new org.springframework.jdbc.core.ColumnMapRowMapper();
+            while (rs.next()) {
+                if (rows.size() == 10000) throw new IllegalArgumentException("Relatorio excede 10000 registros; refine filtros");
+                rows.add(mapper.mapRow(rs, rows.size()));
             }
-            return columns;
+            return new QueryData(columns, rows);
         });
     }
 
     private byte[] generatePdf(QueryData data, Report report) {
+        if ("FISCAL".equalsIgnoreCase(report.getCategory())) return generateFiscalPdf(data, report);
+        return br.com.brasil_saas.core.service.report.JasperReportRenderer.shared().pdf(
+                report.getName(), report.getDescription(), "Empresa " + report.getEmpresaId(),
+                data.rows(), data.columns(), Map.of());
+    }
+
+    private byte[] generateFiscalPdf(QueryData data, Report report) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             Document document = new Document(PageSize.A4.rotate(), 24, 24, 30, 24);

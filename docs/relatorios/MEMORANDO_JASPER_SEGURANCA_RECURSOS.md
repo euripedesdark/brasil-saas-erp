@@ -1,5 +1,7 @@
 # Memorando 02 — dados seguros e custo dos relatórios
 
+> Documento da etapa de planejamento. A implementação e as instruções atuais estão em [JAVA25_SPRING4_JASPER_IMPLANTACAO.md](../infra/JAVA25_SPRING4_JASPER_IMPLANTACAO.md).
+
 ## Segurança
 
 Jasper é o motor de apresentação; não saneia consultas montadas com entradas.

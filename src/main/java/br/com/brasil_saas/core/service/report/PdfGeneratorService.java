@@ -47,7 +47,7 @@ public class PdfGeneratorService {
      * @param resumo Resumo/estatísticas
      * @return Byte array do PDF
      */
-    public byte[] generateReport(
+    public byte[] generateFiscalReport(
             String title, 
             String subtitle,
             Long empresaId,
@@ -84,6 +84,14 @@ public class PdfGeneratorService {
         return baos.toByteArray();
     }
 
+    public byte[] generateReport(String title, String subtitle, Long empresaId, String empresaNome,
+            LocalDate dataGeracao, List<Map<String, Object>> dados, List<String> columns,
+            Map<String, Object> resumo) throws DocumentException, IOException {
+        return JasperReportRenderer.shared().pdf(title, subtitle,
+                empresaNome == null || empresaNome.isBlank() ? "Empresa " + empresaId : empresaNome,
+                dados, columns, resumo);
+    }
+
     /**
      * Gera PDF de Ordem de Serviço
      */
@@ -92,33 +100,9 @@ public class PdfGeneratorService {
             List<Map<String, Object>> itens,
             String empresaNome) throws DocumentException, IOException {
         
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Document document = new Document(PageSize.A4, 36, 36, 54, 36);
-        PdfWriter writer = PdfWriter.getInstance(document, baos);
-        
-        document.open();
-        
-        // Cabeçalho
-        addHeader(document, "Ordem de Serviço", 
-                  "Nº " + osData.get("numero"), 
-                  empresaNome, 
-                  LocalDate.now());
-        
-        // Dados da OS
-        addOsDetails(document, osData);
-        
-        // Itens
-        addOsItens(document, itens);
-        
-        // Totais
-        addOsTotais(document, osData);
-        
-        // Rodapé
-        addFooter(document, writer);
-        
-        document.close();
-        
-        return baos.toByteArray();
+        Map<String, Object> detalhes = new java.util.LinkedHashMap<>(osData);
+        return JasperReportRenderer.shared().pdf("Ordem de Serviço", "Nº " + osData.get("numero"),
+                empresaNome, itens, List.of("codigo", "descricao", "quantidade", "valorUnitario"), detalhes);
     }
 
     /**

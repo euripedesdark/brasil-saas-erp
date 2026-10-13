@@ -2238,5 +2238,15 @@
     "phrase0752": "Numéro (facultatif)",
     "phrase0753": "Nouveau ticket",
     "phrase0754": "Gravité"
+  },
+  "memorando": {
+    "title": "Note de service",
+    "numero": "Numéro",
+    "assunto": "Objet",
+    "destinatario": "Destinataire",
+    "texto": "Texte",
+    "generate": "Générer le PDF",
+    "error": "Impossible de générer la note.",
+    "success": "Note générée."
   }
 }

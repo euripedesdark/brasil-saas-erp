@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent – Spring Boot 3.5 (atualizacoes de seguranca) -->
+    <!-- Parent – Spring Boot 4.1 / Java 25 -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -20,9 +20,7 @@
 
     <!-- =============== VERSION PROPERTIES =============== -->
     <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -55,11 +53,11 @@
         -->
         <lombok.version>1.18.48</lombok.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <springdoc.version>2.9.1</springdoc.version>
+        <springdoc.version>3.1.1</springdoc.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <flyway.version>10.17.0</flyway.version>
+
         <openpdf.version>3.0.5</openpdf.version>
-        <pdfbox.version>3.0.3</pdfbox.version>
+        <pdfbox.version>3.0.5</pdfbox.version>
         <poi.version>5.3.0</poi.version>
         <!-- TEMPORARIAMENTE FORA: JasperReports desativado (CVE-2025-10492 / CVE-2026-6009).
              Reativar com versão >= 7.x quando o módulo de relatórios voltar.
@@ -102,9 +100,16 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>2.0.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2025.0.3</version>
+                <version>2025.1.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -130,11 +135,39 @@
 
     <!-- =============== DEPENDENCIES =============== -->
     <dependencies>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId><artifactId>jasperreports</artifactId><version>7.0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>de.rototor.pdfbox</groupId><artifactId>graphics2d</artifactId><version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId><artifactId>jasperreports-fonts</artifactId><version>7.0.8</version>
+        </dependency>
 
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-jackson2</artifactId>
+        </dependency>
         <!-- ==== WEB ==== -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -185,12 +218,10 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>${flyway.version}</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>${flyway.version}</version>
         </dependency>
         <dependency>
             <groupId>org.hibernate.orm</groupId>
@@ -383,7 +414,7 @@
             <version>${java-cte.version}</version>
         </dependency>
 
-  
+
         <!-- ==== STRIPE ==== -->
         <dependency>
             <groupId>com.stripe</groupId>
@@ -401,12 +432,7 @@
         <!-- ==== IA ==== -->
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-            <!-- O starter GA do Spring AI 1.0.0 mudou de nome
-                 (spring-ai-starter-model-openai); o artefato ...-spring-boot-starter
-                 so existe ate 1.0.0-M3. Manter o nome atual exige a versao M3,
-                 senao a resolucao de dependencia quebra o build. -->
-            <version>1.0.0-M3</version>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
         <!-- ==== UTILITÁRIOS ==== -->
@@ -424,8 +450,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -474,6 +500,16 @@
 
         <plugins>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution><id>mockito-agent-path</id><phase>initialize</phase>
+                        <goals><goal>properties</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -495,8 +531,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <release>${java.version}</release>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -526,6 +561,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.1</version>
+                <configuration>
+                    <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
+                </configuration>
             </plugin>
 
             <!-- JaCoCo coverage -->
@@ -543,7 +581,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>10.17.0</version>
+                <version>${flyway.version}</version>
                 <configuration>
                     <url>${env.FLYWAY_URL:jdbc:postgresql://localhost:5432/brasil-saas}</url>
                     <user>${env.FLYWAY_USER:postgres}</user>

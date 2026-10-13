@@ -1,7 +1,7 @@
 package br.com.brasil_saas.shared.security;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;

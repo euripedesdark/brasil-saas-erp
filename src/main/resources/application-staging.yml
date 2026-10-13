@@ -6,9 +6,9 @@ server:
     include-binding-errors: never
 
 spring:
+  mongodb:
+    uri: "${SPRING_MONGODB_URI:${SPRING_DATA_MONGODB_URI:${MONGODB_URI}}}"
   data:
-    mongodb:
-      uri: ${MONGODB_URI}
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}

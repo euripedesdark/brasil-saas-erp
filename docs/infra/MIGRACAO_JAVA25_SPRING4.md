@@ -1,5 +1,7 @@
 # Java 25 e Spring Boot 4 — preparação verificável
 
+> Documento da etapa de planejamento. A implementação e as instruções atuais estão em [JAVA25_SPRING4_JASPER_IMPLANTACAO.md](../infra/JAVA25_SPRING4_JASPER_IMPLANTACAO.md).
+
 Estado: preparação automatizada, não homologada. Não executar deploy do candidato
 antes de adaptar APIs e observar compilação, testes e inicialização aprovados.
 

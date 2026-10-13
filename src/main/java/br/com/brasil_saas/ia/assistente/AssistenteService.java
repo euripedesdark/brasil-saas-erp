@@ -149,7 +149,7 @@ public class AssistenteService {
 
         final String resposta = chatClient.prompt()
                 .user(prompt)
-                .options(OpenAiChatOptions.builder().withModel(modelo).build())
+                .options(OpenAiChatOptions.builder().model(modelo))
                 .call()
                 .content();
         return resposta == null ? null : resposta.strip();

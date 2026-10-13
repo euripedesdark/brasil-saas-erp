@@ -1,0 +1,21 @@
+<jasperReport name="BrasilCloudMemorando" language="java" pageWidth="595" pageHeight="842" columnWidth="523" leftMargin="36" rightMargin="36" topMargin="36" bottomMargin="36" whenNoDataType="AllSectionsNoDetail">
+    <style name="Base" default="true" fontName="DejaVu Sans" fontSize="11.0"/>
+    <parameter name="TITLE" class="java.lang.String"/>
+    <parameter name="SUBTITLE" class="java.lang.String"/>
+    <parameter name="EMPRESA" class="java.lang.String"/>
+    <parameter name="GENERATED" class="java.lang.String"/>
+    <parameter name="SUMMARY" class="java.lang.String"/>
+    <title height="130">
+        <element kind="staticText" x="0" y="0" width="523" height="30" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="17.0" bold="true" vTextAlign="Middle"><text>BrasilCloud ERP | MEMORANDO</text></element>
+        <element kind="textField" x="0" y="42" width="523" height="32" fontSize="15.0" bold="true"><expression><![CDATA[$P{TITLE}]]></expression></element>
+        <element kind="textField" x="0" y="78" width="523" height="25"><expression><![CDATA[$P{SUBTITLE}]]></expression></element>
+        <element kind="textField" x="0" y="107" width="523" height="20"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
+    </title>
+    <pageFooter height="22">
+        <element kind="textField" x="0" y="0" width="420" height="20" fontSize="8.0"><expression><![CDATA["BrasilCloud ERP | " + $P{GENERATED}]]></expression></element>
+        <element kind="textField" x="420" y="0" width="103" height="20" fontSize="8.0" hTextAlign="Right"><expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression></element>
+    </pageFooter>
+    <summary height="100" splitType="Stretch">
+        <element kind="textField" x="0" y="0" width="523" height="100" textAdjust="StretchHeight"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
+    </summary>
+</jasperReport>

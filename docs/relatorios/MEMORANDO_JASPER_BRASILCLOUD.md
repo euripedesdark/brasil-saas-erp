@@ -1,5 +1,7 @@
 # Memorando 01 — relatórios Jasper do BrasilCloud ERP
 
+> Documento da etapa de planejamento. A implementação e as instruções atuais estão em [JAVA25_SPRING4_JASPER_IMPLANTACAO.md](../infra/JAVA25_SPRING4_JASPER_IMPLANTACAO.md).
+
 Status: especificação para implementação após resolver o runtime/serviços.
 O usuário excluiu a parte fiscal da conversão. Este memorando não declara que
 Jasper foi reativado ou que os relatórios foram migrados.
