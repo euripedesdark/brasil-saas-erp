@@ -266,7 +266,7 @@ export const Layout = () => {
                 ]
             },
             {
-                label: 'Qualidade',
+                label: t('nav.qualidade', { defaultValue: 'Qualidade' }),
                 modulo: 'qualidade',
                 icon: 'pi pi-check-circle',
                 items: [
@@ -276,7 +276,7 @@ export const Layout = () => {
                 ]
             },
             {
-                label: 'Ativos e Manutenção',
+                label: t('nav.ativos', { defaultValue: 'Ativos e Manutenção' }),
                 modulo: 'ativos',
                 icon: 'pi pi-cog',
                 items: [
@@ -399,38 +399,38 @@ export const Layout = () => {
         });
 
         items.push({
-            label: 'Metas comerciais',
+            label: t('nav.metas', { defaultValue: 'Metas comerciais' }),
             icon: 'pi pi-chart-bar',
             command: () => handleNavigation('/vendas/metas')
         });
         items.push({
-            label: 'Contratos de venda',
+            label: t('nav.contratosVenda', { defaultValue: 'Contratos de venda' }),
             icon: 'pi pi-file',
             command: () => handleNavigation('/vendas/contratos')
         });
         items.push({
-            label: 'Helpdesk',
+            label: t('nav.helpdesk', { defaultValue: 'Helpdesk' }),
             icon: 'pi pi-ticket',
             command: () => handleNavigation('/helpdesk')
         });
         items.push({
-            label: 'Agenda',
+            label: t('nav.agenda', { defaultValue: 'Agenda' }),
             icon: 'pi pi-calendar',
             command: () => handleNavigation('/agenda')
         });
         items.push({
-            label: 'Notificações',
+            label: t('nav.notificacoes', { defaultValue: 'Notificações' }),
             icon: 'pi pi-bell',
             command: () => handleNavigation('/notificacoes')
         });
         items.push({
-            label: 'Conhecimento',
+            label: t('nav.conhecimento', { defaultValue: 'Conhecimento' }),
             icon: 'pi pi-book',
             command: () => handleNavigation('/conhecimento')
         });
-        items.push({ label: 'Integrações Enterprise', icon: 'pi pi-share-alt', command: () => handleNavigation('/integracoes-enterprise') });
+        items.push({ label: t('nav.integracoes', { defaultValue: 'Integrações Enterprise' }), icon: 'pi pi-share-alt', command: () => handleNavigation('/integracoes-enterprise') });
         items.push({
-            label: 'Supply Chain / Engenharia',
+            label: t('nav.supply', { defaultValue: 'Supply Chain / Engenharia' }),
             items: [
                 item('Supply Chain / Engenharia', 'pi pi-sitemap', '/supply-chain-enterprise'),
                 item('Supply Chain Control Tower', 'pi pi-chart-line', '/supply-chain/control-tower'),
@@ -439,47 +439,47 @@ export const Layout = () => {
             icon: 'pi pi-sitemap'
         });
         items.push({
-            label: 'TMS Planejamento',
+            label: t('nav.tms', { defaultValue: 'TMS Planejamento' }),
             icon: 'pi pi-truck',
             command: () => handleNavigation('/enterprise/tms-planejamento')
         });
         items.push({
-            label: 'GRC / TMS Enterprise',
+            label: t('nav.grcTms', { defaultValue: 'GRC / TMS Enterprise' }),
             icon: 'pi pi-shield',
             command: () => handleNavigation('/riscos-tms-enterprise')
         });
         items.push({
-            label: 'Eliminações intercompany',
+            label: t('nav.eliminacoes', { defaultValue: 'Eliminações intercompany' }),
             icon: 'pi pi-sync',
             command: () => handleNavigation('/enterprise/intercompany-eliminacoes')
         });
         items.push({
-            label: 'Governança Corporativa',
+            label: t('nav.governanca', { defaultValue: 'Governança Corporativa' }),
             icon: 'pi pi-shield',
             command: () => handleNavigation('/governanca-corporativa')
         });
         items.push({
-            label: 'Gestão Empresarial',
+            label: t('nav.gestao', { defaultValue: 'Gestão Empresarial' }),
             icon: 'pi pi-building',
             command: () => handleNavigation('/gestao-empresarial')
         });
         items.push({
-            label: 'Operações (painel)',
+            label: t('nav.operacoes', { defaultValue: 'Operações (painel)' }),
             icon: 'pi pi-th-large',
             command: () => handleNavigation('/operacoes')
         });
         items.push({
-            label: 'Empresas (Stripe/Cert)',
+            label: t('nav.empresasCert', { defaultValue: 'Empresas (Stripe/Cert)' }),
             icon: 'pi pi-key',
             command: () => handleNavigation('/empresas-credenciais')
         });
         items.push({
-            label: 'Configurar empresa',
+            label: t('nav.configurarEmpresa', { defaultValue: 'Configurar empresa' }),
             icon: 'pi pi-cog',
             command: () => handleNavigation('/configurar-empresa')
         });
         items.push({
-            label: 'Go-live',
+            label: t('nav.golive', { defaultValue: 'Go-live' }),
             icon: 'pi pi-flag',
             command: () => handleNavigation('/golive')
         });
