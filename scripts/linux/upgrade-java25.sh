@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Instala JDK25 e muda somente o runtime das duas units autorizadas.
+# Versão: 2026-10-13-v3
 # Sempre grava ExecStart com caminho ABSOLUTO do bin/java do JDK25.
-# Se o drop-in anterior estiver quebrado (ex.: "bin/java"), remove-o,
-# recarrega o systemd e reparseia a unit base antes de reescrever.
+# Em --apply: remove TODOS os 90-java25.conf, daemon-reload, e recria do zero.
 set -Eeuo pipefail
 MODE="${1:---check}"
 case "$MODE" in --check|--install|--apply|--print-home) ;; *) echo 'Uso: upgrade-java25.sh --check|--install|--apply|--print-home'; exit 2 ;; esac
@@ -13,7 +13,6 @@ find_jdk() {
         [[ -n "$candidate" && -x "$candidate/bin/javac" && -x "$candidate/bin/java" ]] || continue
         version=$("$candidate/bin/javac" -version 2>&1)
         if [[ "$version" =~ ^javac\ 25(\.|$) ]]; then
-            # Sempre caminho absoluto real (evita drop-in com "bin/java")
             resolved=$(readlink -f "$candidate" 2>/dev/null || realpath "$candidate" 2>/dev/null || echo "$candidate")
             if [[ "$resolved" != /* ]]; then
                 continue
@@ -42,8 +41,6 @@ if ! find_jdk; then
         echo '[ERRO] Instale JDK25 oficial e informe ERP_JAVA_HOME.' >&2
         exit 1
     fi
-    # Pacotes podem trocar alternatives automaticamente. Preservar o Java global
-    # protege launchers de outros aplicativos; as duas units recebem drop-ins.
     for binary in java javac; do
         if [[ "$binary" == java ]]; then previous="$PREVIOUS_JAVA"; else previous="$PREVIOUS_JAVAC"; fi
         current="$(readlink -f "$(command -v "$binary")" 2>/dev/null || true)"
@@ -75,185 +72,78 @@ if [[ "$MODE" == --install ]]; then
     exit 0
 fi
 
-# --- --apply ---
+# --- --apply (v3) ---
+echo "[upgrade-java25] versao 2026-10-13-v3  MODE=--apply"
 [[ "$EUID" == 0 ]] || { echo '[ERRO] Alterar units exige sudo.' >&2; exit 1; }
 
-# Garante path absoluto antes de passar ao Python
 JDK=$(readlink -f "$JDK")
 JAVA_BIN="$JDK/bin/java"
 if [[ ! -x "$JAVA_BIN" || "$JAVA_BIN" != /* ]]; then
     echo "[ERRO] JAVA_BIN invalido: $JAVA_BIN" >&2
     exit 1
 fi
+echo "[OK] JAVA_BIN=$JAVA_BIN"
 
-# Se o drop-in anterior estiver quebrado, remove-o e recarrega para que
-# systemctl show / cat voltem a refletir a unit base (com path absoluto).
+# SEMPRE remove os drop-ins 90-java25.conf (quebrados ou nao) e recarrega,
+# para que a unit base volte a ser a unica fonte de ExecStart.
+stamp=$(date +%Y%m%d%H%M%S)
 for unit in brasil-saas-erp.service astral-platform.service; do
-    dropin="/etc/systemd/system/${unit}.d/90-java25.conf"
-    if [[ -f "$dropin" ]]; then
-        if grep -qE 'ExecStart=["'\'']?bin/java|ExecStart=bin/java' "$dropin" 2>/dev/null \
-           || ! grep -qE 'ExecStart=/' "$dropin" 2>/dev/null; then
-            stamp=$(date +%Y%m%d%H%M%S)
-            cp -a "$dropin" "${dropin}.bak.broken.${stamp}" 2>/dev/null || true
-            rm -f "$dropin"
-            echo "[WARN] drop-in quebrado removido: $dropin (backup .bak.broken.${stamp})"
-        fi
+    dropdir="/etc/systemd/system/${unit}.d"
+    dropin="${dropdir}/90-java25.conf"
+    if [[ -f "$dropin" || -L "$dropin" ]]; then
+        mkdir -p "$dropdir"
+        cp -a "$dropin" "${dropin}.bak.${stamp}" 2>/dev/null || true
+        rm -f "$dropin"
+        echo "[OK] drop-in removido: $dropin (backup .bak.${stamp})"
     fi
 done
-systemctl daemon-reload 2>/dev/null || true
+systemctl daemon-reload
 
-python3 - "$JDK" "$JAVA_BIN" <<'PY'
-import datetime, os, pathlib, re, shlex, shutil, subprocess, sys, tempfile
+# Args JVM + jar conhecidos (fonte da verdade se o parse falhar)
+ERP_ARGS='-Xms256m -Xmx2g -XX:MaxMetaspaceSize=512m -Djava.security.egd=file:/dev/./urandom -jar /opt/brasil-saas-erp/brasil-saas-erp-1.0.0-SNAPSHOT.jar'
+ASTRAL_ARGS='-jar /opt/astral-platform/astral-platform.jar'
 
-jdk = os.path.realpath(sys.argv[1])
-java_bin = os.path.realpath(sys.argv[2])
-
-if not jdk.startswith("/") or not java_bin.startswith("/"):
-    raise SystemExit(f"JDK/JAVA_BIN devem ser absolutos: jdk={jdk!r} java={java_bin!r}")
-if not os.path.isfile(java_bin) or not os.access(java_bin, os.X_OK):
-    raise SystemExit(f"java nao executavel: {java_bin}")
-
-def quote(arg: str) -> str:
-    # systemd: aspas duplas; % precisa ser %%
-    return '"' + arg.replace("\\", "\\\\").replace('"', '\\"').replace("%", "%%") + '"'
-
-# Fallbacks conhecidos quando a unit esta quebrada / sem ExecStart parseavel
-KNOWN_FALLBACKS = {
-    "brasil-saas-erp.service": [
-        "-Xms256m", "-Xmx2g", "-XX:MaxMetaspaceSize=512m",
-        "-Djava.security.egd=file:/dev/./urandom",
-        "-jar", "/opt/brasil-saas-erp/brasil-saas-erp-1.0.0-SNAPSHOT.jar",
-    ],
-    "astral-platform.service": [
-        "-jar", "/opt/astral-platform/astral-platform.jar",
-    ],
+write_dropin() {
+    local unit="$1"
+    local extra_args="$2"
+    local dropdir="/etc/systemd/system/${unit}.d"
+    local dropin="${dropdir}/90-java25.conf"
+    mkdir -p "$dropdir"
+    # Monta linha ExecStart com path absoluto, cada arg entre aspas
+    local exec_line="ExecStart=\"${JAVA_BIN}\""
+    # shellcheck disable=SC2086
+    for a in $extra_args; do
+        exec_line="${exec_line} \"${a}\""
+    done
+    cat > "$dropin" <<EOF
+[Service]
+Environment="JAVA_HOME=${JDK}"
+Environment="PATH=${JDK}/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=
+${exec_line}
+EOF
+    chmod 644 "$dropin"
+    echo "[OK] drop-in escrito: $dropin"
+    cat "$dropin"
+    echo
 }
 
-def _extract_args_after_java(tokens: list[str]) -> list[str]:
-    """Remove o binario java (qualquer path cujo basename seja java) e devolve o resto."""
-    out = []
-    skipped = False
-    for t in tokens:
-        if not skipped and pathlib.Path(t).name == "java":
-            skipped = True
-            continue
-        out.append(t)
-    if not skipped and tokens:
-        # primeiro token era o java; descarta
-        out = tokens[1:]
-    return out
+write_dropin "brasil-saas-erp.service" "$ERP_ARGS"
+write_dropin "astral-platform.service" "$ASTRAL_ARGS"
 
-def parse_exec_args(unit: str) -> list[str]:
-    """Extrai argumentos (flags + -jar + jar) do ExecStart efetivo ou da unit file."""
-    # 1) systemctl show (funciona quando a unit esta valida)
-    try:
-        value = subprocess.check_output(
-            ["systemctl", "show", unit, "-p", "ExecStart", "--value"],
-            text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except subprocess.CalledProcessError:
-        value = ""
+systemctl daemon-reload
 
-    args: list[str] = []
-    if value and value != "":
-        found = re.search(r"argv\[\]=(.*?)\s*;\s*ignore_errors=", value)
-        if found:
-            args = shlex.split(found.group(1))
-        else:
-            path_m = re.search(r"path=(\S+)", value)
-            if path_m:
-                jar_m = re.search(r"(-jar\s+\S+.*)$", value)
-                if jar_m:
-                    rest = shlex.split(jar_m.group(1))
-                    args = [path_m.group(1)] + rest
+# Validacao final: systemctl deve aceitar a unit
+if ! systemctl cat brasil-saas-erp.service >/dev/null 2>&1; then
+    echo "[ERRO] brasil-saas-erp.service ainda invalida apos drop-in" >&2
+    systemctl cat brasil-saas-erp.service 2>&1 | head -20 || true
+    exit 1
+fi
+if ! systemctl cat astral-platform.service >/dev/null 2>&1; then
+    echo "[ERRO] astral-platform.service ainda invalida apos drop-in" >&2
+    exit 1
+fi
 
-    # 2) systemctl cat (lê o unit file + drop-ins; funciona mesmo se inválido às vezes)
-    if not args or not any(pathlib.Path(a).name == "java" or a == "-jar" for a in args):
-        try:
-            cat_out = subprocess.check_output(
-                ["systemctl", "cat", unit], text=True, stderr=subprocess.DEVNULL,
-            )
-            # Pega a última linha ExecStart= que não seja só "ExecStart=" (reset)
-            last = None
-            for line in cat_out.splitlines():
-                s = line.strip()
-                if s.startswith("ExecStart=") and s != "ExecStart=":
-                    last = s[len("ExecStart="):].strip()
-            if last:
-                args = shlex.split(last)
-        except (subprocess.CalledProcessError, ValueError):
-            pass
-
-    # 3) Fallback hardcoded
-    if not args or "-jar" not in args:
-        fb = KNOWN_FALLBACKS.get(unit)
-        if fb:
-            print(f"[WARN] usando fallback conhecido para {unit}", file=sys.stderr)
-            return list(fb)
-        raise SystemExit(
-            f"ExecStart nao reconhecido para {unit}. "
-            f"systemctl show:\n{value[:500]}\nNenhuma unit alterada."
-        )
-
-    # Devolve só os args depois do binário java
-    rest = _extract_args_after_java(args)
-    if "-jar" not in rest:
-        raise SystemExit(f"ExecStart de {unit} nao tem -jar apos limpeza: {rest!r}")
-    if any("$" in a for a in rest):
-        raise SystemExit(
-            f"ExecStart de {unit} tem expansao pendente ($VAR). "
-            f"Use caminho literal no unit file: {rest!r}"
-        )
-    return rest
-
-plans = []
-for unit in ("brasil-saas-erp.service", "astral-platform.service"):
-    rest = parse_exec_args(unit)
-    # Sempre: java absoluto + args
-    args = [java_bin] + rest
-
-    if not args[0].startswith("/"):
-        raise SystemExit(f"ExecStart gerado com path relativo (recusado): {args[0]!r}")
-    if not os.path.isfile(args[0]):
-        raise SystemExit(f"java binario inexistente: {args[0]!r}")
-
-    content = (
-        "[Service]\n"
-        f'Environment="JAVA_HOME={jdk}"\n'
-        f'Environment="PATH={jdk}/bin:/usr/local/bin:/usr/bin:/bin"\n'
-        "ExecStart=\n"
-        "ExecStart=" + " ".join(map(quote, args)) + "\n"
-    )
-    # Validação final do conteúdo
-    for line in content.splitlines():
-        if line.startswith("ExecStart=") and line != "ExecStart=":
-            exe = shlex.split(line[len("ExecStart="):])[0].strip('"')
-            if not exe.startswith("/"):
-                raise SystemExit(f"Drop-in invalido (path relativo): {exe!r}")
-            if not os.path.isfile(exe):
-                raise SystemExit(f"Drop-in aponta para binario inexistente: {exe!r}")
-
-    target = pathlib.Path("/etc/systemd/system") / f"{unit}.d" / "90-java25.conf"
-    if target.is_symlink():
-        raise SystemExit(f"Drop-in nao pode ser link simbolico: {unit}")
-    plans.append((target, content))
-
-stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-for target, content in plans:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        shutil.copy2(target, str(target) + ".bak." + stamp)
-    fd, name = tempfile.mkstemp(dir=str(target.parent), prefix=".java25-")
-    with os.fdopen(fd, "w") as f:
-        f.write(content)
-    os.chmod(name, 0o644)
-    os.replace(name, target)
-    print(f"[OK] drop-in escrito: {target}")
-    print(content.rstrip())
-    print()
-
-subprocess.run(["systemctl", "daemon-reload"], check=True)
-print("[OK] ERP e Astral selecionados para JDK25; Graylog e processos atuais preservados.")
-print("Recompile/deploye ambos antes do proximo restart.")
-print("Para validar: systemctl cat brasil-saas-erp.service | grep -A2 ExecStart")
-PY
+echo "[OK] ERP e Astral selecionados para JDK25; Graylog e processos atuais preservados."
+echo "Recompile/deploye ambos antes do proximo restart."
+echo "Para validar: systemctl cat brasil-saas-erp.service | grep -A3 ExecStart"
