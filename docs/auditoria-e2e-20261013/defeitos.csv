@@ -13,3 +13,6 @@ INFRA-001,Login AD fora do ar (auth-service LDAP 192.168.2.10:636 fechada + trus
 INFRA-002,RabbitMQ caído desde o boot,Infra,Alta,CORRIGIDO (restart 10:2x — health UP),failed 06:07,Restart + investigar causa do boot
 INFRA-003,Deploy marca falha por health-check curto,Deploy,Baixa,DOCUMENTADO,curl imediato pós-restart,Aumentar janela do health-check no script
 INFRA-004,Memória do host em 80% (6.3/7.8GB),Infra,Baixa,OBSERVAÇÃO,,Monitorar; ERP 1.34GB de 2GB Xmx
+RODADA2-007,GET /api/core/usuarios|empresas 404,Admin,—,RECLASSIFICADO (falso-positivo de sonda; callers reais usam subpaths existentes),Nenhuma alteracao
+RODADA2-009,490 chaves legacyUi ausentes + 19 labels hardcoded,i18n,Baixa,CORRIGIDO (nav.* 26 chaves x4 + 490 legacyUi PT revisadas + EN/ES/FR geradas; i18n-locale verde; reteste visual pós-deploy pendente),Ver amostra no relatorio
+RODADA2-010,58 relatorios SEED invalidos (11.919 erros scheduler),BI/Dados,Média,CORRIGIDO SEM DELETE (agendado=false 29 pais + ativo=false 29 agendamentos; 0 pendencias SEED),Reversivel via flags
