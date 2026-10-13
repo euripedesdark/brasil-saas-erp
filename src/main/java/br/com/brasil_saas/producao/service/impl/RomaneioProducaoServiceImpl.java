@@ -76,7 +76,14 @@ public class RomaneioProducaoServiceImpl implements RomaneioProducaoService {
     @Override
     @Transactional(readOnly = true)
     public List<RomaneioProducao> listar(Long empresaId) {
-        return repository.findByEmpresaIdAndDeletedAtIsNullOrderByDataRomaneioDesc(empresaId);
+        List<RomaneioProducao> romaneios =
+                repository.findByEmpresaIdAndDeletedAtIsNullOrderByDataRomaneioDesc(empresaId);
+        for (RomaneioProducao r : romaneios) {
+            if (r.getProducao() != null && r.getProducao().getItens() != null) {
+                org.hibernate.Hibernate.initialize(r.getProducao().getItens());
+            }
+        }
+        return romaneios;
     }
 
     private RomaneioProducao carregar(Long empresaId, Long id) {
