@@ -43,6 +43,33 @@ public final class JasperReportRenderer {
         return export(template(safeColumns.size()), parameters, data);
     }
 
+    /** Modelo JRXML por tipo, com campos fixados pelas regras do RelatorioService. */
+    public byte[] pdfPorTipo(String tipo, String title, String subtitle, String empresa,
+                             List<Map<String, Object>> rows, Map<String, Object> summary) {
+        String normalized = tipo == null ? "" : tipo.trim().toUpperCase(Locale.ROOT);
+        String name;
+        List<String> fields;
+        switch (normalized) {
+            case "VENDAS" -> { name = "vendas"; fields = List.of("numero", "data_emissao", "cliente", "valor_produtos", "valor_desconto", "valor_total", "status", "quantidade_pedidos"); }
+            case "FINANCEIRO" -> { name = "financeiro"; fields = List.of("numero_documento", "data_emissao", "data_vencimento", "descricao", "tipo", "valor_original", "valor_saldo", "status"); }
+            case "PRODUCAO" -> { name = "producao"; fields = List.of("numero", "data_inicio", "data_fim", "produto_final", "quantidade_planejada", "custo_total", "status", "tipo_producao"); }
+            case "DRE" -> { name = "dre"; fields = List.of("codigo", "descricao", "natureza", "debitos", "creditos", "resultado"); }
+            case "FLUXO_CAIXA" -> { name = "fluxo_caixa"; fields = List.of("data_projecao", "valor_previsto_entrada", "valor_previsto_saida", "saldo_projetado"); }
+            default -> throw new IllegalArgumentException("Tipo Jasper nao suportado: " + tipo);
+        }
+        List<Map<String, Object>> safeRows = rows == null ? List.of() : rows;
+        if (safeRows.size() > 10000) throw new IllegalArgumentException("Relatorio excede limite de 10000 linhas");
+        Map<String, Object> params = parameters(title, subtitle, empresa, summary);
+        params.put("SUMMARY", params.get("SUMMARY") + "\\nTotal de registros: " + safeRows.size());
+        List<Map<String, ?>> values = new ArrayList<>(safeRows.size());
+        for (Map<String, Object> row : safeRows) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            for (String field : fields) item.put(field, display(row.get(field)));
+            values.add(item);
+        }
+        return export(load(name), params, values);
+    }
+
     public byte[] memorando(String numero, String assunto, String empresa, String remetente,
                             String destinatario, String texto) {
         Map<String, Object> parameters = parameters("Memorando " + display(numero), assunto, empresa, Map.of());
