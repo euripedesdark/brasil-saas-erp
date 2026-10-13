@@ -36,6 +36,12 @@ O sistema está **operacional**: login, navegação, 30+ telas de leitura, pagin
 - `61e96a15` BUG-003 (CRM pendentes) · `f9e2d6c9` BUG-002 (reports lazy) · `067a146e` BUG-004 (romaneios lazy) · `a86c49d2` BUG-005 (logo URL)
 - Infra: LDAP auth-service → 127.0.0.1:636 + CA no cacerts (login 200 retestado) · RabbitMQ reiniciado (health UP)
 
+## Atualização 2026-10-13 (bugs restantes)
+
+- BUG-007 reclassificado: falso-positivo de sonda própria; nenhum caller real usa as bases inexistentes.
+- BUG-009 corrigido: 19 labels hardcoded → `t('nav.*')` + 26 chaves × 4 locales; `i18n-locale.test.js` verde; reteste visual pós-deploy pendente.
+- BUG-010 corrigido sem deletes: 58 relatórios SEED preservados; `agendado=false` (29 pais) + `ativo=false` (29 agendamentos); 0 execuções pendentes de SEED restantes.
+
 ## Pendências
 
 1. Deploy com os 4 fixes p/ reteste (aguarda autorização).
