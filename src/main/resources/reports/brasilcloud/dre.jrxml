@@ -1,0 +1,45 @@
+<jasperReport name="BrasilCloud_dre" language="java" pageWidth="842" pageHeight="595" columnWidth="794" leftMargin="24" rightMargin="24" topMargin="24" bottomMargin="24" whenNoDataType="AllSectionsNoDetail">
+    <style name="Base" default="true" fontName="DejaVu Sans" fontSize="8.0"/>
+    <parameter name="TITLE" class="java.lang.String"/>
+    <parameter name="SUBTITLE" class="java.lang.String"/>
+    <parameter name="EMPRESA" class="java.lang.String"/>
+    <parameter name="GENERATED" class="java.lang.String"/>
+    <parameter name="SUMMARY" class="java.lang.String"/>
+    <field name="codigo" class="java.lang.String"/>
+    <field name="descricao" class="java.lang.String"/>
+    <field name="natureza" class="java.lang.String"/>
+    <field name="debitos" class="java.lang.String"/>
+    <field name="creditos" class="java.lang.String"/>
+    <field name="resultado" class="java.lang.String"/>
+    <title height="100">
+        <element kind="staticText" x="0" y="0" width="794" height="25" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="15.0" bold="true" vTextAlign="Middle"><text>BrasilCloud ERP</text></element>
+        <element kind="textField" x="0" y="33" width="794" height="25" fontSize="14.0" bold="true" forecolor="#2c3e50"><expression><![CDATA[$P{TITLE}]]></expression></element>
+        <element kind="textField" x="0" y="61" width="794" height="18"><expression><![CDATA[$P{SUBTITLE}]]></expression></element>
+        <element kind="textField" x="0" y="81" width="794" height="18"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
+    </title>
+    <columnHeader height="24">
+        <element kind="staticText" x="0" y="0" width="132" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Código</text></element>
+        <element kind="staticText" x="132" y="0" width="132" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Descrição</text></element>
+        <element kind="staticText" x="264" y="0" width="132" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Natureza</text></element>
+        <element kind="staticText" x="396" y="0" width="132" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Débitos</text></element>
+        <element kind="staticText" x="528" y="0" width="132" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Créditos</text></element>
+        <element kind="staticText" x="660" y="0" width="134" height="24" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="8.0" bold="true" vTextAlign="Middle"><text>Resultado</text></element>
+    </columnHeader>
+    <detail>
+        <band height="22" splitType="Stretch">
+        <element kind="textField" x="0" y="0" width="132" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{codigo}]]></expression></element>
+        <element kind="textField" x="132" y="0" width="132" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{descricao}]]></expression></element>
+        <element kind="textField" x="264" y="0" width="132" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{natureza}]]></expression></element>
+        <element kind="textField" x="396" y="0" width="132" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{debitos}]]></expression></element>
+        <element kind="textField" x="528" y="0" width="132" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{creditos}]]></expression></element>
+        <element kind="textField" x="660" y="0" width="134" height="22" fontSize="8.0" textAdjust="StretchHeight"><expression><![CDATA[$F{resultado}]]></expression></element>
+        </band>
+    </detail>
+    <pageFooter height="22">
+        <element kind="textField" x="0" y="2" width="650" height="18" forecolor="#64748B"><expression><![CDATA["BrasilCloud ERP | " + $P{GENERATED}]]></expression></element>
+        <element kind="textField" x="650" y="2" width="144" height="18" hTextAlign="Right"><expression><![CDATA["Página " + $V{PAGE_NUMBER}]]></expression></element>
+    </pageFooter>
+    <summary height="65" splitType="Stretch">
+        <element kind="textField" x="0" y="5" width="794" height="55" textAdjust="StretchHeight"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
+    </summary>
+</jasperReport>
