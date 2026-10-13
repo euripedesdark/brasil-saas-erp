@@ -2238,5 +2238,15 @@
     "phrase0752": "Número (opcional)",
     "phrase0753": "Nuevo ticket",
     "phrase0754": "Severidad"
+  },
+  "memorando": {
+    "title": "Memorando",
+    "numero": "Número",
+    "assunto": "Asunto",
+    "destinatario": "Destinatario",
+    "texto": "Texto",
+    "generate": "Generar PDF",
+    "error": "No se pudo generar el memorando.",
+    "success": "Memorando generado."
   }
 }

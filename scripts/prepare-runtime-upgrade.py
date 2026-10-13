@@ -13,6 +13,9 @@ NS = {'m': 'http://maven.apache.org/POM/4.0.0'}
 
 
 def candidate_pom(content):
+    root = ET.fromstring(content)
+    if root.findtext('m:parent/m:version', namespaces=NS).startswith('4.') and root.findtext('m:properties/m:java.version', namespaces=NS) == '25':
+        return content  # Nao duplica BOMs/starters numa arvore ja migrada.
     # Edicoes localizadas preservam comentarios, exclusoes fiscais e formatacao.
     content, count = re.subn(
         r'(<artifactId>spring-boot-starter-parent</artifactId>\s*<version>)[^<]+',

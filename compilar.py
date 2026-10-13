@@ -227,7 +227,7 @@ def build_monolith():
     maven_cmd = "./mvnw" if os.path.exists("mvnw") else "mvn"
     
     if not run_command(
-        f"{maven_cmd} clean package -DskipTests",
+        f"{maven_cmd} -B clean verify",
         "Compilando Brasil SaaS ERP (Monolito)"
     ):
         return False

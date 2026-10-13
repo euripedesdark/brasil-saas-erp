@@ -18,7 +18,7 @@ COPY src/main/resources/static/react/ ./
 RUN npm run build && ls -la /dist && ls -la /dist/assets | head
 
 # ---------- Backend ----------
-FROM eclipse-temurin:21-jdk-jammy AS backend-builder
+FROM eclipse-temurin:25-jdk-jammy AS backend-builder
 WORKDIR /app
 
 COPY pom.xml ./
@@ -37,7 +37,7 @@ RUN mvn -B clean package -DskipTests \
     && ls -la target/*.jar
 
 # ---------- Runtime ----------
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
 RUN useradd -r -m -U -d /home/brasil-saas -s /bin/false brasilsaas \

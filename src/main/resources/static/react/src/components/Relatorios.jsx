@@ -1,4 +1,6 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { MemorandoDialog } from './MemorandoDialog';
 import { Card } from 'primereact/card';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -14,6 +16,8 @@ import { formatoData, localeAtivo } from './shared/LocaleData.js';
 
 export const Relatorios = () => {
     const { user } = useAuth();
+    const { t } = useTranslation();
+    const [memorandoAberto, setMemorandoAberto] = useState(false);
     const tabelaRef = useRef(null);
 
     const [tipoRelatorio, setTipoRelatorio] = useState('VENDAS');
@@ -34,13 +38,11 @@ export const Relatorios = () => {
         { label: 'Fluxo de Caixa Projetado', value: 'FLUXO_CAIXA' },
     ];
 
-    // O backend resolve o tenant pelo token. empresaId vai na query apenas como
-    // fallback para o download, que nao consegue enviar o header Authorization.
+    // O backend resolve o tenant pelo principal autenticado; download usa Bearer.
     const montarQuery = () => {
         const filtros = new URLSearchParams();
         if (dataInicio) filtros.append('dataInicio', dataInicio.toISOString().split('T')[0]);
         if (dataFim) filtros.append('dataFim', dataFim.toISOString().split('T')[0]);
-        if (user?.empresaId) filtros.append('empresaId', user.empresaId);
         return filtros.toString();
     };
 
@@ -87,6 +89,9 @@ export const Relatorios = () => {
     return (
         <div className="relatorios-container">
             <Card title="Centro de Relatórios Gerenciais" className="relatorios-main-card">
+                <Button label={t('memorando.title')} icon="pi pi-file" className="mb-3"
+                    onClick={() => setMemorandoAberto(true)} />
+                <MemorandoDialog visible={memorandoAberto} onHide={() => setMemorandoAberto(false)} />
                 <div className="grid p-fluid mb-4">
                     <div className="col-12 md:col-4 field">
                         <label className="font-bold mb-2 block">Tipo de Relatório</label>

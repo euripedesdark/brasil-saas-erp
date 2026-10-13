@@ -26,6 +26,24 @@ public class RelatorioController {
     private final RelatorioService relatorioService;
     private final PdfGeneratorService pdfGeneratorService;
 
+    public record MemorandoRequest(
+            @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 50) String numero,
+            @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 200) String assunto,
+            @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 500) String destinatario,
+            @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 20000) String texto) {}
+
+    @PostMapping("/memorando/pdf")
+    public ResponseEntity<byte[]> memorandoPdf(@AuthenticationPrincipal AuthenticatedUser user,
+            @jakarta.validation.Valid @RequestBody MemorandoRequest request) {
+        Long empresaId = resolverEmpresa(user, Map.of());
+        byte[] pdf = br.com.brasil_saas.core.service.report.JasperReportRenderer.shared().memorando(
+                request.numero(), request.assunto(), "Empresa " + empresaId, user.getUsername(),
+                request.destinatario(), request.texto());
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("memorando.pdf").build().toString()).body(pdf);
+    }
+
     @GetMapping("/{tipo}")
     public ResponseEntity<RelatorioResponse> getRelatorio(
             @AuthenticationPrincipal AuthenticatedUser user,
@@ -68,7 +86,9 @@ public class RelatorioController {
         List<String> columns = dados.isEmpty() ? List.of() : new ArrayList<>(dados.get(0).keySet());
 
         try {
-            byte[] pdf = pdfGeneratorService.generateReport(
+            byte[] pdf = "FISCAL".equalsIgnoreCase(tipo) ? pdfGeneratorService.generateFiscalReport(
+                    report.getNomeRelatorio(), report.getPeriodo(), empresaId, "", java.time.LocalDate.now(),
+                    dados, columns, report.getResumo()) : pdfGeneratorService.generateReport(
                     report.getNomeRelatorio() != null ? report.getNomeRelatorio() : tipo,
                     report.getPeriodo() != null ? report.getPeriodo() : "",
                     empresaId, "", java.time.LocalDate.now(),
@@ -90,10 +110,8 @@ public class RelatorioController {
         if (user != null && user.getEmpresaId() != null) {
             return user.getEmpresaId();
         }
-        Object empresaId = filtros.get("empresaId");
-        if (empresaId == null) {
-            throw new IllegalArgumentException("empresaId nao informado");
-        }
-        return Long.valueOf(String.valueOf(empresaId));
+        throw new org.springframework.web.server.ResponseStatusException(
+                user == null ? HttpStatus.UNAUTHORIZED : HttpStatus.FORBIDDEN,
+                "Usuario autenticado com empresa e obrigatorio");
     }
 }

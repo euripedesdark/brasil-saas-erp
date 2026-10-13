@@ -1,4 +1,6 @@
 spring:
+  mongodb:
+    uri: "${SPRING_MONGODB_URI:${SPRING_DATA_MONGODB_URI:mongodb://admin:${MONGODB_PASSWORD:}@localhost:27017/brasil-saas?authSource=admin}}"
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:25}
@@ -15,8 +17,6 @@ spring:
           timeout: 10000
           writetimeout: 10000
   data:
-    mongodb:
-      uri: "mongodb://admin:${MONGODB_PASSWORD:}@localhost:27017/brasil-saas?authSource=admin"
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}

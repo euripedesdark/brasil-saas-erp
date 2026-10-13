@@ -142,8 +142,12 @@ public class RelatorioServiceImpl implements RelatorioService {
         valores.put("empresaId", empresaId);
         valores.put("empresa_id", empresaId);
         String sql = ReportSqlParameters.bind(relatorio.getSqlQuery(), valores);
-        List<Map<String, Object>> resultados = new NamedParameterJdbcTemplate(jdbcTemplate)
-                .queryForList(sql, valores);
+        JdbcTemplate limited = new JdbcTemplate(Objects.requireNonNull(jdbcTemplate.getDataSource()));
+        limited.setMaxRows(10001);
+        limited.setQueryTimeout(30);
+        limited.setFetchSize(200);
+        List<Map<String, Object>> resultados = new NamedParameterJdbcTemplate(limited).queryForList(sql, valores);
+        if (resultados.size() > 10000) throw new IllegalArgumentException("Relatorio excede 10000 registros; refine filtros");
 
         // Calcular resumo
         Map<String, Object> resumo = new HashMap<>();
@@ -165,6 +169,21 @@ public class RelatorioServiceImpl implements RelatorioService {
     @Override
     @Transactional(readOnly = true)
     public ByteArrayOutputStream gerarPdf(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
+        Relatorio relatorio = buscarPorId(empresaId, relatorioId);
+        if ("FISCAL".equalsIgnoreCase(relatorio.getCategoria())) return gerarPdfFiscal(empresaId, relatorioId, parametros);
+        Map<String, Object> response = executarRelatorio(empresaId, relatorioId, parametros);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) response.get("dados");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> resumo = (Map<String, Object>) response.get("resumo");
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        output.writeBytes(br.com.brasil_saas.core.service.report.JasperReportRenderer.shared().pdf(
+                relatorio.getNome(), relatorio.getDescricao(), "Empresa " + empresaId,
+                rows, rows == null || rows.isEmpty() ? List.of() : new ArrayList<>(rows.get(0).keySet()), resumo));
+        return output;
+    }
+
+    private ByteArrayOutputStream gerarPdfFiscal(Long empresaId, Long relatorioId, Map<String, Object> parametros) {
         Map<String, Object> dados = executarRelatorio(empresaId, relatorioId, parametros);
         Relatorio relatorio = buscarPorId(empresaId, relatorioId);
 

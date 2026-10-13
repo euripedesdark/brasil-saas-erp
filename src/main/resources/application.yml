@@ -101,6 +101,7 @@ spring:
     validate-on-migrate: true
 
   jackson:
+    use-jackson2-defaults: true
     time-zone: America/Sao_Paulo
     date-format: yyyy-MM-dd HH:mm:ss
     default-property-inclusion: non_null
@@ -120,6 +121,10 @@ spring:
       max-request-size: 50MB
 
   ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:none}
+      embedding: none
+      image: none
     openai:
       api-key: ${OPENAI_API_KEY:sk-placeholder-not-real}
       chat:

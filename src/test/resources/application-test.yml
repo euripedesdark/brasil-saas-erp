@@ -47,6 +47,10 @@ spring:
 
   # Desabilita OpenAI no teste para evitar chamadas externas sem API key
   ai:
+    model:
+      chat: ${SPRING_AI_MODEL_CHAT:none}
+      embedding: none
+      image: none
     openai:
       api-key: ${OPENAI_API_KEY:test-key-not-for-production}
       chat:

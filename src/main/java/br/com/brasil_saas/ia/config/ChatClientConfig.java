@@ -6,7 +6,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.ai.chat.prompt.ChatOptionsBuilder;
+
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,12 +20,12 @@ import java.util.List;
  * ChatServiceImpl.
  *
  * O autoconfigure do Spring AI não expõe um ChatClient por padrão, e o
- * ChatModel do OpenAI fica desabilitado quando spring.ai.openai.chat.enabled=false
+ * ChatModel do OpenAI fica desabilitado quando spring.ai.model.chat=none
  * (caso do perfil de teste). Sem estes beans o contexto da aplicação falha ao
  * subir (NoSuchBeanDefinitionException).
  *
  * O fallback abaixo NÃO faz chamadas externas: apenas registra um log de aviso
- * e devolve mensagem vazia. Em produção, com spring.ai.openai.chat.enabled=true,
+ * e devolve mensagem vazia. Em produção, com spring.ai.model.chat=openai,
  * o autoconfigure fornece o OpenAiChatModel real e o @ConditionalOnMissingBean
  * impede este fallback de ser criado — comportamento inalterado.
  */
@@ -34,20 +34,20 @@ public class ChatClientConfig {
 
     @Bean
     @ConditionalOnMissingBean(ChatModel.class)
-    @ConditionalOnProperty(prefix = "spring.ai.openai.chat", name = "enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "spring.ai.model", name = "chat", havingValue = "none", matchIfMissing = true)
     public ChatModel fallbackChatModel() {
         return new ChatModel() {
             @Override
             public ChatResponse call(Prompt prompt) {
                 org.slf4j.LoggerFactory.getLogger(ChatClientConfig.class)
-                        .warn("IA indisponível neste ambiente (spring.ai.openai.chat.enabled=false); "
+                        .warn("IA indisponível neste ambiente (spring.ai.model.chat=none); "
                                 + "resposta de fallback sem chamada externa.");
                 return new ChatResponse(List.of(new Generation(new AssistantMessage(""))));
             }
 
             @Override
             public ChatOptions getDefaultOptions() {
-                return ChatOptionsBuilder.builder().build();
+                return ChatOptions.builder().build();
             }
         };
     }
