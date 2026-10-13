@@ -16,3 +16,7 @@ INFRA-004,Memória do host em 80% (6.3/7.8GB),Infra,Baixa,OBSERVAÇÃO,,Monitora
 RODADA2-007,GET /api/core/usuarios|empresas 404,Admin,—,RECLASSIFICADO (falso-positivo de sonda; callers reais usam subpaths existentes),Nenhuma alteracao
 RODADA2-009,490 chaves legacyUi ausentes + 19 labels hardcoded,i18n,Baixa,CORRIGIDO (nav.* 26 chaves x4 + 490 legacyUi PT revisadas + EN/ES/FR geradas; i18n-locale verde; reteste visual pós-deploy pendente),Ver amostra no relatorio
 RODADA2-010,58 relatorios SEED invalidos (11.919 erros scheduler),BI/Dados,Média,CORRIGIDO SEM DELETE (agendado=false 29 pais + ativo=false 29 agendamentos; 0 pendencias SEED),Reversivel via flags
+UJUI-003,DELETE ausente em vendas/metas (residuo id 1 TESTE-QA),Vendas,Média,ABERTO,405 METODO_NAO_PERMITIDO,Adicionar DELETE ou limpeza admin
+UJUI-004,Valor da meta zerado ao criar pela UI,Vendas,Média,ABERTO,valorMeta 0.00 (InputNumber nao submeteu ou API ignorou),Investigar binding numero
+UJUI-006,Sem GET unitario em enterprise genericos,Enterprise,Baixa,ABERTO,405 em /{resource}/{id},Adicionar GET by id ou documentar
+UJUI-008,Validacao responde 409 em vez de 400,Enterprise,Baixa,ABERTO,DATA_INTEGRITY sem validacao previa,Validar DTO (400 DADOS_INVALIDOS)

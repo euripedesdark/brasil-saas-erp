@@ -1,0 +1,31 @@
+UJUI-001,Jornada contrato,CRUD completo via UI+API,APROVADO,POST200 PUT200 DELETE200 lista vazia,-
+UJUI-002,Jornada meta,Nova meta via UI (valor zerado),APROVADO com ressalva UJ-004,POST201 id 1 valorMeta 0.00,-
+UJUI-003,Meta DELETE,405 sem remoção,REPROVADO,405 METODO_NAO_PERMITIDO + resíduo id 1 TESTE-QA,Média
+UJUI-004,Submit vazio,409 + mensagem crua,REPROVADO,POST /enterprise/contratos 409,Média
+UJUI-005,Duplo submit,2º POST 409 (sem duplicar),APROVADO,idempotência por conflito + cleanup id 4,-
+UJUI-006,GET unitário,405 em contratos e metas,REPROVADO,sem GET by id (lista cobre),Baixa
+UJUI-007,Busca autocomplete,Sessão expirada parecia 403,TESTE INVÁLIDO (relogado: 200),-
+UJUI-008,Validação backend,Tipo errado 409 em vez de 400,REPROVADO,DATA_INTEGRITY sem validação,Baixa
+SCR-001,/financeiro/extrato,Carrega sem erros,APROVADO,,-
+SCR-002,/fiscal/entradas,3 linhas sem erros,APROVADO,,-
+SCR-003,/admin/endpoints,Carrega sem erros,APROVADO,,-
+SCR-004,/operacoes,Carrega sem erros,APROVADO,,-
+SCR-005,/wms,Carrega sem erros,APROVADO,,-
+SCR-006,/portais,Gerar acesso + vazio sem erros,APROVADO,,-
+SCR-007,/notificacoes,Carrega sem erros,APROVADO,,-
+SCR-008,/integracoes-enterprise,Carrega sem erros,APROVADO,,-
+SCR-009,/enterprise/tms-planejamento,Carrega sem erros (/tms-planejamento dá 404 app),APROVADO,,-
+SCR-010,/conhecimento,Carrega sem erros,APROVADO,,-
+SCR-011,/vendas/contratos,12 linhas sem erros,APROVADO,,-
+SCR-012,/governanca-corporativa,Carrega sem erros,APROVADO,,-
+SCR-013,/bi/relatorios,403 perfil (correto),BLOQUEADO,,-
+SCR-014,/servicos,403 servicos (parcial),APROVADO com ressalva,,-
+SCR-015,/producao/apontamentos,Carrega sem erros,APROVADO,,-
+SCR-016,/producao/estrutura,Carrega sem erros,APROVADO,,-
+SCR-017,/admin/configuracoes,Form + Salvar sem erros,APROVADO,,-
+SCR-018,/fiscal/nfse,10 linhas (403 servicos/clientes parcial),APROVADO com ressalva,,-
+SCR-019,/vendas/tabelas-preco,10 linhas sem erros,APROVADO,,-
+SCR-020,/rh/cargos,10 linhas sem erros,APROVADO,,-
+SCR-021,/workflow,Instâncias/vazio sem erros,APROVADO,,-
+SCR-022,/supply-chain/control-tower,3 tabelas sem erros,APROVADO,,-
+SES-001,Sessão,Expiração ~2h exige relogin,APROVADO,401s → relogin 200,-
