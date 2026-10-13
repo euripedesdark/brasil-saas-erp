@@ -7,12 +7,12 @@
     <parameter name="GENERATED" class="java.lang.String"/>
     <parameter name="SUMMARY" class="java.lang.String"/>
     <title height="150">
-        <element kind="staticText" x="0" y="0" width="523" height="32" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="16.0" bold="true" vTextAlign="Middle" leftPadding="12"><text>BrasilCloud ERP  |  MEMORANDO</text></element>
+        <element kind="staticText" x="0" y="0" width="523" height="32" mode="Opaque" backcolor="#2c3e50" forecolor="#FFFFFF" fontSize="16.0" bold="true" vTextAlign="Middle"><text>  BrasilCloud ERP  |  MEMORANDO</text></element>
         <element kind="staticText" x="0" y="32" width="523" height="4" mode="Opaque" backcolor="#3498db"><text> </text></element>
-        <element kind="textField" x="0" y="48" width="523" height="28" fontSize="14.0" bold="true" forecolor="#2c3e50" leftPadding="2"><expression><![CDATA[$P{TITLE}]]></expression></element>
-        <element kind="textField" x="0" y="80" width="523" height="20" fontSize="11.0" forecolor="#475569" leftPadding="2"><expression><![CDATA["Assunto: " + $P{SUBTITLE}]]></expression></element>
-        <element kind="textField" x="0" y="104" width="523" height="18" fontSize="10.0" bold="true" forecolor="#1e293b" leftPadding="2"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
-        <element kind="textField" x="0" y="124" width="523" height="16" fontSize="9.0" forecolor="#64748b" leftPadding="2"><expression><![CDATA["Emitido em " + $P{GENERATED}]]></expression></element>
+        <element kind="textField" x="0" y="48" width="523" height="28" fontSize="14.0" bold="true" forecolor="#2c3e50"><expression><![CDATA[$P{TITLE}]]></expression></element>
+        <element kind="textField" x="0" y="80" width="523" height="20" fontSize="11.0" forecolor="#475569"><expression><![CDATA["Assunto: " + $P{SUBTITLE}]]></expression></element>
+        <element kind="textField" x="0" y="104" width="523" height="18" fontSize="10.0" bold="true" forecolor="#1e293b"><expression><![CDATA[$P{EMPRESA}]]></expression></element>
+        <element kind="textField" x="0" y="124" width="523" height="16" fontSize="9.0" forecolor="#64748b"><expression><![CDATA["Emitido em " + $P{GENERATED}]]></expression></element>
     </title>
     <pageFooter height="28">
         <element kind="staticText" x="0" y="0" width="523" height="1" mode="Opaque" backcolor="#e2e8f0"><text> </text></element>
@@ -21,6 +21,6 @@
     </pageFooter>
     <summary height="120" splitType="Stretch">
         <element kind="staticText" x="0" y="0" width="523" height="1" mode="Opaque" backcolor="#e2e8f0"><text> </text></element>
-        <element kind="textField" x="0" y="12" width="523" height="100" textAdjust="StretchHeight" fontSize="11.0" leftPadding="2"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
+        <element kind="textField" x="0" y="12" width="523" height="100" textAdjust="StretchHeight" fontSize="11.0"><expression><![CDATA[$P{SUMMARY}]]></expression></element>
     </summary>
 </jasperReport>
