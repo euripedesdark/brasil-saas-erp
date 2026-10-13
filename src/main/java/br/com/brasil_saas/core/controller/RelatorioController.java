@@ -88,11 +88,10 @@ public class RelatorioController {
         try {
             byte[] pdf = "FISCAL".equalsIgnoreCase(tipo) ? pdfGeneratorService.generateFiscalReport(
                     report.getNomeRelatorio(), report.getPeriodo(), empresaId, "", java.time.LocalDate.now(),
-                    dados, columns, report.getResumo()) : pdfGeneratorService.generateReport(
-                    report.getNomeRelatorio() != null ? report.getNomeRelatorio() : tipo,
-                    report.getPeriodo() != null ? report.getPeriodo() : "",
-                    empresaId, "", java.time.LocalDate.now(),
-                    dados, columns, report.getResumo());
+                    dados, columns, report.getResumo()) :
+                    br.com.brasil_saas.core.service.report.JasperReportRenderer.shared().pdfPorTipo(
+                            tipo, report.getNomeRelatorio(), report.getPeriodo(), "Empresa " + empresaId,
+                            dados, report.getResumo());
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
