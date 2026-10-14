@@ -1,0 +1,32 @@
+BEH-001,Contabilidade 7 abas,Lanç/Razão/Balancete/Balanço/Fech/DRE/ECD sem erros,APROVADO,,-
+BEH-002,Novo lançamento,Diálogo Data*/Histórico* + Cancelar sem escrita,APROVADO,0 writes,-
+BEH-003,Caixa ações,5 botões ícone sem aria-label,APROVADO com ressalva,a11y,Baixa
+BEH-004,Transferência,Botão mudo sem itens; form com selects vazios,APROVADO com ressalva,sem feedback/validação visível,Baixa
+BEH-005,Integrações endpoint,Diálogo Novo (5 campos) abre/fecha sem escrita,APROVADO,0 writes,-
+BEH-006,Helpdesk/Agenda,Diálogos Novo abrem/fecham sem escrita,APROVADO,required ok,-
+BEH-007,Perfil,Save sem alteração PUT 200 sem toast,APROVADO,sem feedback,Baixa
+BEH-008,Notificações,Marcar todas lidas POST 200 + refresh,APROVADO,,-
+BEH-009,Dashboard,Atualizar indicadores 403 correto + auditoria real,APROVADO,,-
+BEH-010,DIFAL/ICMS-ST,Calculadoras POST 200 com valores coerentes,APROVADO,R$120/60/20/80 e 120/1400/132/252,-
+BEH-011,Foto perfil,404 sem foto tratado com avatar inicial,APROVADO,,-
+BEH-012,Balancete/DRE/regras APIs,200 com dados (JPA lote5 live),APROVADO,6180b,-
+SCR-101,/fiscal/apuracoes,1 linha sem erros,APROVADO,,-
+SCR-102,/rh/cargos,10 linhas sem erros,APROVADO,,-
+SCR-103,/producao/estrutura,Carrega sem erros,APROVADO,,-
+SCR-104,/workflow,Instâncias/vazio sem erros,APROVADO,,-
+SCR-105,/supply-chain/control-tower,3 tabelas sem erros,APROVADO,,-
+SCR-106,/vendas/contratos,12 linhas sem erros,APROVADO,,-
+SCR-107,/governanca-corporativa,Carrega sem erros,APROVADO,,-
+SCR-108,/servicos,403 servicos (parcial),APROVADO com ressalva,,-
+SCR-109,/producao/apontamentos,Carrega sem erros,APROVADO,,-
+SCR-110,/admin/configuracoes,Form + Salvar sem erros,APROVADO,,-
+SCR-111,/fiscal/nfse,10 linhas (403 parcial servicos/clientes),APROVADO com ressalva,,-
+SCR-112,/vendas/tabelas-preco,10 linhas sem erros,APROVADO,,-
+SCR-113,/estoque/depositos,10 linhas sem erros,APROVADO,,-
+SCR-114,/qualidade,Carrega sem erros,APROVADO,,-
+SCR-115,/ativos,Carrega sem erros,APROVADO,,-
+SCR-116,/fiscal/entradas,3 linhas sem erros,APROVADO,,-
+SCR-117,/conhecimento,Carrega sem erros,APROVADO,,-
+SCR-118,/documentos,Carrega sem erros,APROVADO,,-
+SCR-119,/perfil,Dados + save no-op,APROVADO,,-
+SCR-120,/portais,Gerar acesso + vazio,APROVADO,,-
