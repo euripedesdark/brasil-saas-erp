@@ -39,6 +39,7 @@ build-and-test:
       - .m2/repository
   script:
     - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp test -Dmaven.repo.local=.m2/repository
     - mvn -B -ntp package -DskipTests -Dmaven.repo.local=.m2/repository

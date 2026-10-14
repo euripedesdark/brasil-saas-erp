@@ -22,6 +22,7 @@ coverage:
     paths:
       - .m2/repository
   script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository clean test jacoco:report || true
     - |

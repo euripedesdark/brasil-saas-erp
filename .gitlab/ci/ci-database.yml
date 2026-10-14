@@ -21,6 +21,7 @@ test-migrations:
     paths:
       - .m2/repository
   script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository test -Dtest=BootstrapPostgresTest
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
