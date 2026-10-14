@@ -20,3 +20,6 @@ UJUI-003,DELETE ausente em vendas/metas (residuo id 1 TESTE-QA),Vendas,Média,AB
 UJUI-004,Valor da meta zerado ao criar pela UI,Vendas,Média,ABERTO,valorMeta 0.00 (InputNumber nao submeteu ou API ignorou),Investigar binding numero
 UJUI-006,Sem GET unitario em enterprise genericos,Enterprise,Baixa,ABERTO,405 em /{resource}/{id},Adicionar GET by id ou documentar
 UJUI-008,Validacao responde 409 em vez de 400,Enterprise,Baixa,ABERTO,DATA_INTEGRITY sem validacao previa,Validar DTO (400 DADOS_INVALIDOS)
+SRCH-001,Busca de produtos com termo unico nunca retorna (AND nome+codigo),Cadastros,Média,ABERTO,frontend envia nome=X&codigo=X; backend exige ambos,Enviar um campo ou backend com OR
+SORT-001,Ordenacao da grade ignorada (sort=nome&direction=desc nao e Pageable Spring),Cadastros,Alta,ABERTO,aria-sort=descending com dados em ordem padrao,Frontend enviar sort=nome,desc
+UX-001,Falha de mutacao sem feedback (dialog mudo apos 403),Frontend,Baixa,ABERTO,delete 403 sem toast/mensagem,Toast de erro em mutacoes

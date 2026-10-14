@@ -1,0 +1,8 @@
+UIB-001,Busca produtos,Termo único nunca acha (AND nome+codigo),REPROVADO,PROD-REF/Referência → vazio; API isolada OK,Média
+UIB-002,Paginação UI,Página 2 carrega 10 corretas,APROVADO,page=1 API + active,-
+UIB-003,Ordenação UI,Header indica desc mas dados em ordem padrão,REPROVADO,UI envia sort=nome&direction=desc (ignorado pelo Pageable),Alta
+UIB-004,Editar produto,Diálogo abre (24 campos) + Cancelar sem escrita,APROVADO,0 writes,-
+UIB-005,Excluir produto,403 + diálogo mudo sem feedback,REPROVADO (parcial),sem toast/mensagem após falha,Baixa
+UIB-006,Imprimir,Nenhum download/requisição observável,NÃO CONCLUSIVO,window.print provável (headless),-
+UIB-007,Sessão,Expiração ~2h exige relogin,APROVADO,401s → login 200,-
+SES-002,Login pós-restart,Sessão anterior invalidada corretamente,APROVADO,403s → relogin,-
