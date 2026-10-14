@@ -56,6 +56,8 @@ public class SupplyChainEnterpriseController {
  @PostMapping("/demanda") @PreAuthorize("hasAuthority('enterprise:escrita')") @Transactional public Map<String,Object> demanda(@AuthenticationPrincipal AuthenticatedUser u,@RequestBody Map<String,Object>b){
    ScDemanda d = new ScDemanda();
    d.setEmpresaId(u.getEmpresaId());
+   if (MapValues.lng(b.get("produtoId")) == null) throw new IllegalArgumentException("produtoId é obrigatório");
+   if (MapValues.dt(b.get("periodo")) == null) throw new IllegalArgumentException("periodo é obrigatório");
    d.setProdutoId(MapValues.lng(b.get("produtoId")));
    d.setLocalId(MapValues.lng(b.get("localId")));
    d.setPeriodo(MapValues.dt(b.get("periodo")));

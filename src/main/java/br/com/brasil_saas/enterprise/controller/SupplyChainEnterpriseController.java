@@ -144,7 +144,9 @@ public class SupplyChainEnterpriseController {
    return documentoRepository.findTopByEmpresaIdOrderByIdDesc(empresa)
      .orElseThrow(() -> new NoSuchElementException("Documento não encontrado")).toMap();
   }
-  Map<String,Object> d=sanitize(body); d.put("empresa_id",u.getEmpresaId()); d.put("created_by",u.getId());
+  Map<String,Object> d=somentePreenchidos(sanitize(body));
+  List<String> ck=new ArrayList<>(d.keySet()); if(ck.isEmpty()) throw new IllegalArgumentException("Nenhum campo informado");
+  d.put("empresa_id",u.getEmpresaId()); d.put("created_by",u.getId());
   List<String> c=new ArrayList<>(d.keySet()); if(c.isEmpty()) throw new IllegalArgumentException("Nenhum campo informado");
   return switch (resource) {
     case "reposicao" -> {
@@ -670,7 +672,18 @@ public class SupplyChainEnterpriseController {
    documentoRepository.save(d);
   }
  }
- private void validar(String resource){
+ private Map<String,Object> somentePreenchidos(Map<String,Object> body) {
+  Map<String,Object> out=new LinkedHashMap<>();
+  if (body == null) return out;
+  body.forEach((k,v) -> {
+   if (v == null) return;
+   if (v instanceof String s && s.isBlank()) return;
+   out.put(k,v);
+  });
+  return out;
+ }
+
+ private void validar(String resource) {
   if(!RECURSOS.contains(resource)) throw new IllegalArgumentException("Recurso inválido");
  }
  private Map<String,Object> sanitize(Map<String,Object> s){
