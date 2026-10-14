@@ -1,0 +1,2 @@
+RT-101,Validacao criar generico lote9c,POST vazio → 400 Nenhum campo informado,APROVADO (ENCERRADO),DADOS_INVALIDOS,-
+RT-102,Validacao demanda SC,POST vazio → 400 produtoId obrigatório,APROVADO (ENCERRADO),,-
