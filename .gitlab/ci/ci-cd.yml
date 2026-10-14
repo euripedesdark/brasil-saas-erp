@@ -27,6 +27,7 @@ backend-build:
       - .m2/repository
   script:
     - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp test -B -Dmaven.repo.local=.m2/repository
     - mvn -B -ntp package -DskipTests -Dmaven.repo.local=.m2/repository
@@ -68,6 +69,7 @@ database-migration-smoke:
     FLYWAY_USER: brasil-saas
     FLYWAY_PASSWORD: test123
   script:
+    - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
