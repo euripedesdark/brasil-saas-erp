@@ -1,0 +1,2 @@
+UJ-004-REV,Meta valorMeta via API,POST {valorMeta:7500} persiste 7500,RECLASSIFICADO: artefato de automação (InputNumber PrimeReact não processa eventos sintéticos; contrato API correto),Teste com digitação sintética é inválido p/ InputNumber
+RT-101,Fixes no jar CI,SORT/SRCH/blank-filter ativos no deploy automatizado,APROVADO,sort desc + OR + 400,-
