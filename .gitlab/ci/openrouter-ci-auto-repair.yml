@@ -1,0 +1,18 @@
+# Espelho automatico: .github/workflows/openrouter-ci-auto-repair.yml
+openrouter-ci-auto-repair--repair:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - 'set -euo pipefail
+
+    test -n "$OPENROUTER_API_KEY" || { echo "::error::OPENROUTER_API_KEY secret is
+    missing."; exit 1; }
+
+    test -n "$AGENT_GITHUB_TOKEN" || { echo "::error::AGENT_GITHUB_TOKEN secret is
+    missing."; exit 1; }
+
+    '
+  - python .github/scripts/openrouter_ci_repair.py
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

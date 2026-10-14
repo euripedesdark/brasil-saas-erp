@@ -1,0 +1,88 @@
+# Espelho automatico: .github/workflows/publish-staging.yml
+publish-staging--publish:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - 'set -Eeuo pipefail
+
+    curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18081/actuator/health
+    | python3 -c ''import json,sys; assert json.load(sys.stdin)["status"] == "UP"''
+
+    HEADER_FILE=$(mktemp)
+
+    trap ''rm -f "$HEADER_FILE"'' EXIT
+
+    curl --fail --silent --show-error --max-time 10 -D "$HEADER_FILE" -H ''Host: staging.brasil-saaserp.com''
+    http://127.0.0.1/login -o /dev/null
+
+    python3 - "$HEADER_FILE" <<''PY''
+
+    import pathlib,sys
+
+    assert any(line.lower().strip() == ''x-erp-environment: staging'' for line in
+    pathlib.Path(sys.argv[1]).read_text().splitlines()), ''Staging route is not installed
+    in Nginx. Administrator must run activate-nginx80.sh.''
+
+    PY
+
+    '
+  - "set -Eeuo pipefail\nexport XDG_RUNTIME_DIR=\"/run/user/$(id -u)\"\nexport DBUS_SESSION_BUS_ADDRESS=\"\
+    unix:path=$XDG_RUNTIME_DIR/bus\"\npython3 - <<'PY'\nimport pathlib,subprocess,os,re,time,urllib.request,json\n\
+    home=pathlib.Path.home()\nprod=home/'.local/share/brasil-saas-public-access'\n\
+    stage=home/'.local/share/brasil-saas-staging'\nroot=home/'.local/share/brasil-saas-staging-public-access'\n\
+    root.mkdir(exist_ok=True); root.chmod(0o700)\nassert (prod/'cloudflared').exists()\n\
+    src=(prod/'supervisor.py').read_text()\nsrc=src.replace(\"str(root/'cloudflared')\"\
+    ,\"str(pathlib.Path.home()/'.local/share/brasil-saas-public-access/cloudflared')\"\
+    )\nsrc=src.replace(\"'brasil-saaserp.com'\",\"'staging.brasil-saaserp.com'\").replace(\"\
+    '127.0.0.1:18493'\",\"'127.0.0.1:18494'\")\n(root/'supervisor.py').write_text(src);\
+    \ (root/'supervisor.py').chmod(0o700)\ncompile(src,str(root/'supervisor.py'),'exec')\n\
+    units=home/'.config/systemd/user'\nunit=units/'brasil-saas-staging-public-access.service'\n\
+    unit.write_text('[Unit]\\nDescription=Free isolated staging public access\\nAfter=brasil-saas-staging-app.service\\\
+    n[Service]\\nExecStart=/usr/bin/python3 '+str(root/'supervisor.py')+'\\nRestart=always\\\
+    nRestartSec=10\\n[Install]\\nWantedBy=default.target\\n')\nsubprocess.run(['systemctl','--user','daemon-reload'],check=True)\n\
+    subprocess.run(['systemctl','--user','enable','--now',unit.name],check=True)\n\
+    url=''\nfor _ in range(90):\n    try:\n        urls=re.findall(r'https://[a-z0-9-]+\\\
+    .trycloudflare\\.com',(root/'tunnel.log').read_text(errors='replace'))\n     \
+    \   if urls:\n            url=urls[-1]\n            with urllib.request.urlopen(url+'/login',timeout=5)\
+    \ as r:\n                assert r.headers.get('X-ERP-Environment')=='staging'\n\
+    \                assert r.status==200\n            break\n    except (OSError,AssertionError):\
+    \ pass\n    time.sleep(2)\nelse: raise RuntimeError('Staging public access did\
+    \ not become ready')\nsettings=dict(line.split('=',1) for line in (stage/'staging.env').read_text().splitlines()\
+    \ if line and not line.startswith('#'))\nbody=json.dumps({'username':'staging-admin','password':settings['STAGING_ADMIN_PASSWORD'],'provider':'POSTGRES'}).encode()\n\
+    request=urllib.request.Request(url+'/api/auth/login',data=body,headers={'Content-Type':'application/json'})\n\
+    with urllib.request.urlopen(request,timeout=15) as response:\n    assert json.load(response).get('data',{}).get('accessToken'),'Staging\
+    \ public login did not return access token'\n(root/'url.txt').write_text(url+'\\\
+    n')\nwith open(os.environ['GITHUB_OUTPUT'],'a') as out: out.write('url='+url+'\\\
+    n')\nprint('PUBLIC_STAGING_LOGIN_OK',url+'/login')\nPY\n"
+  rules: &id001
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64
+publish-staging--verify-external:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "python3 - <<'PY'\nimport os,urllib.request,urllib.parse,re\nbase=os.environ['STAGING_PUBLIC_URL']\n\
+    with urllib.request.urlopen(base+'/login',timeout=15) as response:\n    assert\
+    \ response.status==200\n    assert response.headers.get('X-ERP-Environment')=='staging'\n\
+    \    html=response.read().decode()\nassets=re.findall(r'(?:src|href)=[\"\\x27]([^\"\
+    \\x27]+\\.(?:js|css)(?:\\?[^\"\\x27]*)?)',html)\nlocal=[a for a in assets if not\
+    \ a.startswith(('http:','https:','//'))]\nassert local,'Missing frontend assets'\n\
+    for asset in local[:4]:\n    with urllib.request.urlopen(urllib.parse.urljoin(base+'/login',asset),timeout=15)\
+    \ as response:\n        assert response.status==200\n        assert 'text/html'\
+    \ not in response.headers.get('Content-Type','')\n        assert response.read(1024)\n\
+    print('STAGING_EXTERNAL_OK',base+'/login')\nPY\n"
+  rules: *id001
+  variables:
+    STAGING_PUBLIC_URL: ${{ needs.publish.outputs.url }}
+publish-staging--record-staging:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - echo "Verified isolated staging access $STAGING_URL/login" >> "$GITHUB_STEP_SUMMARY"
+  rules: *id001

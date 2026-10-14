@@ -1,0 +1,26 @@
+# Espelho automatico: .github/workflows/inspect-bridge-startup.yml
+inspect-bridge-startup--inspect:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "python3 - <<'PY'\nimport subprocess,urllib.request,socket\nfor name in ['nfse-sp-api.service','nfse-sp-bridge.service','brasil_saas-watchdog.service']:\n\
+    \    r=subprocess.run(['systemctl','show',name,'-p','ActiveState','-p','SubState','-p','ExecMainStatus','-p','NRestarts'],capture_output=True,text=True)\n\
+    \    print(name,r.stdout.strip().replace('\\n',' | '))\nr=subprocess.run(['journalctl','-u','nfse-sp-bridge.service','-n','100','--no-pager','-o','cat'],capture_output=True,text=True)\n\
+    text=r.stdout.lower()\npatterns={'missing_certificate':['certificado não legível'],'missing_password':['nfse_sp_cert_pass\
+    \ não definido'],'missing_bundle':['bundle: command not found','bundle: comando\
+    \ não encontrado'],'missing_gems':['bundler::gemnotfound','could not find','bundle\
+    \ install'],'ruby_load_error':['loaderror','cannot load such file'],'openssl_error':['pkcs12_parse','unsupported','openssl::'],'port_conflict':['address\
+    \ already in use','eaddrinuse'],'permissions':['permission denied','permissão\
+    \ negada']}\nprint('JOURNAL_READ',r.returncode,'HAS_LINES',bool(text.strip()))\n\
+    for label,terms in patterns.items():\n    print('ERROR_CATEGORY',label,any(term\
+    \ in text for term in terms))\nfor port,path in [(4567,'/api/nfse-sp/status'),(4568,'/api/nfse-sp/status'),(4569,'/api/nfse-sp/status'),(8080,'/login'),(18081,'/login')]:\n\
+    \    try:\n        with urllib.request.urlopen('http://127.0.0.1:%d%s'%(port,path),timeout=4)\
+    \ as response:\n            print('HTTP',port,path,response.status)\n    except\
+    \ Exception as e: print('HTTP',port,path,type(e).__name__)\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64

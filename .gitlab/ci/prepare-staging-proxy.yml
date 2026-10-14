@@ -1,0 +1,51 @@
+# Espelho automatico: .github/workflows/prepare-staging-proxy.yml
+prepare-staging-proxy--prepare:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - 'set -Eeuo pipefail
+
+    TASK_STAGE="$HOME/.local/share/brasil-saas-staging"
+
+    test -d "$TASK_STAGE"
+
+    install -m 0700 ops/staging/activate-nginx80.sh "$TASK_STAGE/activate-nginx80.sh"
+
+    bash -n "$TASK_STAGE/activate-nginx80.sh"
+
+    echo "ADMIN_COMMAND=sudo bash $TASK_STAGE/activate-nginx80.sh"
+
+    echo "Staging Nginx activation needs administrator rights; no root permissions
+    were bypassed."
+
+    '
+  rules: &id001
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64
+prepare-staging-proxy--test-proxy:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -Eeuo pipefail\nsudo apt-get update -qq\nsudo apt-get install -y nginx\n\
+    python3 - <<'PY' &\nimport http.server,json\nclass Backend(http.server.BaseHTTPRequestHandler):\n\
+    \    def do_GET(self):\n        body=json.dumps({'status':'UP'}).encode() if self.path=='/actuator/health'\
+    \ else b'<html>Isolated staging</html>'\n        self.send_response(200); self.send_header('Content-Length',str(len(body)));\
+    \ self.end_headers(); self.wfile.write(body)\n    def log_message(self,*args):\
+    \ pass\nhttp.server.HTTPServer(('127.0.0.1',18081),Backend).serve_forever()\n\
+    PY\nBACKEND_PID=$!\ntrap 'kill \"$BACKEND_PID\" || true' EXIT\nsleep 1\nsudo systemctl\
+    \ start nginx\ncurl --fail --silent http://127.0.0.1/login -o /tmp/prod-before.html\
+    \ || curl --fail --silent http://127.0.0.1/ -o /tmp/prod-before.html\n# The fixture\
+    \ default host serves a login page so the installer can\n# verify production was\
+    \ preserved after adding staging's virtual host.\necho '<html>Production fixture</html>'\
+    \ | sudo tee /var/www/html/login >/dev/null\nsudo bash ops/staging/activate-nginx80.sh\n\
+    curl --fail --silent -H 'Host: staging.brasil-saaserp.com' http://127.0.0.1/login\
+    \ | python3 -c 'import sys; assert \"Isolated staging\" in sys.stdin.read()'\n\
+    curl --fail --silent http://127.0.0.1/login | python3 -c 'import sys; assert \"\
+    Production fixture\" in sys.stdin.read()'\necho 'PASS staging and production enter\
+    \ via port 80 and reach different applications'\n"
+  rules: *id001

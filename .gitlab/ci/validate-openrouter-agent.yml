@@ -1,0 +1,27 @@
+# Espelho automatico: .github/workflows/validate-openrouter-agent.yml
+validate-openrouter-agent--validate:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - python -m py_compile .github/scripts/openrouter_issue_agent.py .github/scripts/openrouter_ci_repair.py
+  - "python - <<'PY'\nfrom pathlib import Path\nscript = Path(\".github/scripts/openrouter_issue_agent.py\"\
+    ).read_text(encoding=\"utf-8\")\nworkflow = Path(\".github/workflows/openrouter-issue-agent.yml\"\
+    ).read_text(encoding=\"utf-8\")\nagent = Path(\".github/agents/my-agent.agent.md\"\
+    ).read_text(encoding=\"utf-8\")\nsetup = Path(\"docs/VSCODE-OPENROUTER-SETUP.md\"\
+    ).read_text(encoding=\"utf-8\")\nrequired_script_markers = [\"subprocess.run\"\
+    , \"blocked_parts\", \"openrouter/free\", \"post_comment\"]\nmissing = [marker\
+    \ for marker in required_script_markers if marker not in script]\nif missing:\n\
+    \    raise SystemExit(f\"Missing expected agent safety markers: {missing}\")\n\
+    for marker in (\"issue_comment:\", \"AGENT_GITHUB_TOKEN\", \"OPENROUTER_API_KEY\"\
+    , \"pull-requests: write\", \"contents: write\"):\n    if marker not in workflow:\n\
+    \        raise SystemExit(f\"Missing expected workflow configuration: {marker}\"\
+    )\nfor marker in (\"target: vscode\", \"model: openrouter/free\", \"tools:\"):\n\
+    \    if marker not in agent:\n        raise SystemExit(f\"Missing expected VS\
+    \ Code agent field: {marker}\")\nfor marker in (\"https://openrouter.ai/api/v1/chat/completions\"\
+    , \"Custom Endpoint\", \"chat/completions\"):\n    if marker not in setup:\n \
+    \       raise SystemExit(f\"Missing expected OpenRouter setup detail: {marker}\"\
+    )\nprint(\"Agent syntax, safety markers, VS Code profile and OpenRouter setup\
+    \ validated.\")\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

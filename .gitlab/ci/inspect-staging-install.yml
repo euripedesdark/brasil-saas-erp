@@ -1,0 +1,33 @@
+# Espelho automatico: .github/workflows/inspect-staging-install.yml
+inspect-staging-install--inspect:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "python3 - <<'PY'\nimport os,pathlib,subprocess,urllib.request,urllib.parse,re,json,hashlib\n\
+    home=pathlib.Path.home()\ncandidates=[]\nfor p in (home/'brasil-saas-erp').iterdir():\
+    \ print('SOURCE_ENTRY',p.name)\nfor p in (home/'brasil-saas-erp').glob('*/package.json'):\
+    \ print('PACKAGE',p, p.read_text()[:4000])\nfor folder in [home/'staging',home/'.local/share/brasil-saas-staging/staging',home/'brasil-saas-erp/staging']:\n\
+    \    print('DIRECTORY',folder)\n    if folder.exists():\n        for p in sorted(folder.iterdir()):\
+    \ print('ENTRY',p.name,'dir' if p.is_dir() else 'file')\nos.environ['XDG_RUNTIME_DIR']=f'/run/user/{os.getuid()}'\n\
+    os.environ['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{os.getuid()}/bus'\n\
+    print(subprocess.run(['systemctl','--user','show','brasil-saas-staging-app','-p','ActiveState','-p','ExecStart','-p','WorkingDirectory'],capture_output=True,text=True).stdout)\n\
+    for p in [pathlib.Path('/opt/brasil-saas-erp-deploy/release.jar'),home/'.local/share/brasil-saas-staging/app.jar']:\n\
+    \    try:\n        digest=hashlib.file_digest(p.open('rb'),'sha256').hexdigest()\n\
+    \        print('JAR',p,'SHA256',digest)\n    except OSError as e: print('JAR_UNREADABLE',p,type(e).__name__)\n\
+    for label,url,host in [('stage-direct','http://127.0.0.1:18081/login',None),('stage-prefix','http://127.0.0.1/staging',None),('stage-host','http://127.0.0.1/login','staging.brasil-saaserp.com')]:\n\
+    \    try:\n        req=urllib.request.Request(url,headers={'Host':host} if host\
+    \ else {})\n        with urllib.request.urlopen(req,timeout=10) as r:\n      \
+    \      html=r.read().decode()\n            print('HTTP',label,r.status,r.url,'environment',r.headers.get('X-ERP-Environment'))\n\
+    \            for asset in re.findall(r'(?:src|href)=[\"\\x27]([^\"\\x27]+\\.(?:js|css))',html)[:4]:\n\
+    \                u=urllib.parse.urljoin(r.url,asset)\n                try:\n \
+    \                   with urllib.request.urlopen(urllib.request.Request(u,headers={'Host':host}\
+    \ if host else {}),timeout=10) as a: print('ASSET',label,u,a.status,a.headers.get('Content-Type'))\n\
+    \                except Exception as e: print('ASSET_FAILED',label,u,type(e).__name__)\n\
+    \    except Exception as e: print('HTTP_FAILED',label,type(e).__name__)\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64

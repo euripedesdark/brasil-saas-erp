@@ -1,0 +1,58 @@
+# Espelho automatico: .github/workflows/prepare-staging-db.yml
+prepare-staging-db--prepare:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -Eeuo pipefail\nexport TASK_STAGE=\"$HOME/.local/share/brasil-saas-staging\"\
+    \nexport XDG_RUNTIME_DIR=\"/run/user/$(id -u)\"\nexport DBUS_SESSION_BUS_ADDRESS=\"\
+    unix:path=$XDG_RUNTIME_DIR/bus\"\nmkdir -p \"$TASK_STAGE\"\nchmod 700 \"$TASK_STAGE\"\
+    \npython3 - <<'PY'\nimport os,pathlib,secrets,subprocess,shutil,json\nroot=pathlib.Path(os.environ['TASK_STAGE'])\n\
+    pg=root/'postgres'\npg.mkdir(exist_ok=True); pg.chmod(0o700)\ndata=pg/'data'\n\
+    secret=pg/'password'\nif not secret.exists(): secret.write_text(secrets.token_urlsafe(36)+'\\\
+    n'); secret.chmod(0o600)\ninitdb=shutil.which('initdb')\npostgres=shutil.which('postgres')\n\
+    if not (data/'PG_VERSION').exists():\n    subprocess.run([initdb,'-D',str(data),'--username=staging_owner','--pwfile='+str(secret),'--auth-local=scram-sha-256','--auth-host=scram-sha-256','--encoding=UTF8'],check=True,stdout=subprocess.DEVNULL)\n\
+    \    with open(data/'postgresql.conf','a') as f:\n        f.write(\"\\nlisten_addresses='127.0.0.1'\\\
+    nport=15432\\nunix_socket_directories='\"+str(pg)+\"'\\nshared_buffers='32MB'\\\
+    nmax_connections=12\\nwork_mem='2MB'\\nmaintenance_work_mem='16MB'\\n\")\nunits=pathlib.Path.home()/'.config/systemd/user';\
+    \ units.mkdir(parents=True,exist_ok=True)\nunit=units/'brasil-saas-staging-postgres.service'\n\
+    unit.write_text('[Unit]\\nDescription=Isolated ERP staging PostgreSQL\\n[Service]\\\
+    nExecStart='+postgres+' -D '+str(data)+'\\nRestart=on-failure\\nRestartSec=5\\\
+    nMemoryMax=192M\\nCPUQuota=25%\\n[Install]\\nWantedBy=default.target\\n')\nsubprocess.run(['systemctl','--user','daemon-reload'],check=True)\n\
+    subprocess.run(['systemctl','--user','enable','--now',unit.name],check=True)\n\
+    env=os.environ.copy()\nenv['PGPASSWORD']=secret.read_text().strip()\nbase=['psql','-X','-h','127.0.0.1','-p','15432','-U','staging_owner','-d','postgres','-v','ON_ERROR_STOP=1']\n\
+    import time\nfor _ in range(20):\n    if subprocess.run(base+['-Atc','select 1'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0:\
+    \ break\n    time.sleep(1)\nelse: raise RuntimeError('Isolated PostgreSQL did\
+    \ not start')\nexists=subprocess.check_output(base+['-Atc',\"select 1 from pg_database\
+    \ where datname='brasil_saas_staging'\"],env=env,text=True).strip()\nif not exists:\
+    \ subprocess.run(base+['-c','CREATE DATABASE brasil_saas_staging'],env=env,check=True,stdout=subprocess.DEVNULL)\n\
+    db=base.copy(); db[db.index('postgres')]='brasil_saas_staging'\nsubprocess.run(db+['-c','CREATE\
+    \ SCHEMA IF NOT EXISTS brasil_saas AUTHORIZATION staging_owner'],env=env,check=True,stdout=subprocess.DEVNULL)\n\
+    release=pathlib.Path('/opt/brasil-saas-erp-deploy/release.jar')\nif not (root/'app.jar').exists():\
+    \ shutil.copy2(release,root/'app.jar')\nenvfile=root/'staging.env'\nif not envfile.exists():\n\
+    \    settings={\n        'SPRING_PROFILES_ACTIVE':'staging','SERVER_PORT':'18081',\n\
+    \        'SERVER_ADDRESS':'127.0.0.1',\n        'DB_URL':'jdbc:postgresql://127.0.0.1:15432/brasil_saas_staging',\n\
+    \        'DB_USER':'staging_owner','DB_PASSWORD':secret.read_text().strip(),\n\
+    \        'JWT_SECRET':secrets.token_urlsafe(64),\n        'APP_SECURITY_SECRET_ENCRYPTION_KEY':secrets.token_urlsafe(32),\n\
+    \        'MONGODB_URI':'mongodb://127.0.0.1:27018/brasil_saas_staging',\n    \
+    \    'REDIS_HOST':'127.0.0.1','REDIS_PORT':'16379','REDIS_PASSWORD':secrets.token_urlsafe(32),\n\
+    \        'RABBIT_HOST':'127.0.0.1','RABBIT_PORT':'15673','RABBIT_USER':'staging',\n\
+    \        'RABBIT_PASSWORD':secrets.token_urlsafe(32),'RABBIT_VHOST':'/staging',\n\
+    \        'MINIO_URL':'http://127.0.0.1:19000',\n        'MINIO_ACCESS_KEY':'staging','MINIO_SECRET_KEY':secrets.token_urlsafe(32),\n\
+    \        'MINIO_BUCKET':'brasil-saas-staging',\n        'BRASIL_SAAS_AUTH_SERVICE_ENABLED':'false','BRASIL_SAAS_AD_ENABLED':'false',\n\
+    \        'BRASIL_SAAS_BOOTSTRAP_ADMIN_ENABLED':'false',\n        'SPRING_FLYWAY_ENABLED':'true',\n\
+    \        'BRASIL_SAAS_MIGRACAO_IMAGENS_ENABLED':'false',\n        'DB_POOL_MAX':'3','DB_POOL_MIN':'1'}\n\
+    \    envfile.write_text(''.join(k+'='+v+'\\n' for k,v in settings.items()))\n\
+    \    envfile.chmod(0o600)\ninfo=json.loads(subprocess.check_output(db+['-Atc',\"\
+    select json_build_object('database',current_database(),'port',inet_server_port(),'tables',(select\
+    \ count(*) from information_schema.tables where table_schema='brasil_saas'))\"\
+    ],env=env,text=True))\nprint('ISOLATED_DB',info)\nprint('Staging config and JAR\
+    \ prepared; application not started before auxiliary services and Nginx permissions\
+    \ are ready.')\nfor tool in ['mongod','redis-server','rabbitmq-server','minio']:\n\
+    \    print('TOOL',tool,shutil.which(tool))\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64

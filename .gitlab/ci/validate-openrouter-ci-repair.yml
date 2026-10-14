@@ -1,0 +1,18 @@
+# Espelho automatico: .github/workflows/validate-openrouter-ci-repair.yml
+validate-openrouter-ci-repair--validate:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - python -m py_compile .github/scripts/openrouter_ci_repair.py
+  - "python - <<'PY'\nfrom pathlib import Path\nscript = Path(\".github/scripts/openrouter_ci_repair.py\"\
+    ).read_text()\nworkflow = Path(\".github/workflows/openrouter-ci-auto-repair.yml\"\
+    ).read_text()\nfor marker in ('cmd([\"git\",\"apply\"', \"blocked_exact\", \"\
+    PR de fork\", \"openrouter/free\"):\n    if marker not in script:\n        raise\
+    \ SystemExit(f\"Missing script safety marker: {marker}\")\nfor marker in (\"workflow_run:\"\
+    , \"AGENT_GITHUB_TOKEN\", \"OPENROUTER_API_KEY\", \"pull-requests: write\"):\n\
+    \    if marker not in workflow:\n        raise SystemExit(f\"Missing workflow\
+    \ marker: {marker}\")\nprint(\"CI repair agent syntax and safety markers validated.\"\
+    )\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

@@ -1,0 +1,23 @@
+# Espelho automatico: .github/workflows/validate-graylog-bi-plugin.yml
+validate-graylog-bi-plugin--build:
+  stage: inspect
+  image: maven:3.9-eclipse-temurin-21
+  allow_failure: true
+  script:
+  - 'node --test src/main/resources/static/react/graylog-bi-bridge.test.mjs
+
+    python3 scripts/bi/test-install-graylog-bi.py
+
+    python3 scripts/bi/test-configure-graylog.py
+
+    '
+  - python3 scripts/bi/build-graylog-bi.py
+  - "python3 - <<'PY'\nimport importlib.util, pathlib, zipfile\nspec = importlib.util.spec_from_file_location('installer',\
+    \ 'scripts/bi/install-graylog-bi.py')\nmodule = importlib.util.module_from_spec(spec);\
+    \ spec.loader.exec_module(module)\npath = pathlib.Path('integrations/graylog-bi/target/brasil-saas-graylog-bi-1.0.0.jar')\n\
+    with zipfile.ZipFile(path) as jar:\n    print('Web resources:', [name for name\
+    \ in jar.namelist() if name.endswith(('.module.json', '.js'))])\n    print('Web\
+    \ manifest:', jar.read('plugin.' + module.PLUGIN + '.module.json').decode())\n\
+    print('Plugin SHA256:', module.validate_jar(path))\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

@@ -17,6 +17,7 @@ stages:
   - package
   - database
   - deploy
+  - inspect
 
 variables:
   JAVA_VERSION: "21"
@@ -24,11 +25,33 @@ variables:
   MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
 
 include:
-  - local: '.gitlab/ci/ci-cd.yml'
+  - local: '.gitlab/ci/build.yml'
+  - local: '.gitlab/ci/cd-deploy.yml'
   - local: '.gitlab/ci/ci-build-test.yml'
+  - local: '.gitlab/ci/ci-cd.yml'
   - local: '.gitlab/ci/ci-code-quality.yml'
   - local: '.gitlab/ci/ci-database.yml'
-  - local: '.gitlab/ci/test-coverage.yml'
-  - local: '.gitlab/ci/cd-deploy.yml'
-  - local: '.gitlab/ci/build.yml'
   - local: '.gitlab/ci/ci-dump-sanitizado.yml'
+  - local: '.gitlab/ci/free-public-access.yml'
+  - local: '.gitlab/ci/incident-readonly-health.yml'
+  - local: '.gitlab/ci/inspect-bridge-startup.yml'
+  - local: '.gitlab/ci/inspect-graylog-bi.yml'
+  - local: '.gitlab/ci/inspect-microservice-runtime.yml'
+  - local: '.gitlab/ci/inspect-staging-install.yml'
+  - local: '.gitlab/ci/install-staging-runtime.yml'
+  - local: '.gitlab/ci/microservices-validation.yml'
+  - local: '.gitlab/ci/openrouter-ci-auto-repair.yml'
+  - local: '.gitlab/ci/openrouter-issue-agent.yml'
+  - local: '.gitlab/ci/openrouter-review.yml'
+  - local: '.gitlab/ci/prepare-bi-staging.yml'
+  - local: '.gitlab/ci/prepare-staging-db.yml'
+  - local: '.gitlab/ci/prepare-staging-proxy.yml'
+  - local: '.gitlab/ci/publish-staging.yml'
+  - local: '.gitlab/ci/temporary-public-domain-probe.yml'
+  - local: '.gitlab/ci/test-coverage.yml'
+  - local: '.gitlab/ci/validate-bi-staging-checker.yml'
+  - local: '.gitlab/ci/validate-graylog-bi-plugin.yml'
+  - local: '.gitlab/ci/validate-graylog-local-setup.yml'
+  - local: '.gitlab/ci/validate-nginx-routes.yml'
+  - local: '.gitlab/ci/validate-openrouter-agent.yml'
+  - local: '.gitlab/ci/validate-openrouter-ci-repair.yml'

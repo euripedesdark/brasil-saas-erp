@@ -1,0 +1,15 @@
+# Espelho automatico: .github/workflows/microservices-validation.yml
+microservices-validation--verify-presence:
+  stage: inspect
+  image: maven:3.9-eclipse-temurin-21
+  allow_failure: true
+  script:
+  - bash scripts/verify-microservices.sh
+  - "set -e\nfor dir in             src/main/resources/microservices/Java_NFe    \
+    \         src/main/resources/microservices/Java-Efd-Icms             src/main/resources/microservices/Java-Efd-Contribuicoes\
+    \             src/main/resources/microservices/Java_Certificado             src/main/resources/microservices/Java_Pdf_Signature\
+    \             src/main/resources/microservices/nfe             src/main/resources/microservices/nfse;\
+    \ do\n  echo \"=== Validating $dir ===\"\n  mvn -B -ntp -f \"$dir/pom.xml\" test\
+    \ -DskipTests\ndone\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

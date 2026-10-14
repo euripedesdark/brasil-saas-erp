@@ -1,0 +1,24 @@
+# Espelho automatico: .github/workflows/temporary-public-domain-probe.yml
+temporary-public-domain-probe--probe-registry:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -u\necho \"== Official Verisign COM RDAP lookup ==\"\ncurl --noproxy '*'\
+    \ -sS -o /tmp/brasil-rdap-response.json \\\n  --connect-timeout 5 --max-time 15\
+    \ \\\n  -w 'RDAP_HTTP=%{http_code}\\n' \\\n  'https://rdap.verisign.com/com/v1/domain/brasil-saaserp.com'\
+    \ || true\npython3 - <<'PY'\nimport json\ntry:\n    d=json.load(open(\"/tmp/brasil-rdap-response.json\"\
+    ))\n    print(\"RDAP_NAME:\",d.get(\"ldhName\"))\n    print(\"RDAP_STATUS:\",d.get(\"\
+    status\"))\n    print(\"RDAP_NAMESERVERS:\",[n.get(\"ldhName\") for n in d.get(\"\
+    nameservers\",[])])\n    print(\"RDAP_ERROR:\",d.get(\"errorCode\"),d.get(\"title\"\
+    ),d.get(\"description\"))\nexcept Exception as exc:\n    print(\"RDAP_PARSE_UNAVAILABLE\"\
+    ,type(exc).__name__)\nPY\n\necho \"== Verify delegation at .com TLD authoritative\
+    \ server ==\"\ndig +time=3 +tries=1 +norecurse +noall +comments +answer +authority\
+    \ \\\n  @a.gtld-servers.net brasil-saaserp.com NS || true\n\necho \"== Public\
+    \ DNS via two resolvers ==\"\nfor resolver in 1.1.1.1 8.8.8.8; do\n  for host\
+    \ in brasil-saaserp.com staging.brasil-saaserp.com; do\n    echo \"RESOLVER=${resolver}\
+    \ HOST=${host}\"\n    dig +time=2 +tries=1 +noall +comments +answer +authority\
+    \ @\"${resolver}\" \"${host}\" A || true\n  done\ndone\necho \"External-only diagnostic;\
+    \ no changes made.\"\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

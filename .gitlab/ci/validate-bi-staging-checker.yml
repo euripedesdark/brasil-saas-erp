@@ -1,0 +1,9 @@
+# Espelho automatico: .github/workflows/validate-bi-staging-checker.yml
+validate-bi-staging-checker--test:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - python3 scripts/bi/test-validate-staging-bi.py
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

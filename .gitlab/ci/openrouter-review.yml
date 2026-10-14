@@ -1,0 +1,19 @@
+# Espelho automatico: .github/workflows/openrouter-review.yml
+openrouter-review--review:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -euo pipefail\ngit fetch --no-tags origin \"+refs/pull/${PR_NUMBER}/head:refs/remotes/pull/review-head\"\
+    \ngit diff --no-ext-diff --unified=20 \"${BASE_SHA}...refs/remotes/pull/review-head\"\
+    \ -- > \"${TEMP_DIR}/pr.diff\"\nif git cat-file -e \"${BASE_SHA}:.github/scripts/openrouter_review.py\"\
+    \ 2>/dev/null; then\n  git show \"${BASE_SHA}:.github/scripts/openrouter_review.py\"\
+    \ > \"${TEMP_DIR}/openrouter_review.py\"\nelse\n  printf '%s\\n' 'from pathlib\
+    \ import Path' 'import os' 'Path(os.environ[\"GITHUB_STEP_SUMMARY\"]).write_text(\"\
+    ## Agente OpenRouter\\n\\nO workflow foi introduzido nesta PR. A análise por IA\
+    \ ficará ativa nas próximas PRs após o merge inicial.\\n\", encoding=\"utf-8\"\
+    )' > \"${TEMP_DIR}/openrouter_review.py\"\nfi\necho \"Diff preparado: $(wc -c\
+    \ < \"${TEMP_DIR}/pr.diff\") bytes.\"\n"
+  - python3 "${{ runner.temp }}/openrouter_review.py"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

@@ -1,0 +1,27 @@
+# Espelho automatico: .github/workflows/incident-readonly-health.yml
+incident-readonly-health--diagnose:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -u\necho '### Systemd service states'\nfor svc in nginx brasil-saas-erp-staging\
+    \ brasil_saas-erp brasil-saas-erp; do\n  state=$(systemctl is-active \"$svc\"\
+    \ 2>/dev/null || true)\n  printf '%s: %s\\n' \"$svc\" \"${state:-not-found}\"\n\
+    done\necho '### Local TCP availability'\nfor port in 80 443 8080 8081; do\n  if\
+    \ (echo >/dev/tcp/127.0.0.1/\"$port\") >/dev/null 2>&1; then\n    echo \"tcp $port:\
+    \ listening\"\n  else\n    echo \"tcp $port: closed\"\n  fi\ndone\necho '### HTTP\
+    \ and health routes'\nfor entry in \"prod_app|http://127.0.0.1:8080/actuator/health\"\
+    \ \"stage_app|http://127.0.0.1:8081/actuator/health\" \"proxy_login|http://127.0.0.1/login\"\
+    \ \"proxy_health|http://127.0.0.1/actuator/health\"; do\n  name=\"${entry%%|*}\"\
+    \n  url=\"${entry#*|}\"\n  code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time\
+    \ 7 \"$url\" 2>/dev/null || true)\n  echo \"$name: HTTP ${code:-000}\"\ndone\n\
+    echo '### Staging prerequisites (presence only)'\nfor file in /etc/brasil-saas/staging.env\
+    \ /opt/brasil-saas-erp/staging/app.jar; do\n  if test -s \"$file\"; then echo\
+    \ \"$file: present\"; else echo \"$file: absent_or_inaccessible\"; fi\ndone\n\
+    echo '### Probe completed: no changes made'\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64

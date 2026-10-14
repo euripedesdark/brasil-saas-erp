@@ -1,0 +1,110 @@
+# Espelho automatico: .github/workflows/free-public-access.yml
+free-public-access--publish:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -Eeuo pipefail\ncurl --fail --silent --show-error --max-time 10 http://127.0.0.1/login\
+    \ -o /tmp/erp-local-login.html\nTASK_DIR=\"$HOME/.local/share/brasil-saas-public-access\"\
+    \nmkdir -p \"$TASK_DIR\"\nchmod 700 \"$TASK_DIR\"\nBIN=\"$TASK_DIR/cloudflared\"\
+    \nif ! test -x \"$BIN\"; then\n  curl --fail --location --silent --show-error\
+    \ --connect-timeout 10 --max-time 120 https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-linux-amd64\
+    \ -o \"$BIN.new\"\n  echo \"d33ff2d14475178d2012c2c56beba87389ac5ded27649519f198a7d3134a99db\
+    \  $BIN.new\" | sha256sum -c -\n  chmod 700 \"$BIN.new\"\n  mv \"$BIN.new\" \"\
+    $BIN\"\nfi\n\"$BIN\" --version\nexport TASK_DIR\npython3 - <<'PY'\nimport os,\
+    \ pathlib, subprocess, json, time\nroot=pathlib.Path(os.environ['TASK_DIR'])\n\
+    state=root/'state.json'\nrunning=False\nif state.exists():\n    d=json.loads(state.read_text())\n\
+    \    try:\n        pid=int(d['pid'])\n        cmd=pathlib.Path(f'/proc/{pid}/cmdline').read_bytes()\n\
+    \        running=str(root/'cloudflared').encode() in cmd and b'tunnel' in cmd\n\
+    \    except (OSError,KeyError,ValueError): pass\nif not running:\n    env=os.environ.copy()\n\
+    \    env.pop('RUNNER_TRACKING_ID',None)\n    log=open(root/'tunnel.log','wb')\n\
+    \    proc=subprocess.Popen([str(root/'cloudflared'),'tunnel','--no-autoupdate','--url','http://127.0.0.1:80','--protocol','http2','--http-host-header','brasil-saaserp.com','--metrics','127.0.0.1:18493'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)\n\
+    \    state.write_text(json.dumps({'pid':proc.pid,'started_at':time.time()}))\n\
+    \    state.chmod(0o600)\n    print('Tunnel started:',proc.pid)\nelse:\n    print('Existing\
+    \ tunnel reused')\nPY\nURL=\"\"\nfor attempt in $(seq 1 60); do\n  URL=$(python3\
+    \ -c 'import re,os,pathlib; s=(pathlib.Path(os.environ[\"TASK_DIR\"])/\"tunnel.log\"\
+    ).read_text(errors=\"replace\"); u=re.findall(r\"https://[a-z0-9-]+\\.trycloudflare\\\
+    .com\",s); print(u[-1] if u else \"\")')\n  if test -n \"$URL\" && curl --fail\
+    \ --silent --max-time 5 \"$URL/login\" -o \"$TASK_DIR/public-login.html\"; then\
+    \ break; fi\n  sleep 2\ndone\ntest -n \"$URL\" || { echo \"::error::No public\
+    \ URL assigned\"; tail -30 \"$TASK_DIR/tunnel.log\"; exit 1; }\ncurl --fail --silent\
+    \ --show-error --max-time 15 \"$URL/login\" -o \"$TASK_DIR/public-login.html\"\
+    \nprintf '%s\\n' \"$URL\" > \"$TASK_DIR/url.txt\"\necho \"url=$URL\" >> \"$GITHUB_OUTPUT\"\
+    \necho \"PUBLIC_URL=$URL\"\necho \"### Free public ERP access\" >> \"$GITHUB_STEP_SUMMARY\"\
+    \necho \"$URL/login\" >> \"$GITHUB_STEP_SUMMARY\"\necho \"Quick Tunnel: temporary\
+    \ address, changes when restarted; no domain or payment required.\" >> \"$GITHUB_STEP_SUMMARY\"\
+    \necho \"Staging not published: isolated environment is not installed.\" >> \"\
+    $GITHUB_STEP_SUMMARY\"\n"
+  - "set -Eeuo pipefail\nexport TASK_DIR=\"$HOME/.local/share/brasil-saas-public-access\"\
+    \npython3 - <<'PY'\nimport os,pathlib,subprocess,json\nroot=pathlib.Path(os.environ['TASK_DIR'])\n\
+    supervisor=root/'supervisor.py'\nsupervisor.write_text(\"\"\"import pathlib,os,json,subprocess,time,re,fcntl\n\
+    root=pathlib.Path(__file__).resolve().parent\nlock=open(root/'supervisor.lock','w')\n\
+    try: fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)\nexcept BlockingIOError: raise\
+    \ SystemExit(0)\nwhile True:\n    running=False\n    try:\n        pid=int(json.loads((root/'state.json').read_text())['pid'])\n\
+    \        cmd=pathlib.Path(f'/proc/{pid}/cmdline').read_bytes()\n        running=str(root/'cloudflared').encode()\
+    \ in cmd and b'tunnel' in cmd\n    except (OSError,ValueError,KeyError): pass\n\
+    \    if not running:\n        env=os.environ.copy()\n        env.pop('RUNNER_TRACKING_ID',None)\n\
+    \        with open(root/'tunnel.log','wb') as log:\n            proc=subprocess.Popen([str(root/'cloudflared'),'tunnel','--no-autoupdate','--url','http://127.0.0.1:80','--protocol','http2','--http-host-header','brasil-saaserp.com','--metrics','127.0.0.1:18493'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)\n\
+    \        (root/'state.json').write_text(json.dumps({'pid':proc.pid,'started_at':time.time()}))\n\
+    \        (root/'state.json').chmod(0o600)\n    try:\n        urls=re.findall(r'https://[a-z0-9-]+\\\
+    \\.trycloudflare\\\\.com',(root/'tunnel.log').read_text(errors='replace'))\n \
+    \       if urls: (root/'url.txt').write_text(urls[-1]+'\\\\n')\n    except OSError:\
+    \ pass\n    time.sleep(10)\n\"\"\")\ncompile(supervisor.read_text(),str(supervisor),'exec')\n\
+    supervisor.chmod(0o700)\nenv=os.environ.copy()\nuid=os.getuid()\nif pathlib.Path(f'/run/user/{uid}/bus').exists():\n\
+    \    env['XDG_RUNTIME_DIR']=f'/run/user/{uid}'\n    env['DBUS_SESSION_BUS_ADDRESS']=f'unix:path=/run/user/{uid}/bus'\n\
+    manager=subprocess.run(['systemctl','--user','show-environment'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0\n\
+    mode='current-session'\nif manager:\n    units=pathlib.Path.home()/'.config/systemd/user'\n\
+    \    units.mkdir(parents=True,exist_ok=True)\n    unit=units/'brasil-saas-public-access.service'\n\
+    \    unit.write_text('[Unit]\\nDescription=Free ERP public access supervisor\\\
+    nAfter=network-online.target\\n[Service]\\nExecStart=/usr/bin/python3 '+str(supervisor)+'\\\
+    nRestart=always\\nRestartSec=10\\n[Install]\\nWantedBy=default.target\\n')\n \
+    \   for args in [('daemon-reload',),('enable','--now',unit.name)]:\n        subprocess.run(['systemctl','--user',*args],env=env,check=True)\n\
+    \    mode='systemd-user'\nelse:\n    import shutil\n    if shutil.which('crontab'):\n\
+    \        old=subprocess.run(['crontab','-l'],capture_output=True,text=True)\n\
+    \        if old.returncode==0 or 'no crontab' in old.stderr.lower():\n       \
+    \     lines=[l for l in old.stdout.splitlines() if '# brasil-saas-public-access'\
+    \ not in l]\n            lines.append('@reboot /usr/bin/python3 '+str(supervisor)+'\
+    \ >> '+str(root/'supervisor.log')+' 2>&1 # brasil-saas-public-access')\n     \
+    \       subprocess.run(['crontab','-'],input='\\n'.join(lines)+'\\n',text=True,check=True)\n\
+    \            mode='cron'\n    detached=env.copy()\n    detached.pop('RUNNER_TRACKING_ID',None)\n\
+    \    with open(root/'supervisor.log','ab') as log:\n        subprocess.Popen(['/usr/bin/python3',str(supervisor)],env=detached,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)\n\
+    (root/'persistence.txt').write_text(mode+'\\n')\nprint('PERSISTENCE='+mode)\n\
+    PY\n"
+  rules: &id001
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64
+free-public-access--verify-external:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "set -Eeuo pipefail\npython3 - <<'PY'\nimport urllib.request,urllib.parse,re,os,time\n\
+    base=os.environ['ERP_PUBLIC_URL']\nfor attempt in range(20):\n    try:\n     \
+    \   with urllib.request.urlopen(base+'/login',timeout=10) as r:\n            assert\
+    \ r.status==200,r.status\n            html=r.read().decode()\n        break\n\
+    \    except Exception:\n        if attempt==19: raise\n        time.sleep(3)\n\
+    assert '<html' in html.lower(), 'Login is not an HTML page'\nassets=re.findall(r'(?:src|href)=[\"\
+    \\x27]([^\"\\x27]+\\.(?:js|css)(?:\\?[^\"\\x27]*)?)',html)\nlocal=[a for a in\
+    \ assets if not a.startswith(('http:','https:','//'))]\nassert local,'No local\
+    \ frontend assets found'\nfor asset in local[:4]:\n    url=urllib.parse.urljoin(base+'/login',asset)\n\
+    \    with urllib.request.urlopen(url,timeout=15) as r:\n        assert r.status==200,r.status\n\
+    \        assert 'text/html' not in r.headers.get('Content-Type',''), 'Asset returned\
+    \ HTML'\n        assert r.read(1024),'Empty asset'\n    print('ASSET_OK',url)\n\
+    print('EXTERNAL_LOGIN_OK',base+'/login')\nPY\n"
+  rules: *id001
+  variables:
+    ERP_PUBLIC_URL: ${{ needs.publish.outputs.url }}
+free-public-access--record-public-access:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - 'echo "Verified ERP access: $PUBLIC_URL/login" >> "$GITHUB_STEP_SUMMARY"
+
+    echo "Temporary free tunnel; not a permanent hostname." >> "$GITHUB_STEP_SUMMARY"
+
+    '
+  rules: *id001

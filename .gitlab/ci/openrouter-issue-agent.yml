@@ -1,0 +1,14 @@
+# Espelho automatico: .github/workflows/openrouter-issue-agent.yml
+openrouter-issue-agent--agent:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - "if [ -z \"$OPENROUTER_API_KEY\" ]; then\n  echo \"::error::Configure OPENROUTER_API_KEY\
+    \ in repository Actions secrets.\"\n  exit 1\nfi\nif [ -z \"$AGENT_GITHUB_TOKEN\"\
+    \ ]; then\n  echo \"::error::Configure AGENT_GITHUB_TOKEN (fine-grained PAT with\
+    \ Contents, Issues and Pull requests read/write) so agent-created PRs trigger\
+    \ normal CI workflows.\"\n  exit 1\nfi\n"
+  - python .github/scripts/openrouter_issue_agent.py
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"

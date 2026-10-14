@@ -1,0 +1,20 @@
+# Espelho automatico: .github/workflows/install-staging-runtime.yml
+install-staging-runtime--install:
+  stage: inspect
+  image: alpine:latest
+  allow_failure: true
+  script:
+  - python3 ops/staging/install-user-runtime.py
+  - "python3 - <<'PY'\nimport subprocess,pathlib,re\nroot=pathlib.Path.home()/'.local/share/brasil-saas-staging'\n\
+    settings=dict(line.split('=',1) for line in (root/'staging.env').read_text().splitlines()\
+    \ if line and not line.startswith('#'))\nsecrets=[v.strip('\"') for k,v in settings.items()\
+    \ if any(s in k for s in ['PASSWORD','SECRET','URI'])]\nfor name in ['mongo','redis','rabbit','minio','app']:\n\
+    \    text=subprocess.run(['journalctl','--user','-u','brasil-saas-staging-'+name,'-n','60','--no-pager'],capture_output=True,text=True).stdout\n\
+    \    for secret in sorted(secrets,key=len,reverse=True):\n        if secret: text=text.replace(secret,'[REDACTED]')\n\
+    \    print('### STAGING',name)\n    print(text)\nPY\n"
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "web"
+  tags:
+  - self-hosted
+  - linux
+  - x64
