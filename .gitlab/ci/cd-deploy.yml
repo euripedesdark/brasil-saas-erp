@@ -10,8 +10,6 @@ deploy-production:
   timeout: 45 minutes
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
-  dependencies:
-    - build-and-test
   script:
     - cd "${CI_PROJECT_DIR}/src/main/resources/static/react" && npm ci && npm run build && cd "${CI_PROJECT_DIR}"
     - mvn --batch-mode --no-transfer-progress clean package -DskipTests
