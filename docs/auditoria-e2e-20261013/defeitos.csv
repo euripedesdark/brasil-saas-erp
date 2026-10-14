@@ -23,3 +23,4 @@ UJUI-008,Validacao responde 409 em vez de 400,Enterprise,Baixa,ABERTO,DATA_INTEG
 SRCH-001,Busca de produtos com termo unico nunca retorna (AND nome+codigo),Cadastros,Média,ABERTO,frontend envia nome=X&codigo=X; backend exige ambos,Enviar um campo ou backend com OR
 SORT-001,Ordenacao da grade ignorada (sort=nome&direction=desc nao e Pageable Spring),Cadastros,Alta,ABERTO,aria-sort=descending com dados em ordem padrao,Frontend enviar sort=nome,desc
 UX-001,Falha de mutacao sem feedback (dialog mudo apos 403),Frontend,Baixa,ABERTO,delete 403 sem toast/mensagem,Toast de erro em mutacoes
+A11Y-001,83/180 telas com botoes icone sem aria-label,Frontend,Baixa,ABERTO (backlog: padrao Caixa/Titulo aplicado como referencia),Auditoria automatizada do bundle

@@ -308,23 +308,23 @@ export const Titulo = () => {
             <Button
                 icon="pi pi-list"
                 className="p-button-text p-button-sm"
-                tooltip={t('common.details')}
-                onClick={() => verParcelas(row)}
+                tooltip={t('common.details')} aria-label={t('common.details')}
+                onClick={() = verParcelas(row)}
             />
             {(row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && row.status !== 'PENDENTE_APROVACAO' && podeSolicitarAprovacao && (
                 <Button
                     icon="pi pi-send"
                     className="p-button-text p-button-info p-button-sm"
-                    tooltip={t('common.send')}
-                    onClick={() => abrirAprovacao(row)}
+                    tooltip={t('common.send')} aria-label={t('common.send')}
+                    onClick={() = abrirAprovacao(row)}
                 />
             )}
             {podeVerAprovacoes && (
                 <Button
                     icon="pi pi-verified"
                     className="p-button-text p-button-sm"
-                    tooltip={t('common.details')}
-                    onClick={() => verTrilha(row)}
+                    tooltip={t('common.details')} aria-label={t('common.details')}
+                    onClick={() = verTrilha(row)}
                 />
             )}
             {(row.tipo === 'R' && (row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && podeSolicitarAprovacao) && (
@@ -349,9 +349,9 @@ export const Titulo = () => {
                 <Button
                     icon="pi pi-check"
                     className="p-button-text p-button-success p-button-sm"
-                    tooltip={t('common.confirm')}
+                    tooltip={t('common.confirm')} aria-label={t('common.confirm')}
                     disabled={row.status === 'PENDENTE_APROVACAO'}
-                    onClick={() => abrirBaixa(row)}
+                    onClick={() = abrirBaixa(row)}
                 />
             )}
         </div>
