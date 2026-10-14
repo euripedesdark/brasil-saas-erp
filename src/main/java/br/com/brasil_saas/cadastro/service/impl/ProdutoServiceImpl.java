@@ -109,6 +109,11 @@ public class ProdutoServiceImpl implements ProdutoService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<ProdutoResponse> listar(Long empresaId, String nome, String codigo, Long categoriaId, Long marcaId, Boolean ativo, Pageable pageable) {
+        if (nome != null && nome.equals(codigo)) {
+            Page<Produto> geral = produtoRepository.buscaGeral(
+                    empresaId, nome, categoriaId, marcaId, ativo, pageable);
+            return PageResponse.from(geral, ProdutoResponse::from);
+        }
         Page<Produto> page = produtoRepository.buscar(empresaId, nome, codigo, categoriaId, marcaId, ativo, pageable);
         return PageResponse.from(page, ProdutoResponse::from);
     }

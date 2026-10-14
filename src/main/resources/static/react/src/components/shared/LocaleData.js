@@ -31,7 +31,9 @@ export const fmtDataHora = (v, opts) => {
 
 const PRIMEREACT_LOCALES = {
     'en-US': {
-        firstDayOfWeek: 0, today: 'Today', clear: 'Clear', dateFormat: 'mm/dd/yy', weekHeader: 'Wk'
+        firstDayOfWeek: 0, today: 'Today', clear: 'Clear', dateFormat: 'mm/dd/yy', weekHeader: 'Wk',
+        emptyFilterMessage: 'No available options',
+        emptyMessage: 'No records found'
     },
     'pt-BR': {
         firstDayOfWeek: 0,
@@ -43,7 +45,9 @@ const PRIMEREACT_LOCALES = {
         today: 'Hoje',
         clear: 'Limpar',
         dateFormat: 'dd/mm/yy',
-        weekHeader: 'Sm'
+        weekHeader: 'Sm',
+        emptyFilterMessage: 'Nenhuma opção disponível',
+        emptyMessage: 'Nenhum registro'
     },
     'es-ES': {
         firstDayOfWeek: 1,
@@ -55,7 +59,9 @@ const PRIMEREACT_LOCALES = {
         today: 'Hoy',
         clear: 'Borrar',
         dateFormat: 'dd/mm/yy',
-        weekHeader: 'Sm'
+        weekHeader: 'Sm',
+        emptyFilterMessage: 'Sin opciones disponibles',
+        emptyMessage: 'Sin registros'
     },
     'fr-FR': {
         firstDayOfWeek: 1,
@@ -67,7 +73,9 @@ const PRIMEREACT_LOCALES = {
         today: "Aujourd'hui",
         clear: 'Effacer',
         dateFormat: 'dd/mm/yy',
-        weekHeader: 'Sm'
+        weekHeader: 'Sm',
+        emptyFilterMessage: 'Aucune option disponible',
+        emptyMessage: 'Aucun enregistrement'
     }
 };
 

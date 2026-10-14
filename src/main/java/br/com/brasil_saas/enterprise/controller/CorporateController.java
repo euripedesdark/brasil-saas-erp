@@ -51,6 +51,7 @@ public class CorporateController {
  @Transactional
  public Map<String,Object> criar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@RequestBody Map<String,Object> body){
   validar(resource);
+  body = somentePreenchidos(body);
   if (!temCampoUtil(body)) {
     throw new IllegalArgumentException("Nenhum campo informado");
   }
@@ -101,6 +102,23 @@ public class CorporateController {
  private void validar(String r){
    if(!RECURSOS.contains(r)) throw new IllegalArgumentException("Recurso corporativo inválido");
  }
+
+    private Map<String, Object> somentePreenchidos(Map<String, Object> body) {
+      Map<String, Object> out = new LinkedHashMap<>();
+      if (body == null) {
+        return out;
+      }
+      body.forEach((k, v) -> {
+        if (v == null) {
+          return;
+        }
+        if (v instanceof String s && s.isBlank()) {
+          return;
+        }
+        out.put(k, v);
+      });
+      return out;
+    }
 
  private boolean temCampoUtil(Map<String,Object> body) {
    if (body == null || body.isEmpty()) {

@@ -38,4 +38,13 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     Optional<Produto> findFirstByCodigoIgnoreCaseAndDeletedAtIsNull(String codigo);
     java.util.Optional<br.com.brasil_saas.cadastro.model.Produto> findByIdAndEmpresaIdAndDeletedAtIsNull(Long id, Long empresaId);
     long countByEmpresaIdAndDeletedAtIsNull(Long empresaId);
+    @Query("SELECT p FROM Produto p WHERE p.empresaId = :empresaId AND p.deletedAt IS NULL AND ("
+            + "LOWER(p.nome) LIKE LOWER(CONCAT('%', CAST(:termo AS String), '%')) OR "
+            + "LOWER(p.codigo) LIKE LOWER(CONCAT('%', CAST(:termo AS String), '%'))) AND "
+            + "(:categoriaId IS NULL OR p.categoria.id = :categoriaId) AND "
+            + "(:marcaId IS NULL OR p.marca.id = :marcaId) AND "
+            + "(:ativo IS NULL OR p.ativo = :ativo)")
+    Page<Produto> buscaGeral(@Param("empresaId") Long empresaId, @Param("termo") String termo,
+            @Param("categoriaId") Long categoriaId, @Param("marcaId") Long marcaId,
+            @Param("ativo") Boolean ativo, Pageable pageable);
 }

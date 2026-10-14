@@ -16,13 +16,13 @@ import {api} from '../../services/ApiConfig';
 import { formatoData } from '../shared/LocaleData.js';
 
 const resources = [
- {key:'contratos',label:'Contratos',icon:'pi pi-file-edit'},
- {key:'qualificacoes',label:'Fornecedores',icon:'pi pi-verified'},
- {key:'metas',label:'Metas comerciais',icon:'pi pi-chart-line'},
- {key:'periodos',label:'Fechamento',icon:'pi pi-lock'},
- {key:'orcamentos',label:'Orçamento',icon:'pi pi-wallet'},
- {key:'tesouraria',label:'Tesouraria projetada',icon:'pi pi-chart-bar'},
- {key:'tributacao',label:'Cenários tributários',icon:'pi pi-calculator'}
+ {key:'contratos',label:'Contratos',singular:'contrato',icon:'pi pi-file-edit'},
+ {key:'qualificacoes',label:'Fornecedores',singular:'qualificação',icon:'pi pi-verified'},
+ {key:'metas',label:'Metas comerciais',singular:'meta comercial',icon:'pi pi-chart-line'},
+ {key:'periodos',label:'Fechamento',singular:'fechamento',icon:'pi pi-lock'},
+ {key:'orcamentos',label:'Orçamento',singular:'orçamento',icon:'pi pi-wallet'},
+ {key:'tesouraria',label:'Tesouraria projetada',singular:'tesouraria projetada',icon:'pi pi-chart-bar'},
+ {key:'tributacao',label:'Cenários tributários',singular:'cenário tributário',icon:'pi pi-calculator'}
 ];
 
 const money = v => Number(v || 0).toLocaleString(localeAtivo(),{style:'currency',currency:'BRL'});
@@ -66,7 +66,7 @@ export default function EnterpriseOperations(){
     </TabPanel>)}
    </TabView>
   </Card>
-  <Dialog header={'Novo '+resource.label} visible={dialog} style={{width:'min(720px,95vw)'}} onHide={()=>setDialog(false)}>
+  <Dialog header={'Adicionar '+(resource.singular||resource.label)} visible={dialog} style={{width:'min(720px,95vw)'}} onHide={()=>setDialog(false)}>
    <div className="grid">
     {Object.keys(fields).map(k=><div className="col-12 md:col-6" key={k}><label className="block mb-1">{fields[k]}</label>
       {dateFields.includes(k)?<Calendar value={payload[k]?new Date(payload[k]):null} onChange={e=>setPayload({...payload,[k]:e.value?.toISOString().slice(0,10)})} dateFormat={formatoData()} className="w-full"/>:

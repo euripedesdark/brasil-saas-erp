@@ -56,6 +56,12 @@ public class MetaComercialService {
     }
 
     @Transactional
+    public void excluir(Long empresaId, Long id) {
+        MetaComercial m = buscar(empresaId, id);
+        m.setDeletedAt(java.time.LocalDateTime.now());
+        repository.save(m);
+    }
+
     public MetaComercial registrarRealizado(Long empresaId, Long id, BigDecimal valor) {
         MetaComercial m = buscar(empresaId, id);
         m.setValorRealizado(valor == null ? BigDecimal.ZERO : valor);

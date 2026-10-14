@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -48,6 +49,14 @@ public class MetaComercialController {
     public MetaComercial atualizar(@PathVariable Long id, @RequestBody MetaComercial m, @AuthenticationPrincipal AuthenticatedUser u) {
         m.setId(id);
         return service.salvar(u.getEmpresaId(), m);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Void> excluir(@PathVariable Long id,
+            @AuthenticationPrincipal AuthenticatedUser u) {
+        service.excluir(u.getEmpresaId(), id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/realizado")

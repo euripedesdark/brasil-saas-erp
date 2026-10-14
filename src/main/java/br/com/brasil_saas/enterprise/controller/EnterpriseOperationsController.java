@@ -74,6 +74,7 @@ public class EnterpriseOperationsController {
                                     @PathVariable String resource,
                                     @RequestBody Map<String,Object> body) {
         validar(resource);
+        body = somentePreenchidos(body);
         if (!temCampoUtil(body)) {
             throw new IllegalArgumentException("Nenhum campo informado");
         }
@@ -127,6 +128,7 @@ public class EnterpriseOperationsController {
                                          @PathVariable Long id,
                                          @RequestBody Map<String,Object> body) {
         validar(resource);
+        body = somentePreenchidos(body);
         if (!temCampoUtil(body)) {
             throw new IllegalArgumentException("Nenhum campo informado");
         }
@@ -274,6 +276,23 @@ public class EnterpriseOperationsController {
         if (!RECURSOS.contains(resource)) {
             throw new IllegalArgumentException("Recurso empresarial inválido");
         }
+    }
+
+    private Map<String, Object> somentePreenchidos(Map<String, Object> body) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        if (body == null) {
+            return out;
+        }
+        body.forEach((k, v) -> {
+            if (v == null) {
+                return;
+            }
+            if (v instanceof String s && s.isBlank()) {
+                return;
+            }
+            out.put(k, v);
+        });
+        return out;
     }
 
     private boolean temCampoUtil(Map<String, Object> body) {
