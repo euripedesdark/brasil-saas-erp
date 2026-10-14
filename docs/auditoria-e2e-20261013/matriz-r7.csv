@@ -1,0 +1,6 @@
+RT-001,SORT-001 reteste,sort=nome&direction=desc respeitado,APROVADO (ENCERRADO),SEED NOME 99 primeiro,-
+RT-002,SRCH-001 reteste,termo único retorna (OR),APROVADO (ENCERRADO),total=1,-
+RT-003,UJ-001 reteste,submit vazio → 400 Nenhum campo informado,APROVADO (ENCERRADO),DADOS_INVALIDOS,-
+RT-004,UJ-005 reteste,DELETE metas 204 + resíduo TESTE-QA removido,APROVADO (ENCERRADO),lista limpa,-
+RT-005,UJ-006 reteste,diálogo "Adicionar contrato",APROVADO (ENCERRADO),screenshot DOM,-
+RT-006,UJ-007 reteste,emptyFilterMessage no bundle live,APROVADO (ENCERRADO),grep bundle,-
