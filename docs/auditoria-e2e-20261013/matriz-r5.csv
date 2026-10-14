@@ -1,0 +1,14 @@
+UJUI-101,Jornada EHS acao,POST 200 id 1 + DELETE 200 (limpo),APROVADO,,-
+UJUI-102,Jornada meta (revisao),Valor zerado confirmado + sem DELETE,REPROVADO (já UJ-003/004),resíduo id 1 TESTE-QA,-
+UJUI-103,Sessão,Expiração força relogin (~1h); 403s pós-expiração são esperados,APROVADO,3 relogins 200,-
+UJUI-104,Falso alarme,EHS 403 e autocomplete 403 eram sessão expirada,TESTE INVÁLIDO (corrigido),relogado 200,-
+SCR-101,/supply-chain 11 abas,Todas 200 sem erros JS,APROVADO,APIs 200,-
+SCR-102,/gestao 5 abas,200 sem erros (contratos/metas testados),APROVADO,,-
+SCR-103,/contabilidade balancete+DRE+regras APIs,200 com dados,APROVADO,JPA lote5 live,-
+SCR-104,/vendas/metas API,Lista + POST 201,APROVADO,,-
+SCR-105,/bi/kpis API,200 com conteúdo,APROVADO,1543b,-
+SCR-106,/estoque/reservas API,200 20KB,APROVADO,,-
+SCR-107,/financeiro/caixas,SEED status/ativo false (dado teste),APROVADO com ressalva,,-
+SCR-108,/corporativo eliminacoes,200 shape correto,APROVADO,,-
+SES-101,Refresh,Token válido não rotacionado no teste,NÃO EXECUTADO,preservar sessão; fake rejeitado OK,-
+PERM-001,Perfil,403s apenas onde sem autoridade; writes permitidos funcionam,APROVADO,,-
