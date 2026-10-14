@@ -120,6 +120,32 @@ public class EnterpriseOperationsController {
         };
     }
 
+    @GetMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}/{id}")
+    @PreAuthorize("hasAuthority('enterprise:leitura')")
+    public Map<String,Object> buscarPorId(@AuthenticationPrincipal AuthenticatedUser u,
+                                          @PathVariable String resource,
+                                          @PathVariable Long id) {
+        validar(resource);
+        Long empresa = u.getEmpresaId();
+        return switch (resource) {
+            case "contratos" -> contratoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "qualificacoes" -> qualificacaoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "metas" -> metaRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "periodos" -> periodoRepository.findByIdAndEmpresaId(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "orcamentos" -> orcamentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "tesouraria" -> tesourariaRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            case "tributacao" -> cenarioRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+                    .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+            default -> throw new IllegalArgumentException("Recurso empresarial inválido");
+        };
+    }
+
     @PutMapping("/{resource:contratos|qualificacoes|metas|periodos|orcamentos|tesouraria|tributacao}/{id}")
     @PreAuthorize("hasAuthority('enterprise:escrita')")
     @Transactional

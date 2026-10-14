@@ -122,11 +122,11 @@ export default function Caixa() {
 
     const actionBodyTemplate = (rowData) => (
         <div className="flex gap-1 flex-wrap">
-            <Button icon="pi pi-plus" rounded text severity="success" tooltip="Suprimento" disabled={rowData.status === 'INATIVO'} onClick={() => abrirMov(rowData, 'SUPRIMENTO')} />
-            <Button icon="pi pi-minus" rounded text severity="warning" tooltip="Sangria" disabled={rowData.status === 'INATIVO'} onClick={() => abrirMov(rowData, 'SANGRIA')} />
-            <Button icon="pi pi-list" rounded text tooltip="Histórico" onClick={() => abrirHist(rowData)} />
-            <Button icon="pi pi-pencil" rounded outlined onClick={() => { setSelectedCaixa(rowData); setDialogVisible(true); }} />
-            <Button icon="pi pi-trash" rounded outlined severity="danger" onClick={() => deleteCaixa(rowData)} />
+            <Button icon="pi pi-plus" rounded text severity="success" tooltip="Suprimento" aria-label="Suprimento" disabled={rowData.status === 'INATIVO'} onClick={() => abrirMov(rowData, 'SUPRIMENTO')} />
+            <Button icon="pi pi-minus" rounded text severity="warning" tooltip="Sangria" aria-label="Sangria" disabled={rowData.status === 'INATIVO'} onClick={() => abrirMov(rowData, 'SANGRIA')} />
+            <Button icon="pi pi-list" rounded text tooltip="Histórico" aria-label="Histórico" onClick={() => abrirHist(rowData)} />
+            <Button icon="pi pi-pencil" rounded outlined tooltip="Editar" aria-label="Editar" onClick={() => { setSelectedCaixa(rowData); setDialogVisible(true); }} />
+            <Button icon="pi pi-trash" rounded outlined severity="danger" tooltip="Excluir" aria-label="Excluir" onClick={() => deleteCaixa(rowData)} />
         </div>
     );
 

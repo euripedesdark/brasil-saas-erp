@@ -48,7 +48,17 @@ export default function EnterpriseOperations(){
    return {nome:'Nome',vigencia_inicio:'Início',vigencia_fim:'Fim',regime:'Regime',uf_origem:'UF origem',uf_destino:'UF destino',cst:'CST',cfop:'CFOP',aliquota_icms:'ICMS %',aliquota_ibs:'IBS %',aliquota_cbs:'CBS %',reducao:'Redução %',status:'Status',observacao:'Observação'};
  },[resource.key]);
 
- const save=async()=>{setError('');try{await api.post('/enterprise/'+resource.key,payload);setDialog(false);setPayload({});load()}catch(e){setError(e?.response?.data?.message||e.message||'Falha ao salvar')}};
+ const save=async()=>{setError('');try{
+  if(payload.id){await api.put('/enterprise/'+resource.key+'/'+payload.id,payload);}
+  else{await api.post('/enterprise/'+resource.key,payload);}
+  setDialog(false);setPayload({});load()
+ }catch(e){setError(e?.response?.data?.message||e.message||'Falha ao salvar')}};
+ const editar=(row)=>{setPayload({...row});setDialog(true)};
+ const excluir=async(row)=>{
+  if(!window.confirm('Excluir este registro?'))return;
+  setError('');
+  try{await api.delete('/enterprise/'+resource.key+'/'+row.id);load()}
+  catch(e){setError(e?.response?.data?.message||e.message||'Falha ao excluir')}};
  const textFields=['tipo','numero','parceiro_tipo','categoria','origem','descricao','observacao','regime','uf_origem','uf_destino','cst','cfop','nome','status'];
  const dateFields=['inicio','fim','validade','periodo_inicio','periodo_fim','competencia','data_prevista','vigencia_inicio','vigencia_fim'];
 
@@ -61,12 +71,12 @@ export default function EnterpriseOperations(){
       <div className="flex justify-content-end mb-2"><Button label="Novo" icon="pi pi-plus" onClick={()=>{setPayload({});setDialog(true)}}/></div>
       <DataTable value={rows} loading={loading} paginator rows={10} stripedRows responsiveLayout="scroll">
        {Object.keys(fields).map(k=><Column key={k} field={k} header={fields[k]} body={v=>k.includes('valor')||k==='meta_valor'||k==='valor'?money(v[k]):v[k] ?? '—'}/>)}
-       {resource.key==='periodos'&&<Column header="Ações" body={r=><Button size="small" label="Fechar contábil" icon="pi pi-lock" disabled={r.fechamento_contabil} onClick={async()=>{await api.post('/enterprise/periodos/'+r.id+'/fechar?etapa=contabil');load()}}/>}/>}
+       <Column header="Ações" body={(r)=>(<span className="flex gap-1"><Button size="small" icon="pi pi-pencil" aria-label="Editar" tooltip="Editar" onClick={()=>editar(r)}/><Button size="small" severity="danger" icon="pi pi-trash" aria-label="Excluir" tooltip="Excluir" onClick={()=>excluir(r)}/></span>)}/>{resource.key==='periodos'&&<Column header="Fechamento" body={r=><Button size="small" label="Fechar contábil" icon="pi pi-lock" disabled={r.fechamento_contabil} onClick={async()=>{await api.post('/enterprise/periodos/'+r.id+'/fechar?etapa=contabil');load()}}/>}/>}
       </DataTable>
     </TabPanel>)}
    </TabView>
   </Card>
-  <Dialog header={'Adicionar '+(resource.singular||resource.label)} visible={dialog} style={{width:'min(720px,95vw)'}} onHide={()=>setDialog(false)}>
+  <Dialog header={(payload.id?'Editar ':'Adicionar ')+(resource.singular||resource.label)} visible={dialog} style={{width:'min(720px,95vw)'}} onHide={()=>setDialog(false)}>
    <div className="grid">
     {Object.keys(fields).map(k=><div className="col-12 md:col-6" key={k}><label className="block mb-1">{fields[k]}</label>
       {dateFields.includes(k)?<Calendar value={payload[k]?new Date(payload[k]):null} onChange={e=>setPayload({...payload,[k]:e.value?.toISOString().slice(0,10)})} dateFormat={formatoData()} className="w-full"/>:

@@ -207,6 +207,41 @@ public class SupplyChainEnterpriseController {
     default -> throw new IllegalArgumentException("Recurso inválido");
   };
  }
+ @GetMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}/{id}")
+ @PreAuthorize("isAuthenticated()")
+ public Map<String,Object> buscarPorId(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@PathVariable Long id){
+  validar(resource);
+  Long empresa = u.getEmpresaId();
+  return switch (resource) {
+    case "reposicao" -> reposicaoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "transportes" -> transporteRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "revisoes-produto" -> revisaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "mudancas-engenharia" -> mudancaRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "ehs" -> ocorrenciaRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "contratos-servico" -> srvContratoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "plm-documentos" -> documentoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "plm-efeitos" -> efeitoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "plm-aprovacoes" -> aprovacaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "ehs-riscos" -> ehsRiscoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "ehs-inspecoes" -> inspecaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "ehs-acoes" -> ehsAcaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "ehs-permissoes" -> permissaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    default -> throw new IllegalArgumentException("Recurso inválido");
+  };
+ }
  @PutMapping("/{resource:reposicao|transportes|revisoes-produto|mudancas-engenharia|ehs|contratos-servico|plm-documentos|plm-efeitos|plm-aprovacoes|ehs-riscos|ehs-inspecoes|ehs-acoes|ehs-permissoes}/{id}")
  @PreAuthorize("isAuthenticated()")
  @Transactional

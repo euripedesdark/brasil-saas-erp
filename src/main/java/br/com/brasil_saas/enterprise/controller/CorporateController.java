@@ -47,6 +47,22 @@ public class CorporateController {
     default -> throw new IllegalArgumentException("Recurso corporativo inválido");
   };
  }
+ @GetMapping("/{resource}/{id}") @PreAuthorize("hasAuthority('corporativo:leitura')")
+ public Map<String,Object> buscarPorId(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@PathVariable Long id){
+  validar(resource);
+  Long empresa = u.getEmpresaId();
+  return switch (resource) {
+    case "intercompany" -> intercompanyRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "consolidacoes" -> consolidacaoRepository.findByIdAndEmpresaId(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "riscos" -> riscoRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    case "controles" -> controleRepository.findByIdAndEmpresaIdAndDeletedAtIsNull(id, empresa)
+      .orElseThrow(() -> new NoSuchElementException("Registro não encontrado")).toMap();
+    default -> throw new IllegalArgumentException("Recurso corporativo inválido");
+  };
+ }
  @PostMapping("/{resource}") @PreAuthorize("hasAuthority('corporativo:escrita')")
  @Transactional
  public Map<String,Object> criar(@AuthenticationPrincipal AuthenticatedUser u,@PathVariable String resource,@RequestBody Map<String,Object> body){
