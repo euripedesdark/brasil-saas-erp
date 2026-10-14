@@ -1,0 +1,5 @@
+CORR-006,UX-001 reavaliado,Toast de erro APARECE com espera adequada,RECLASSIFICADO: artefato de medição (polling rápido demais),Nenhuma alteracao
+CORR-007,Transferência silenciosa reavaliada,Mensagem "Informe origem, destino..." aparece; selects carregam,RECLASSIFICADO: artefato de medição,Nenhuma alteracao
+FIX-101,UJ-002,Ações Editar/Excluir + PUT no save (EnterpriseOperations),CORRIGIDO (aguarda deploy),,
+FIX-102,UJ-009,GET /{resource}/{id} nos 3 genericos,CORRIGIDO (aguarda deploy),,
+FIX-103,BEH-003,aria-labels nos 5 botões do caixa,CORRIGIDO (aguarda deploy),,
