@@ -309,14 +309,14 @@ export const Titulo = () => {
                 icon="pi pi-list"
                 className="p-button-text p-button-sm"
                 tooltip={t('common.details')} aria-label={t('common.details')}
-                onClick={() = verParcelas(row)}
+                onClick={() => verParcelas(row)}
             />
             {(row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && row.status !== 'PENDENTE_APROVACAO' && podeSolicitarAprovacao && (
                 <Button
                     icon="pi pi-send"
                     className="p-button-text p-button-info p-button-sm"
                     tooltip={t('common.send')} aria-label={t('common.send')}
-                    onClick={() = abrirAprovacao(row)}
+                    onClick={() => abrirAprovacao(row)}
                 />
             )}
             {podeVerAprovacoes && (
@@ -324,7 +324,7 @@ export const Titulo = () => {
                     icon="pi pi-verified"
                     className="p-button-text p-button-sm"
                     tooltip={t('common.details')} aria-label={t('common.details')}
-                    onClick={() = verTrilha(row)}
+                    onClick={() => verTrilha(row)}
                 />
             )}
             {(row.tipo === 'R' && (row.status === 'ABERTO' || Number(row.valorSaldo) > 0) && podeSolicitarAprovacao) && (
@@ -351,7 +351,7 @@ export const Titulo = () => {
                     className="p-button-text p-button-success p-button-sm"
                     tooltip={t('common.confirm')} aria-label={t('common.confirm')}
                     disabled={row.status === 'PENDENTE_APROVACAO'}
-                    onClick={() = abrirBaixa(row)}
+                    onClick={() => abrirBaixa(row)}
                 />
             )}
         </div>
