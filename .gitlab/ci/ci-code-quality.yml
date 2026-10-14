@@ -1,0 +1,29 @@
+# Espelho: .github/workflows/ci-code-quality.yml
+code-quality:
+  stage: quality
+  image: maven:3.9-eclipse-temurin-21
+  allow_failure: true
+  script:
+    - mvn -B -ntp spotbugs:check || true
+    - mvn -B -ntp pmd:check || true
+    - mvn -B -ntp checkstyle:check || true
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+
+security-scan:
+  stage: quality
+  image: maven:3.9-eclipse-temurin-21
+  allow_failure: true
+  script:
+    - mvn -B -ntp org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7 --projects . || true
+  artifacts:
+    when: always
+    paths:
+      - target/dependency-check-report.*
+    expire_in: 30 days
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'

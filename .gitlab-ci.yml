@@ -1,0 +1,34 @@
+# Brasil SaaS ERP - GitLab CI/CD
+# Espelho de .github/workflows/*
+default:
+  interruptible: true
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+
+stages:
+  - build
+  - test
+  - quality
+  - package
+  - database
+  - deploy
+
+variables:
+  JAVA_VERSION: "21"
+  NODE_VERSION: "22"
+  MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
+
+include:
+  - local: '.gitlab/ci/ci-cd.yml'
+  - local: '.gitlab/ci/ci-build-test.yml'
+  - local: '.gitlab/ci/ci-code-quality.yml'
+  - local: '.gitlab/ci/ci-database.yml'
+  - local: '.gitlab/ci/test-coverage.yml'
+  - local: '.gitlab/ci/cd-deploy.yml'
+  - local: '.gitlab/ci/build.yml'
+  - local: '.gitlab/ci/ci-dump-sanitizado.yml'

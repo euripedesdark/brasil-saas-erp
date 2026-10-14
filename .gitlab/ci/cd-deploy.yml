@@ -1,0 +1,54 @@
+# Espelho: .github/workflows/cd-deploy.yml
+# Build no runner self-hosted + solicitacao de deploy via sistema dedicado
+# (systemd.path observa /opt/brasil-saas-erp-deploy). Nada de docker-compose em producao.
+deploy-production:
+  stage: deploy
+  tags:
+    - self-hosted
+    - linux
+    - x64
+  timeout: 45 minutes
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+  dependencies:
+    - build-and-test
+  script:
+    - cd "${CI_PROJECT_DIR}/src/main/resources/static/react" && npm ci && npm run build && cd "${CI_PROJECT_DIR}"
+    - mvn --batch-mode --no-transfer-progress clean package -DskipTests
+    - |
+      set -Eeuo pipefail
+      JAR="target/brasil-saas-erp-1.0.0-SNAPSHOT.jar"
+      test -s "$JAR"
+      jar tf "$JAR" | grep -q '^BOOT-INF/'
+      sha256sum "$JAR"
+    - |
+      set -Eeuo pipefail
+      STAGING="/opt/brasil-saas-erp-deploy"
+      NEW_JAR="${CI_PROJECT_DIR}/target/brasil-saas-erp-1.0.0-SNAPSHOT.jar"
+      HEALTH_URL="http://127.0.0.1:8080/actuator/health"
+
+      test -s "$NEW_JAR"
+      test -d "$STAGING" || { echo "Pasta de staging ausente: $STAGING"; exit 1; }
+      test -w "$STAGING" || { echo "Runner sem permissao de escrita em $STAGING"; exit 1; }
+
+      install -m 0640 "$NEW_JAR" "$STAGING/release.jar"
+      setfacl -m u:erp-deploy:r-- "$STAGING/release.jar" || true
+      printf '%s\n' "$CI_COMMIT_SHA" > "$STAGING/deploy.trigger"
+
+      echo "Solicitacao de deploy enviada ao servico dedicado."
+      DEPLOYED=false
+      for _ in $(seq 1 60); do
+        if [ -r "$STAGING/deploy.status" ] && [ "$(cat "$STAGING/deploy.status")" = "$CI_COMMIT_SHA" ]; then
+          DEPLOYED=true; break
+        fi
+        sleep 5
+      done
+      if [ "$DEPLOYED" != true ]; then
+        echo "Servico dedicado nao confirmou o deploy de $CI_COMMIT_SHA em ate 5 min."; exit 1
+      fi
+      curl --fail --silent --show-error --max-time 5 "$HEALTH_URL" -o /tmp/brasil-saas-erp-health.json
+      python3 -c 'import json; assert json.load(open("/tmp/brasil-saas-erp-health.json")).get("status") == "UP"'
+      echo "Deploy de $CI_COMMIT_SHA confirmado; health check OK."
+  environment:
+    name: production
+    url: https://myers-jessica-cluster-performed.trycloudflare.com

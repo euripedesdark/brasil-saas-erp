@@ -1,0 +1,17 @@
+# Espelho: .github/workflows/build.yml (SonarQube)
+sonar-build:
+  stage: quality
+  image: maven:3.9-eclipse-temurin-21
+  allow_failure: true
+  cache:
+    key: sonar
+    paths:
+      - .sonar/cache
+      - .m2/repository
+  script:
+    - |
+      if [ -z "${SONAR_TOKEN:-}" ]; then echo "SONAR_TOKEN ausente; pulando."; exit 0; fi
+      mvn -B -U -Dmaven.repo.local=.m2/repository clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=euripedesdark_brasil-saas-erp
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'

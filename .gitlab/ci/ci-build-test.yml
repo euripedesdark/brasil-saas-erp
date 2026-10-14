@@ -1,0 +1,74 @@
+# Espelho: .github/workflows/ci-build-test.yml
+.bt_services: &bt_services
+  services:
+    - name: postgres:18
+      alias: postgres
+      variables:
+        POSTGRES_USER: brasil-saas
+        POSTGRES_PASSWORD: test123
+        POSTGRES_DB: brasil-saas
+    - name: mongo:7
+      alias: mongodb
+    - name: redis:7
+      alias: redis
+
+.bt_rules: &bt_rules
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        paths:
+          - 'src/**'
+          - 'pom.xml'
+
+build-and-test:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  <<: [*bt_rules, *bt_services]
+  variables:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
+    SPRING_DATASOURCE_USERNAME: brasil-saas
+    SPRING_DATASOURCE_PASSWORD: test123
+    SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/brasil-saas
+    SPRING_DATA_REDIS_HOST: redis
+    SPRING_DATA_REDIS_PORT: "6379"
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository
+  script:
+    - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    - mvn -B -ntp test -Dmaven.repo.local=.m2/repository
+    - mvn -B -ntp package -DskipTests -Dmaven.repo.local=.m2/repository
+  artifacts:
+    when: always
+    paths:
+      - target/*.jar
+      - target/surefire-reports/
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    expire_in: 7 days
+
+frontend-build:
+  stage: build
+  image: node:22
+  <<: *bt_rules
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  cache:
+    key: npm-$CI_COMMIT_REF_SLUG
+    paths:
+      - .npm/
+      - src/main/resources/static/react/node_modules/
+  script:
+    - cd src/main/resources/static/react
+    - npm ci
+    - npm run test:i18n
+    - npm run build
+  artifacts:
+    paths:
+      - src/main/resources/static/dist/
+    expire_in: 7 days

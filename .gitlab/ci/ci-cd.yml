@@ -1,0 +1,78 @@
+# Espelho: .github/workflows/ci-cd.yml
+.cd_services: &cd_services
+  services:
+    - name: postgres:18
+      alias: postgres
+      variables:
+        POSTGRES_USER: brasil-saas
+        POSTGRES_PASSWORD: test123
+        POSTGRES_DB: brasil-saas
+    - name: mongo:7
+      alias: mongodb
+    - name: redis:7
+      alias: redis
+    - name: rabbitmq:3-management
+      alias: rabbitmq
+      variables:
+        RABBITMQ_DEFAULT_USER: brasil-saas
+        RABBITMQ_DEFAULT_PASS: test123
+
+backend-build:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  <<: *cd_services
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository
+  script:
+    - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    - mvn -B -ntp test -B -Dmaven.repo.local=.m2/repository
+    - mvn -B -ntp package -DskipTests -Dmaven.repo.local=.m2/repository
+  artifacts:
+    when: always
+    paths:
+      - target/*.jar
+      - target/surefire-reports/
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+    expire_in: 7 days
+
+ci-frontend-build:
+  stage: build
+  image: node:22
+  script:
+    - cd src/main/resources/static/react
+    - npm ci
+    - npm test
+    - npm run build
+  artifacts:
+    paths:
+      - src/main/resources/static/dist/
+    expire_in: 7 days
+
+database-migration-smoke:
+  stage: database
+  image: maven:3.9-eclipse-temurin-21
+  services:
+    - name: postgres:18
+      alias: postgres
+      variables:
+        POSTGRES_USER: brasil-saas
+        POSTGRES_PASSWORD: test123
+        POSTGRES_DB: brasil-saas
+  variables:
+    FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas
+    FLYWAY_USER: brasil-saas
+    FLYWAY_PASSWORD: test123
+  script:
+    - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:info -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository

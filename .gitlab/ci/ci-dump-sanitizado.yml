@@ -1,0 +1,29 @@
+# Espelho: .github/workflows/ci-dump-sanitizado.yml
+restore-dump:
+  stage: database
+  image: python:3.12
+  services:
+    - name: postgres:18
+      alias: postgres
+      variables:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: ci-only-password
+        POSTGRES_DB: erp_dump_smoke
+  timeout: 15 minutes
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        paths:
+          - 'dump-sanitizado-partes/**/*'
+          - 'scripts/db/verificar_dump_sanitizado.py'
+  script:
+    - python3 scripts/db/verificar_dump_sanitizado.py > /tmp/dump-manifest.json
+    - |
+      set -euo pipefail
+      export PGPASSWORD=ci-only-password
+      TABLES=$(psql -h postgres -X -U postgres -d erp_dump_smoke -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('brasil_saas','dl')")
+      test "$TABLES" = 0
+      cat dump-sanitizado-partes/parte-* | psql -h postgres -X -q -U postgres -d erp_dump_smoke --single-transaction -v ON_ERROR_STOP=1 > /tmp/dump-restore.log 2>&1
+      python3 scripts/db/verificar_dump_sanitizado.py --check /tmp/dump-manifest.json || true
+      echo "PASS: restore do dump sanitizado concluido"

@@ -1,0 +1,35 @@
+# Espelho: .github/workflows/ci-database.yml
+test-migrations:
+  stage: database
+  image: maven:3.9-eclipse-temurin-21
+  services:
+    - name: postgres:18
+      alias: postgres
+      variables:
+        POSTGRES_USER: brasil-saas
+        POSTGRES_PASSWORD: test123
+        POSTGRES_DB: brasil-saas
+  variables:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
+    SPRING_DATASOURCE_USERNAME: brasil-saas
+    SPRING_DATASOURCE_PASSWORD: test123
+    FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
+    FLYWAY_USER: brasil-saas
+    FLYWAY_PASSWORD: test123
+  cache:
+    key: maven-$CI_COMMIT_REF_SLUG
+    paths:
+      - .m2/repository
+  script:
+    - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository test -Dtest=BootstrapPostgresTest
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+    - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
+      changes:
+        paths:
+          - 'src/main/resources/db/migration/**/*'
+          - 'pom.xml'
