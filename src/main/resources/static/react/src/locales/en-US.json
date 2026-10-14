@@ -141,7 +141,8 @@
     "operacoes": "Operations (dashboard)",
     "empresasCert": "Companies (Stripe/Cert)",
     "configurarEmpresa": "Configure company",
-    "golive": "Go-live"
+    "golive": "Go-live",
+    "donations": "Donations"
   },
   "menu": {
     "people": "People",

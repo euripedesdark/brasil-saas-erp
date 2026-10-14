@@ -489,7 +489,7 @@ export const Layout = () => {
             command: () => handleNavigation('/sobre')
         });
         items.push({
-            label: t('nav.donations', { defaultValue: 'Doacoes' }),
+            label: t('nav.donations', { defaultValue: 'Doações' }),
             icon: 'pi pi-heart-fill',
             command: () => handleNavigation('/doacoes')
         });
