@@ -47,6 +47,7 @@ include:
   - local: '.gitlab/ci/prepare-staging-db.yml'
   - local: '.gitlab/ci/prepare-staging-proxy.yml'
   - local: '.gitlab/ci/publish-staging.yml'
+  - local: '.gitlab/ci/qodana_code_quality.yml'
   - local: '.gitlab/ci/temporary-public-domain-probe.yml'
   - local: '.gitlab/ci/test-coverage.yml'
   - local: '.gitlab/ci/validate-bi-staging-checker.yml'
