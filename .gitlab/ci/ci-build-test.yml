@@ -24,7 +24,7 @@
 
 build-and-test:
   stage: build
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   <<: [*bt_rules, *bt_services]
   variables:
     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas

@@ -20,7 +20,7 @@ stages:
   - inspect
 
 variables:
-  JAVA_VERSION: "21"
+  JAVA_VERSION: "25"
   NODE_VERSION: "22"
   MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
 

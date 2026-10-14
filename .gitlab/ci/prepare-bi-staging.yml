@@ -1,7 +1,7 @@
 # Espelho automatico: .github/workflows/prepare-bi-staging.yml
 prepare-bi-staging--prepare:
   stage: inspect
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   script:
   - "python3 - <<'PY'\nimport pathlib, os, shutil, importlib.util, subprocess, pwd,\

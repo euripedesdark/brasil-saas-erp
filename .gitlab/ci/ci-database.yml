@@ -1,7 +1,7 @@
 # Espelho: .github/workflows/ci-database.yml
 test-migrations:
   stage: database
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   services:
     - name: postgres:18
       alias: postgres

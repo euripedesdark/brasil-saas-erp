@@ -1,7 +1,7 @@
 # Espelho automatico: .github/workflows/microservices-validation.yml
 microservices-validation--verify-presence:
   stage: inspect
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   script:
   - bash scripts/verify-microservices.sh

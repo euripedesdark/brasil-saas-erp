@@ -19,7 +19,7 @@
 
 backend-build:
   stage: build
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   <<: *cd_services
   cache:
     key: maven-$CI_COMMIT_REF_SLUG
@@ -55,7 +55,7 @@ ci-frontend-build:
 
 database-migration-smoke:
   stage: database
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   services:
     - name: postgres:18
       alias: postgres

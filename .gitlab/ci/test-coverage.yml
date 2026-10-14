@@ -4,7 +4,7 @@ variables:
 
 coverage:
   stage: quality
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   services:
     - name: postgres:18

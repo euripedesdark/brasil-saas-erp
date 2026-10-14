@@ -1,7 +1,7 @@
 # Espelho: .github/workflows/ci-code-quality.yml
 code-quality:
   stage: quality
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   script:
     - mvn -B -ntp spotbugs:check || true
@@ -14,7 +14,7 @@ code-quality:
 
 security-scan:
   stage: quality
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   script:
     - mvn -B -ntp org.owasp:dependency-check-maven:check -DfailBuildOnCVSS=7 --projects . || true

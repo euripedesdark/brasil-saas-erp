@@ -1,7 +1,7 @@
 # Espelho automatico: .github/workflows/validate-graylog-bi-plugin.yml
 validate-graylog-bi-plugin--build:
   stage: inspect
-  image: maven:3.9-eclipse-temurin-21
+  image: maven:3.9-eclipse-temurin-25
   allow_failure: true
   script:
   - 'node --test src/main/resources/static/react/graylog-bi-bridge.test.mjs
