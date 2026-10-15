@@ -23,7 +23,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  JAVA_VERSION: "21"
+  # O pom.xml compila com release 25; com JDK 21 o build falha com
+  # "release version 25 not supported" (era o erro do job Backend Build).
+  JAVA_VERSION: "25"
   NODE_VERSION: "22"
   MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
 
@@ -288,7 +290,10 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_USER: brasil-saas
+          # Usuario "sa": o mesmo da aplicacao em staging/producao.
+          # A migracao V187 faz "ALTER TABLE ... OWNER TO sa" e exige que o
+          # papel exista; sem ele este job ficava travado por horas.
+          POSTGRES_USER: sa
           POSTGRES_PASSWORD: test123
           POSTGRES_DB: brasil-saas
         ports:
@@ -311,8 +316,11 @@ jobs:
           cache: maven
       - name: Apply and validate Flyway migrations
         env:
-          FLYWAY_URL: jdbc:postgresql://localhost:5432/brasil-saas
-          FLYWAY_USER: brasil-saas
+          # socketTimeout/connectTimeout: se o banco parar de responder, o
+          # Flyway falha em ~60s em vez de pendurar o job para sempre.
+          FLYWAY_URL: jdbc:postgresql://localhost:5432/brasil-saas?socketTimeout=60&connectTimeout=10
+          # Mesmo usuario do service acima.
+          FLYWAY_USER: sa
           FLYWAY_PASSWORD: test123
         run: |
           set -euo pipefail
