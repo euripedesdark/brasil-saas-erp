@@ -61,12 +61,12 @@ database-migration-smoke:
     - name: postgres:18
       alias: postgres
       variables:
-        POSTGRES_USER: brasil-saas
+        POSTGRES_USER: sa
         POSTGRES_PASSWORD: test123
         POSTGRES_DB: brasil-saas
   variables:
-    FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas
-    FLYWAY_USER: brasil-saas
+    FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas?socketTimeout=60&connectTimeout=10
+    FLYWAY_USER: sa
     FLYWAY_PASSWORD: test123
   script:
     - apt-get update && apt-get install -y --no-install-recommends postgresql-client
