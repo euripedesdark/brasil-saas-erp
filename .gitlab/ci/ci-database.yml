@@ -24,6 +24,12 @@ test-migrations:
     FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
     FLYWAY_USER: sa
     FLYWAY_PASSWORD: test123
+    # ERP_BOOTSTRAP_TEST_*: sem estas variaveis o BootstrapPostgresTest fica
+    # DESABILITADO (@EnabledIfEnvironmentVariable) e o "mvn test -Dtest=..." nao
+    # executa teste nenhum. No GitHub elas existem; faltavam no espelho.
+    ERP_BOOTSTRAP_TEST_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
+    ERP_BOOTSTRAP_TEST_USER: sa
+    ERP_BOOTSTRAP_TEST_PASSWORD: test123
   cache:
     key: maven-$CI_COMMIT_REF_SLUG
     paths:

@@ -27,9 +27,7 @@ build-and-test:
   image: maven:3.9-eclipse-temurin-25
   <<: [*bt_rules, *bt_services]
   variables:
-    SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
-    SPRING_DATASOURCE_USERNAME: brasil-saas
-    SPRING_DATASOURCE_PASSWORD: test123
+    # Mongo/Redis valem para o job inteiro, como no workflow do GitHub.
     SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/brasil-saas
     SPRING_DATA_REDIS_HOST: redis
     SPRING_DATA_REDIS_PORT: "6379"
@@ -38,7 +36,12 @@ build-and-test:
     paths:
       - .m2/repository
   script:
-    - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    # As SPRING_DATASOURCE_* entram SO na compilacao, igual ao GitHub. Os testes
+    # rodam no perfil "test", que em application-test.yml fixa o driver do H2;
+    # se a URL do Postgres valer tambem no "mvn test", o H2 recusa a URL
+    # (Driver org.h2.Driver claims to not accept jdbcUrl) e os 9 testes que
+    # carregam o ApplicationContext quebram o job.
+    - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas SPRING_DATASOURCE_USERNAME=brasil-saas SPRING_DATASOURCE_PASSWORD=test123 mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
     - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp test -Dmaven.repo.local=.m2/repository
