@@ -1,13 +1,33 @@
 # Espelho: .github/workflows/qodana_code_quality.yml
+# Analise do Qodana enviada para o Qodana Cloud.
+#
+# Para funcionar, o projeto precisa da variavel QODANA_TOKEN em
+# Settings -> CI/CD -> Variables (ela ja existe, marcada como "masked" e SEM
+# "Protected" -- o projeto nao tem ramo protegido, e variavel protegida nunca
+# chegaria ao job). Sem o token, o job falharia ao autenticar.
 qodana:
   stage: quality
-  image: jetbrains/qodana-jvm-community:2026.1
+  image:
+    name: jetbrains/qodana-jvm:2026.1
+    # entrypoint vazio para o GitLab poder executar o script abaixo
+    entrypoint: [""]
+  # Mantido tolerante, como no espelho do GitHub: a analise nao bloqueia o
+  # pipeline enquanto a divida tecnica apontada ainda nao foi tratada.
   allow_failure: true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
+  cache:
+    - key: qodana-2026.1-$CI_DEFAULT_BRANCH-$CI_COMMIT_REF_SLUG
+      fallback_keys:
+        - qodana-2026.1-$CI_DEFAULT_BRANCH-
+        - qodana-2026.1-
+      paths:
+        - .qodana/cache
+  variables:
+    # QODANA_TOKEN vem da variavel de projeto de mesmo nome (nao precisa
+    # reatribuir aqui, o GitLab ja a injeta no ambiente do job).
+    QODANA_ENDPOINT: "https://qodana.cloud"
   script:
-    - |
-      if [ -z "${QODANA_TOKEN:-}" ]; then echo "QODANA_TOKEN ausente; pulando."; exit 0; fi
-      curl -fsSL https://qodana.cloud/cli.sh -o /tmp/qodana && bash /tmp/qodana scan --token "$QODANA_TOKEN" || true
+    - qodana --cache-dir=$CI_PROJECT_DIR/.qodana/cache
