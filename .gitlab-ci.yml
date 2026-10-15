@@ -1,15 +1,29 @@
+# ==========================================================================
 # Brasil SaaS ERP - GitLab CI/CD
-# Espelho de .github/workflows/*
+# --------------------------------------------------------------------------
+# Este e o ponto de entrada do pipeline no GitLab e espelha o que existe em
+# .github/workflows/* no GitHub. Ele NAO define trabalhos: apenas organiza o
+# pipeline e inclui um arquivo por workflow do GitHub, para as duas
+# plataformas terem o mesmo comportamento.
+# ==========================================================================
+
+# interruptible: ao empurrar um novo commit no mesmo ramo, o GitLab cancela
+# o pipeline anterior ainda em execucao (evita dois pipelines competindo).
 default:
   interruptible: true
 
+# workflow.rules: define QUANDO o pipeline roda. Disparo por API (source
+# "api") fica de fora de proposito, para evitar pipelines acidentais.
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop")'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'        # botao "Run pipeline" na interface
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'   # pipeline agendado
 
+# Ordem das etapas: um trabalho so comeca quando a etapa anterior termina,
+# exceto quando usa "needs" (DAG). A etapa "deploy" so roda na main
+# (ver .gitlab/ci/cd-deploy.yml).
 stages:
   - build
   - test
@@ -19,11 +33,14 @@ stages:
   - deploy
   - inspect
 
+# Variaveis globais usadas pelos trabalhos incluidos abaixo.
 variables:
-  JAVA_VERSION: "25"
+  JAVA_VERSION: "25"   # o pom.xml exige release 25; nao baixar sem revisar o pom
   NODE_VERSION: "22"
   MAVEN_OPTS: "-Xmx2048m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75"
 
+# Um arquivo incluido por workflow do GitHub. A ordem aqui nao importa:
+# a sequencia real de execucao vem dos "stages" e dos "needs".
 include:
   - local: '.gitlab/ci/build.yml'
   - local: '.gitlab/ci/cd-deploy.yml'

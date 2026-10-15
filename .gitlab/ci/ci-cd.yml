@@ -1,9 +1,23 @@
 # Espelho: .github/workflows/ci-cd.yml
+# ==========================================================================
+# Pipeline principal (no GitHub chama-se "Brasil SaaS ERP CI/CD Pipeline").
+# Contem tres trabalhos:
+#   backend-build ............. compila e roda os testes do backend (usam H2);
+#   ci-frontend-build ......... testa e empacota o frontend React;
+#   database-migration-smoke .. sobe um PostgreSQL descartavel e aplica as
+#                               migracoes Flyway do zero, num banco limpo.
+# ==========================================================================
+
+# Ancoras YAML (*cd_services) para nao repetir a mesma lista de servicos:
+# quem precisa de banco/mensageria herda com "<<: *cd_services".
 .cd_services: &cd_services
   services:
     - name: postgres:18
-      alias: postgres
+      alias: postgres        # os trabalhos conectam no host "postgres"
       variables:
+        # Aqui o usuario segue "brasil-saas": este bloco e usado pelo
+        # backend-build, cujos testes rodam em H2 (Flyway desligado em
+        # application-test.yml) e nao dependem do dono dos objetos.
         POSTGRES_USER: brasil-saas
         POSTGRES_PASSWORD: test123
         POSTGRES_DB: brasil-saas
@@ -17,36 +31,40 @@
         RABBITMQ_DEFAULT_USER: brasil-saas
         RABBITMQ_DEFAULT_PASS: test123
 
+# Compila o backend, cria o schema e roda os testes de unidade.
 backend-build:
   stage: build
-  image: maven:3.9-eclipse-temurin-25
+  image: maven:3.9-eclipse-temurin-25   # JDK 25: exigido pelo pom (release 25)
   <<: *cd_services
   cache:
+    # Cache por ramo: evita baixar todas as dependencias Maven a cada execucao.
     key: maven-$CI_COMMIT_REF_SLUG
     paths:
       - .m2/repository
   script:
     - mvn -B -ntp clean compile -DskipTests -Dmaven.repo.local=.m2/repository
+    # postgresql-client instala o "psql" (a imagem maven nao traz esse cliente).
     - apt-get update && apt-get install -y --no-install-recommends postgresql-client
     - PGPASSWORD=test123 psql -h postgres -U brasil-saas -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
     - mvn -B -ntp test -B -Dmaven.repo.local=.m2/repository
     - mvn -B -ntp package -DskipTests -Dmaven.repo.local=.m2/repository
   artifacts:
-    when: always
+    when: always          # guarda relatorios mesmo se os testes falharem
     paths:
       - target/*.jar
       - target/surefire-reports/
     reports:
       junit:
-        - target/surefire-reports/TEST-*.xml
+        - target/surefire-reports/TEST-*.xml   # mostra os testes na aba do pipeline
     expire_in: 7 days
 
+# Testa e empacota o frontend React.
 ci-frontend-build:
   stage: build
   image: node:22
   script:
     - cd src/main/resources/static/react
-    - npm ci
+    - npm ci          # instalacao limpa a partir do package-lock.json
     - npm test
     - npm run build
   artifacts:
@@ -54,6 +72,10 @@ ci-frontend-build:
       - src/main/resources/static/dist/
     expire_in: 7 days
 
+# Aplica TODAS as migracoes num PostgreSQL limpo e descartavel, para provar
+# que a sequencia de migracoes funciona num banco novo. O banco e criado
+# dentro do contêiner deste job e desaparece ao final: nada e tocado em
+# producao nem em staging.
 database-migration-smoke:
   stage: database
   image: maven:3.9-eclipse-temurin-25
@@ -61,18 +83,29 @@ database-migration-smoke:
     - name: postgres:18
       alias: postgres
       variables:
+        # IMPORTANTE: aqui o usuario e "sa", o mesmo usuario de aplicacao da
+        # producao/staging (ver ops/staging/install-user-runtime.py).
+        # A migracao V187 faz "ALTER TABLE ... OWNER TO sa"; se o papel "sa"
+        # nao existir, ela falha. Com "sa" como dono do banco, o teste fica
+        # igual ao ambiente real e deixa de quebrar.
         POSTGRES_USER: sa
         POSTGRES_PASSWORD: test123
         POSTGRES_DB: brasil-saas
   variables:
+    # socketTimeout/connectTimeout: se o banco parar de responder, o Flyway
+    # falha em ~60s em vez de ficar pendurado sem emitir log.
     FLYWAY_URL: jdbc:postgresql://postgres:5432/brasil-saas?socketTimeout=60&connectTimeout=10
     FLYWAY_USER: sa
     FLYWAY_PASSWORD: test123
   script:
     - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+    # 1) garante o schema antes de migrar (as migracoes criam as tabelas nele).
     - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    # 2) aplica as migracoes.
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+    # 3) confere se o historico aplicado bate com os arquivos do repositorio.
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
+    # 4) imprime o resumo (versao aplicada, pendentes etc.).
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:info -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
   cache:
     key: maven-$CI_COMMIT_REF_SLUG

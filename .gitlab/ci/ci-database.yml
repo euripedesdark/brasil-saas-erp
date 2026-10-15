@@ -1,4 +1,8 @@
 # Espelho: .github/workflows/ci-database.yml
+# ==========================================================================
+# Valida as migracoes Flyway contra um banco novo, mas apenas quando algo
+# relacionado a banco muda (ver o bloco "rules" no fim do arquivo).
+# ==========================================================================
 test-migrations:
   stage: database
   image: maven:3.9-eclipse-temurin-25
@@ -6,10 +10,14 @@ test-migrations:
     - name: postgres:18
       alias: postgres
       variables:
+        # Usuario "sa": mesmo usuario de aplicacao da producao/staging. A
+        # migracao V187 faz "ALTER TABLE ... OWNER TO sa"; sem esse papel o
+        # teste falha (ver ops/staging/install-user-runtime.py).
         POSTGRES_USER: sa
         POSTGRES_PASSWORD: test123
         POSTGRES_DB: brasil-saas
   variables:
+    # O "?currentSchema=brasil_saas" faz a aplicacao enxergar o schema certo.
     SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/brasil-saas?currentSchema=brasil_saas
     SPRING_DATASOURCE_USERNAME: sa
     SPRING_DATASOURCE_PASSWORD: test123
@@ -22,11 +30,16 @@ test-migrations:
       - .m2/repository
   script:
     - apt-get update && apt-get install -y --no-install-recommends postgresql-client
+    # 1) garante o schema antes de migrar.
     - PGPASSWORD="$FLYWAY_PASSWORD" psql -h postgres -U "$FLYWAY_USER" -d brasil-saas -v ON_ERROR_STOP=1 -c "CREATE SCHEMA IF NOT EXISTS brasil_saas;"
+    # 2) roda o teste de bootstrap do Postgres (usa banco de verdade, nao H2).
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository test -Dtest=BootstrapPostgresTest
+    # 3) aplica e valida as migracoes.
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:migrate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
     - mvn -B -ntp -Dmaven.repo.local=.m2/repository flyway:validate -Dflyway.url="$FLYWAY_URL" -Dflyway.user="$FLYWAY_USER" -Dflyway.password="$FLYWAY_PASSWORD" -Dflyway.schemas=brasil_saas
   rules:
+    # Roda em merge request, no disparo manual (web) e em push para
+    # main/develop - mas, em push, SOMENTE se algo de banco mudou.
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_PIPELINE_SOURCE == "web"'
     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "develop"'
