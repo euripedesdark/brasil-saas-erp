@@ -26,12 +26,14 @@ if curl --silent --max-time 1 "$ERP_SMOKE_URL/actuator/health" > /dev/null; then
   exit 1
 fi
 
+# O ERP conecta como "sa" (application.yml), o mesmo usuario do servico postgres
+# deste job: a migracao V187 exige esse papel.
 docker run --detach --name "$ERP_SMOKE_CONTAINER" --network host \
   --health-cmd 'curl -fsS http://localhost:18080/actuator/health || exit 1' \
   --env SERVER_PORT=18080 \
   --env SPRING_PROFILES_ACTIVE=ci-smoke \
   --env 'SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/erp_runtime_smoke?currentSchema=brasil_saas&sslmode=disable' \
-  --env SPRING_DATASOURCE_USERNAME=brasil-saas \
+  --env SPRING_DATASOURCE_USERNAME=sa \
   --env SPRING_DATASOURCE_PASSWORD=test123 \
   --env SPRING_DATA_MONGODB_URI=mongodb://127.0.0.1:27017/erp_runtime_smoke \
   --env SPRING_DATA_MONGODB_AUTO_INDEX_CREATION=false \

@@ -186,13 +186,17 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_USER: brasil-saas
+          # Usuario "sa": o mesmo que o ERP usa (application.yml: username: sa).
+          # O runtime smoke sobe a imagem do ERP, que executa as migracoes Flyway
+          # dentro do container; a V187 faz "ALTER TABLE ... OWNER TO sa" e sem
+          # esse papel o app nao subia (role "sa" does not exist).
+          POSTGRES_USER: sa
           POSTGRES_PASSWORD: test123
           POSTGRES_DB: erp_runtime_smoke
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U brasil-saas -d erp_runtime_smoke"
+          --health-cmd "pg_isready -U sa -d erp_runtime_smoke"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 12
@@ -378,8 +382,11 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          mvn -B verify sonar:sonar \
-            -Dsonar.projectKey=BrasilSaaS \
+          # Mesmo goal do workflow SonarQube (build.yml): o pom nao declara o
+          # plugin, entao o atalho "sonar:sonar" falhava com
+          # "No plugin found for prefix 'sonar'".
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.projectKey=euripedesdark_brasil-saas-erp \
             -Dsonar.organization=euripedesdark \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN \
