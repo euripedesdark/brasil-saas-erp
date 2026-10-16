@@ -15,7 +15,7 @@ public class GraylogBiController {
     public GraylogBiController(GraylogBiProperties properties) { this.properties = properties; }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN', 'DIRETORIA', 'GERENTE', 'GESTOR')")
     public ApiResponse<Connection> status() {
         String web = publicUrl(properties.getWebUrl());
         boolean configured = properties.isConfigured() && web != null;
