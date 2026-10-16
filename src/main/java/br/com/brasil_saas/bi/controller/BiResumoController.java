@@ -21,7 +21,7 @@ public class BiResumoController {
     public BiResumoController(BiResumoService service) { this.service = service; }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN', 'DIRETORIA', 'GERENTE', 'GESTOR')")
     public ApiResponse<BiResumo> consultar(@AuthenticationPrincipal AuthenticatedUser usuario,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim) {
@@ -29,7 +29,7 @@ public class BiResumoController {
     }
 
     @GetMapping("/{area}")
-    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERUSER', 'SUPERADMIN', 'ADMIN', 'DIRETORIA', 'GERENTE', 'GESTOR')")
     public ApiResponse<BiResumo> consultarArea(@AuthenticationPrincipal AuthenticatedUser usuario,
             @PathVariable String area,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
