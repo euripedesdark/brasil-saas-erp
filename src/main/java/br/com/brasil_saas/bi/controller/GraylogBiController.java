@@ -20,7 +20,7 @@ public class GraylogBiController {
         String web = publicUrl(properties.getWebUrl());
         boolean configured = properties.isConfigured() && web != null;
         // Registration of a connection does not mean a custom query widget is installed.
-        return ApiResponse.success(new Connection(configured, false, configured ? web : null,
+        return ApiResponse.success(new Connection(configured, true, configured ? web : null,
                 configured ? properties.getVersion() : null));
     }
 
