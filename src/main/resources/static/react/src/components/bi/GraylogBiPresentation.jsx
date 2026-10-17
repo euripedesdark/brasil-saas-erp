@@ -22,7 +22,6 @@ export default function GraylogBiPresentation({ webUrl }) {
         if (!iframeUrl || !iframeRef.current) return;
         const iframe = iframeRef.current;
         const nonce = biNonce();
-        // Rebuild URL with nonce
         let url;
         try { url = presentationUrl(webUrl, window.location.origin, nonce, i18n.resolvedLanguage); }
         catch { setStatus('unavailable'); return; }
@@ -45,30 +44,27 @@ export default function GraylogBiPresentation({ webUrl }) {
         window.addEventListener('message', receive);
         const timeout = setTimeout(() => { setStatus('unavailable'); }, 60000);
         session.current = () => { clearTimeout(timeout); host.dispose(); window.removeEventListener('message', receive); };
-        // Set iframe src after setting up listeners
         iframe.src = url.href;
         return () => { session.current?.(); session.current = null; };
     }, [iframeUrl]);
 
-    const open = () => {
-        session.current?.(); session.current = null;
-        setIframeUrl(webUrl);
-        setStatus('connecting');
-    };
+    // Auto-load iframe when configured
+    useEffect(() => {
+        if (webUrl && !iframeUrl) {
+            setIframeUrl(webUrl);
+            setStatus('connecting');
+        }
+    }, [webUrl]);
 
     if (!webUrl) return null;
 
     return <div className="graylog-bi-presentation">
-        {iframeUrl ? (
-            <iframe
-                ref={iframeRef}
-                title="BI Graylog"
-                style={{ width: '100%', height: '600px', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                sandbox="allow-scripts allow-same-origin allow-popups"
-            />
-        ) : (
-            <button type="button" onClick={open}>{t('biOverview.graylogBi')}</button>
-        )}
+        <iframe
+            ref={iframeRef}
+            title="BI Graylog"
+            style={{ width: '100%', height: '600px', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+            sandbox="allow-scripts allow-same-origin allow-popups"
+        />
         {status !== 'idle' && status !== 'connecting' && (
             <p role={['blocked', 'unavailable'].includes(status) ? 'alert' : 'status'}>
                 {t(`biOverview.graylogStatus.${status}`)}
