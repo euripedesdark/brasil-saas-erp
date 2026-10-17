@@ -1,15 +1,126 @@
-.bi-overview { margin-bottom: 1.5rem; }
-.bi-overview-filters { display: flex; flex-wrap: wrap; gap: 1rem; align-items: end; }
-.bi-overview-filters label { display: grid; gap: .4rem; }
-.bi-overview input, .bi-overview button { font: inherit; padding: .6rem; border-radius: .4rem; }
-.bi-overview-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
-.bi-overview-card { background: var(--surface-card, white); color: var(--text-color, #243247); border: 1px solid var(--surface-border, #dfe5ed); border-radius: .75rem; padding: 1.2rem; }
-.bi-overview-value { font-size: 1.8rem; font-weight: 700; overflow-wrap: anywhere; }
-.bi-overview summary { cursor: pointer; }
-.bi-overview dd { margin: .3rem 0 1rem; font-weight: 600; }
+/* ResumoBI — PowerBI-inspired visual identity */
+:root {
+    --bi-bg: #f3f2f1;
+    --bi-card-bg: #ffffff;
+    --bi-card-border: #edebe9;
+    --bi-text-primary: #201f1e;
+    --bi-text-secondary: #605e5c;
+    --bi-accent: #0078d4;
+    --bi-accent-light: #deecf9;
+    --bi-success: #107c10;
+    --bi-warning: #d83b01;
+    --bi-danger: #a4262c;
+    --bi-purple: #5c2d91;
+    --bi-teal: #008272;
+    --bi-shadow: 0 1.6px 3.6px 0 rgba(0,0,0,.132), 0 0.3px 0.9px 0 rgba(0,0,0,.108);
+    --bi-radius: 4px;
+    --bi-font: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-theme="dark"], .dark-mode {
+    --bi-bg: #252423;
+    --bi-card-bg: #2f2f2f;
+    --bi-card-border: #3b3a39;
+    --bi-text-primary: #ffffff;
+    --bi-text-secondary: #a19f9d;
+    --bi-accent: #4488ff;
+    --bi-accent-light: #1a3a5c;
+    --bi-shadow: 0 1.6px 3.6px 0 rgba(0,0,0,.25), 0 0.3px 0.9px 0 rgba(0,0,0,.2);
+}
+
+.bi-overview {
+    margin-bottom: 1.5rem;
+    font-family: var(--bi-font);
+}
+
+.bi-overview-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 1.5rem;
+}
+
+.bi-overview-filters label {
+    display: grid;
+    gap: .4rem;
+    font-size: 0.85rem;
+    color: var(--bi-text-secondary);
+    font-weight: 600;
+}
+
+.bi-overview input,
+.bi-overview button {
+    font: inherit;
+    padding: .5rem .75rem;
+    border-radius: var(--bi-radius);
+    border: 1px solid var(--bi-card-border);
+    background: var(--bi-card-bg);
+    color: var(--bi-text-primary);
+}
+
+.bi-overview button[type="submit"] {
+    background: var(--bi-accent);
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    padding: .5rem 1.25rem;
+}
+
+.bi-overview button[type="submit"]:hover {
+    opacity: 0.9;
+}
+
+.bi-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.bi-overview-card {
+    background: var(--bi-card-bg);
+    color: var(--bi-text-primary);
+    border: 1px solid var(--bi-card-border);
+    border-radius: var(--bi-radius);
+    padding: 1.25rem;
+    box-shadow: var(--bi-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.bi-overview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--bi-accent);
+}
+
+.bi-overview-value {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--bi-text-primary);
+    overflow-wrap: anywhere;
+    margin: 0.5rem 0;
+}
+
+.bi-overview summary {
+    cursor: pointer;
+    color: var(--bi-accent);
+    font-weight: 600;
+}
+
+.bi-overview dd {
+    margin: .3rem 0 1rem;
+    font-weight: 600;
+}
+
 @media (max-width: 1000px) { .bi-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 550px) { .bi-overview-grid { grid-template-columns: 1fr; } }
 
-.bi-overview-card .p-chart { height: 220px; margin-bottom: 1rem; }
-.bi-overview-card table { width: 100%; text-align: left; border-collapse: collapse; }
-.bi-overview-card th, .bi-overview-card td { padding: .4rem; border-bottom: 1px solid var(--surface-border, #dfe5ed); }
+.bi-overview-card .p-chart { height: 200px; margin-bottom: 1rem; }
+.bi-overview-card table { width: 100%; text-align: left; border-collapse: collapse; font-size: 0.85rem; }
+.bi-overview-card th, .bi-overview-card td { padding: .4rem; border-bottom: 1px solid var(--bi-card-border); }
