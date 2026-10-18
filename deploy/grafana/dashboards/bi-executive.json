@@ -94,7 +94,7 @@
       "type": "stat",
       "title": "A Receber (em aberto)",
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 0,
         "y": 9
@@ -128,7 +128,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "custom": {}
         },
         "overrides": []
       },
@@ -153,7 +154,7 @@
       "type": "stat",
       "title": "A Pagar (em aberto)",
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 6,
         "y": 9
@@ -187,7 +188,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "custom": {}
         },
         "overrides": []
       },
@@ -212,7 +214,7 @@
       "type": "stat",
       "title": "Saldo Previsto (a receber − a pagar)",
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 12,
         "y": 9
@@ -246,7 +248,8 @@
                 "value": 0
               }
             ]
-          }
+          },
+          "custom": {}
         },
         "overrides": []
       },
@@ -271,7 +274,7 @@
       "type": "stat",
       "title": "Vendas Faturadas (período)",
       "gridPos": {
-        "h": 5,
+        "h": 4,
         "w": 6,
         "x": 18,
         "y": 9
@@ -305,7 +308,8 @@
                 "value": null
               }
             ]
-          }
+          },
+          "custom": {}
         },
         "overrides": []
       },
@@ -333,7 +337,7 @@
         "h": 10,
         "w": 10,
         "x": 0,
-        "y": 14
+        "y": 13
       },
       "datasource": {
         "type": "postgres",
@@ -394,7 +398,7 @@
         "h": 10,
         "w": 14,
         "x": 10,
-        "y": 14
+        "y": 13
       },
       "datasource": {
         "type": "postgres",
@@ -445,7 +449,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 24
+        "y": 23
       },
       "datasource": {
         "type": "postgres",
@@ -500,7 +504,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 23
       },
       "datasource": {
         "type": "postgres",
@@ -621,6 +625,6 @@
   "timezone": "America/Sao_Paulo",
   "title": "Brasil SaaS — BI Executivo",
   "uid": "bi-brasil-saas",
-  "version": 1,
+  "version": 7,
   "weekStart": ""
 }

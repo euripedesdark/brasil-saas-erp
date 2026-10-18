@@ -36,6 +36,7 @@ export function ResumoBI() {
         <h2 id="bi-overview-title">{t('biOverview.title')}</h2>
         {grafana?.url && <GrafanaBiDashboard
             url={grafana.url}
+            uid={grafana.uid}
             empresaId={user?.empresaId}
             areas={grafana.areas}
         />}
