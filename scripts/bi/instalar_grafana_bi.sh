@@ -54,7 +54,10 @@ install -o root -g grafana -m 644 "$DEPLOY/dashboards/bi-executive.json" \
   /var/lib/grafana/dashboards/bi-executive.json
 
 echo "==> Grafana escuta so no loopback"
-sed -i 's|^;http_addr = .*|http_addr = 127.0.0.1|' /etc/grafana/grafana.ini
+# A porta 3000 nao vai para a rede: o dashboard e servido pelo ERP.
+if grep -q '^;http_addr' /etc/grafana/grafana.ini; then
+  sed -i 's|^;http_addr.*|http_addr = 127.0.0.1|' /etc/grafana/grafana.ini
+fi
 
 echo "==> Autenticacao no AD"
 install -o root -g grafana -m 640 "$DEPLOY/ldap.toml" /etc/grafana/ldap.toml
@@ -70,6 +73,23 @@ sync_user_attr = userPrincipalName
 [auth]
 disable_login_form = false
 INI
+
+echo "==> Dashboard servido pelo ERP (prefixo e identidade)"
+cat >> /etc/grafana/grafana.ini <<'INI2'
+
+[server]
+root_url = http://127.0.0.1:8080/api/bi/grafana/
+serve_from_sub_path = true
+
+[auth.proxy]
+enabled = true
+header_name = X-WEBAUTH-USER
+auto_sign_up = true
+enable_login_token = true
+
+[auth.anonymous]
+enabled = false
+INI2
 
 echo "==> Reiniciando o Grafana"
 systemctl enable --now grafana-server
