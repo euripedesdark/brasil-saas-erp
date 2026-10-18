@@ -7,7 +7,6 @@
   "error": "Não foi possível consultar os indicadores. Confira o período (até 366 dias) e a disponibilidade do BI.",
   "retry": "Tentar novamente",
   "details": "Ver indicadores",
-  "management": "Administrar dashboards e relatórios",
   "periodHelp": "Financeiro: vencimentos no período e saldos atuais. Produção e vendas: ordens iniciadas e pedidos emitidos no período. Serviços: abertas pela abertura, concluídas pelo fechamento. O valor faturado considera pedidos totalmente faturados pela data de emissão; não representa recebimentos nem faturamento parcial.",
   "areas": {
     "financeiro": "Financeiro",
@@ -30,15 +29,6 @@
     "valor_concluido": "Valor das ordens concluídas",
     "saldo_previsto": "Saldo previsto (a receber − a pagar)",
     "valor_faturado": "Valor dos pedidos faturados"
-  },
-  "openGraylog": "Abrir Graylog",
-  "graylogPending": "A disponibilidade da extensão é verificada ao abrir os indicadores.",
-  "graylogBi": "Indicadores no Graylog",
-  "graylogStatus": {
-    "connecting": "Conectando à extensão do BI. Entre no Graylog se solicitado.",
-    "ready": "Extensão conectada. As consultas usam sua sessão atual do ERP.",
-    "blocked": "O navegador bloqueou a janela. Permita a abertura para este site.",
-    "unavailable": "Não foi possível conectar à extensão. Verifique a instalação do plugin e o acesso ao Graylog."
   },
   "month": "Mês",
   "value": "Valor",

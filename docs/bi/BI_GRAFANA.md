@@ -20,10 +20,12 @@ A tela de BI (`/bi`) mostra o dashboard embutido em `<iframe>`, com o mesmo
 visual de Painel/Load de sempre. O usuario **nao sai do sistema**: e a mesma
 janela, so que a representacao dos dados vem do Grafana.
 
-O Grafana fica **preso ao loopback** (`127.0.0.1:3000`). O acesso a ele passa
-por um proxy autenticado do proprio ERP, em `/api/bi/grafana/**`, que exige
-sessao valida. Nao ha porta 3000 exposta na rede, e o Grafana exige login
-proprio (AD) quando aberto direto.
+O ERP **nao faz proxy de nada**. O `iframe` aponta direto para o Grafana
+(`http://192.168.2.10:3000/grafana/d/bi-brasil-saas`), que escuta em
+`0.0.0.0:3000`. O Grafana autentica pelo mesmo AD, com o mesmo login e senha
+do ERP — por isso o painel abre sem tela extra. O endpoint
+`/api/bi/grafana/dashboard` do ERP so devolve a URL do painel e a lista de areas
+que a pessoa pode ver; nao transporta dado nem consulta o Grafana.
 
 ## Login: mesma conta do ERP
 
@@ -50,16 +52,40 @@ usuario da requisicao — e nao a partir do navegador:
 
 - `SUPERUSER` / `GRP_SUPERUSER` / `Domain Admins` -> todas as areas.
 - Grupo em `OU=Diretoria` -> todas as areas.
-- Grupo em `OU=Gestao` (`GRP_GERENTE`) -> todas as areas.
-- Nao sendo isso, cada `ERP_MODULO_<X>` vira a area `<X>` do BI. Quem esta em
-  `ERP_MODULO_FINANCEIRO` ve so `financeiro`; quem esta em `ERP_MODULO_VENDAS`
-  ve so `vendas`.
+- Grupo em `OU=Gestao` (`GRP_GERENTE`, `GRP_GESTOR`) -> todas as areas.
+- Nao sendo isso, o departamento vem do grupo do AD, e o grupo pode ser dos
+  dois jeitos que o dominio usa:
+  - o tecnico, `ERP_MODULO_<X>` -> area `<X>`;
+  - o de negocio, `GRP_<X>` na OU do departamento -> area `<X>`
+    (`GRP_VENDEDOR` em `OU=Vendas` vira `vendas`, `GRP_FINANCEIRO` em
+    `OU=Financeiro` vira `financeiro`, e assim por diante).
 
-A area liberada vai para o Grafana como variavel de dashboard
-(`var-area`), e as queries do dashboard respeitam essa variavel. Um usuario
-comum pode trocar a variavel na URL, mas **so consegue ampliar o proprio
-escopo de empresa**, e nao o de outro departamento: o `empresa_id` vem do
-token, nunca da URL.
+O escopo fechado viaja em `var-area`, e a empresa em `var-empresa`. **Toda**
+query do painel filtra pelas duas:
+
+```sql
+WHERE empresa_id = CAST('$empresa' AS bigint)
+  AND ('financeiro') IN (SELECT unnest(string_to_array('$area', ',')))
+```
+
+Quem nao tem a area liberada recebe zero — nao um total, nao um agregado: zero.
+Verificado no banco: com `financeiro` liberado a soma e R$ 18.110; com
+`var-area=vendas` o painel financeiro devolve 0; com `empresa=99` devolve 0.
+
+Um usuario pode trocar as variaveis na URL, mas **nao ganha nada com isso**:
+`$empresa` so amplia a propria empresa, e `$area` nao inventa area que o
+servidor nao mandou — o valor que o ERP entrega ja e o teto.
+
+## Sessao do iframe
+
+O dashboard e um `<iframe>`, e iframe nao manda cabecalho `Authorization`:
+ele navega. Por isso o login tambem grava o token num cookie
+(`BRASIL_SAAS_TOKEN`, `HttpOnly` + `SameSite=Strict`) e o
+`JwtAuthenticationFilter` aceita as duas vias — cabecalho e cookie. E o mesmo
+JWT, com a mesma validacao e a mesma expiracao; o cookie e outra via de
+entrega, nao uma credencial nova. Sem `Secure` de proposito, porque o ERP
+tambem roda em http na rede interna e o cookie seria descartado la.
+
 
 ## Arquivos
 
