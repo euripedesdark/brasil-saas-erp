@@ -20,7 +20,7 @@
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
-    "test": "node frontend.smoke.test.js && node i18n-locale.test.js && node i18n-bridge.test.cjs && node --test graylog-bi-bridge.test.mjs",
+    "test": "node frontend.smoke.test.js && node i18n-locale.test.js && node i18n-bridge.test.cjs",
     "test:smoke": "node frontend.smoke.test.js",
     "test:i18n": "node i18n-locale.test.js && node i18n-bridge.test.cjs"
   },

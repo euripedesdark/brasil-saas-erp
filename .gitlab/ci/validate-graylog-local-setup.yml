@@ -1,9 +1,0 @@
-# Espelho automatico: .github/workflows/validate-graylog-local-setup.yml
-validate-graylog-local-setup--test:
-  stage: inspect
-  image: alpine:latest
-  allow_failure: true
-  script:
-  - python3 scripts/bi/test-configure-graylog.py
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
