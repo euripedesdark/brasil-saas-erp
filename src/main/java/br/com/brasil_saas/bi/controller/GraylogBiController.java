@@ -19,8 +19,10 @@ public class GraylogBiController {
     public ApiResponse<Connection> status() {
         String web = publicUrl(properties.getWebUrl());
         boolean configured = properties.isConfigured() && web != null;
-        // Registration of a connection does not mean a custom query widget is installed.
-        return ApiResponse.success(new Connection(configured, true, configured ? web : null,
+        // A conexao registrada com o Graylog e informativa. A apresentacao do BI
+        // (o dashboard com grafico dentro da tela /bi) vem do Grafana, servida por
+        // BiGrafanaController. Entao aqui nunca ha apresentacao pronta.
+        return ApiResponse.success(new Connection(configured, false, configured ? web : null,
                 configured ? properties.getVersion() : null));
     }
 

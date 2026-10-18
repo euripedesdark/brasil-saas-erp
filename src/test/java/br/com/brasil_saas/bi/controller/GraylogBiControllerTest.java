@@ -12,7 +12,7 @@ class GraylogBiControllerTest {
         assertNull(response.webUrl());
     }
 
-    @Test void configuredConnectionIsNotAnInstalledDashboardAdapter() {
+    @Test void configuredConnectionCarriesNoPresentation() {
         var properties = new GraylogBiProperties();
         properties.setConfigured(true);
         properties.setWebUrl("https://example.org/graylog/");
