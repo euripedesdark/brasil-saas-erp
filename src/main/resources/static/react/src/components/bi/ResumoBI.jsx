@@ -4,7 +4,7 @@ import ApiConfig, { apiFetch } from '../../services/ApiConfig';
 import { useAuth } from '../../contexts/AuthContext';
 import './ResumoBI.css';
 import { Chart } from 'primereact/chart';
-import GraylogBiPresentation from './GraylogBiPresentation';
+import GrafanaBiDashboard from './GrafanaBiDashboard';
 
 const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -54,7 +54,7 @@ export default function ResumoBI() {
             <a href={graylog.webUrl} target="_blank" rel="noopener noreferrer">{t('biOverview.openGraylog')}</a>
             {!graylog.presentationReady && <span> — {t('biOverview.graylogPending')}</span>}
         </p>}
-        {graylog?.configured && <GraylogBiPresentation webUrl={graylog.webUrl} />}
+        <GrafanaBiDashboard />
         <form className="bi-overview-filters" onSubmit={event => { event.preventDefault(); setPeriodo({ inicio, fim }); }}>
             <label>{t('biOverview.start')}<input type="date" required value={inicio} max={fim} onChange={event => setInicio(event.target.value)} /></label>
             <label>{t('biOverview.end')}<input type="date" required value={fim} min={inicio} onChange={event => setFim(event.target.value)} /></label>

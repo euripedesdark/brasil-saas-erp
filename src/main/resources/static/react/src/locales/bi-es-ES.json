@@ -48,5 +48,8 @@
     "producao": "Órdenes por mes de inicio",
     "vendas": "Valor de pedidos por mes de emisión",
     "servicos": "Servicios por mes de cierre"
-  }
+  },
+  "grafanaTitle": "Panel de BI",
+  "grafanaLoading": "Cargando el panel de BI…",
+  "grafanaError": "No se pudo cargar el panel de BI."
 }

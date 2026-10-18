@@ -1,0 +1,85 @@
+#######################################
+# Grafana -> Active Directory (Samba AD)
+# O login no Grafana usa a mesma conta do ERP (login AD).
+#######################################
+
+[[servers]]
+  # AD local do dc-erp: o mesmo servico que o auth-service do ERP consulta.
+  host = "127.0.0.1"
+  port = 636
+  protocol = "ldaps"
+  use_ssl = true
+
+  # Conta de servico somente-leitura, criada para o Grafana consultar o AD.
+  bind_dn = "grafana-svc@srvcloud.cloud"
+  bind_password = "GrafanaBI@2026Svc!"
+
+  search_base_dns = ["DC=srvcloud,DC=cloud"]
+  search_filter = "(sAMAccountName=%s)"
+  timeout = 10
+  # Grafana recusa login de usuario desabilitado no AD.
+  user_sync_enabled = false
+
+  [servers.tls]
+  # O certificado do AD e da PKI interna (CN=dc-erp.srvcloud.cloud): o nome
+  # importa para o TLS, e a cadeia so valida dentro do servidor.
+  skip_verify = true
+  server_name = "dc-erp.srvcloud.cloud"
+
+  [servers.attributes]
+  # O Samba AD deste dominio nao popula "mail"; o userPrincipalName serve de
+  # login e de e-mail para o Grafana (ele exige os dois preenchidos).
+  login    = "userPrincipalName"
+  name     = "cn"
+  surname  = "cn"
+  email    = "userPrincipalName"
+
+  # O grupo chega pelo memberOf; o Grafana compara pelo DN completo.
+  [servers.group_mapping]
+  name = "DN"
+
+#######################################
+# Perfis de acesso no Grafana
+#######################################
+
+# SUPERUSER e Domain Admins administram o Grafana.
+[[auth.ldap.groups]]
+  name = "Administradores do BI"
+  groups = [
+    "CN=Domain Admins,CN=Builtin,DC=srvcloud,DC=cloud",
+    "CN=Administrators,CN=Builtin,DC=srvcloud,DC=cloud",
+    "CN=GRP_SUPERUSER,OU=Administracao,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+    "CN=GRP_ROOT,OU=Tecnologia,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+  ]
+  role = "Admin"
+
+# Diretoria: veem todos os dados (regra do dono).
+[[auth.ldap.groups]]
+  name = "Diretoria do BI"
+  groups = [
+    "CN=GRP_DIRETORIA,OU=Diretoria,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+  ]
+  role = "Editor"
+
+# Gestao: veem todos os dados.
+[[auth.ldap.groups]]
+  name = "Gestao do BI"
+  groups = [
+    "CN=GRP_GERENTE,OU=Gestao,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+  ]
+  role = "Editor"
+
+# Demais perfis: enxergam apenas o proprio departamento.
+[[auth.ldap.groups]]
+  name = "Leitores do BI"
+  groups = [
+    "CN=GRP_FINANCEIRO,OU=Financeiro,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+    "CN=GRP_SA,OU=Tecnologia,OU=BrasilCloud,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_FINANCEIRO,CN=Users,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_VENDAS,CN=Users,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_PRODUCAO,CN=Users,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_CADASTRO,CN=Users,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_ESTOQUE,CN=Users,DC=srvcloud,DC=cloud",
+    "CN=ERP_MODULO_FISCAL,CN=Users,DC=srvcloud,DC=cloud",
+  ]
+  role = "Viewer"

@@ -1,0 +1,31 @@
+
+/* Painel do Grafana embutido na tela de BI.
+   O iframe fica com o mesmo tratamento dos cards: fundo branco, borda fina e
+   a barra de acento que identifica o bloco como parte do BI. */
+.bi-grafana {
+    margin: 1.25rem 0 0;
+    background: var(--bi-card-bg);
+    border: 1px solid var(--bi-card-border);
+    border-radius: var(--bi-radius);
+    box-shadow: var(--bi-shadow);
+    overflow: hidden;
+}
+
+.bi-grafana-frame {
+    display: block;
+    width: 100%;
+    /* Altura suficiente para o dashboard inteiro respirar sem barra interna. */
+    height: 1600px;
+    border: 0;
+    background: #111217;
+}
+
+.bi-grafana-status {
+    margin: 1rem 0;
+    color: var(--bi-text-secondary);
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .bi-grafana-frame { height: 2100px; }
+}
