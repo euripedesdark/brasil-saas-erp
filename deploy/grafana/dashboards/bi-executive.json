@@ -9,7 +9,7 @@
       "type": "timeseries",
       "title": "Posição financeira ao longo do tempo (A receber vs A pagar)",
       "gridPos": {
-        "h": 10,
+        "h": 9,
         "w": 24,
         "x": 0,
         "y": 0
@@ -22,7 +22,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_vencimento)::date AS time, SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE 0 END) AS \"A receber\", SUM(CASE WHEN tipo='P' THEN valor_saldo ELSE 0 END) AS \"A pagar\" FROM brasil_saas_dl.v_bi_financeiro WHERE status='ABERTO' AND data_vencimento IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_vencimento)::timestamp AS time, SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE 0 END) AS \"A receber\", SUM(CASE WHEN tipo='P' THEN valor_saldo ELSE 0 END) AS \"A pagar\" FROM brasil_saas_dl.v_bi_financeiro WHERE status='ABERTO' AND data_vencimento IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -43,10 +43,33 @@
             "lineStyle": {
               "fill": "solid"
             },
-            "axisPlacement": "auto"
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "time"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "date"
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "legend": {
@@ -57,8 +80,15 @@
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
+        },
+        "xaxis": {
+          "show": true,
+          "values": [],
+          "showLabel": true
         }
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "stat",
@@ -67,7 +97,7 @@
         "h": 5,
         "w": 6,
         "x": 0,
-        "y": 10
+        "y": 9
       },
       "datasource": {
         "type": "postgres",
@@ -115,7 +145,9 @@
         "justifyMode": "auto",
         "textMode": "value",
         "wideLayout": true
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "stat",
@@ -124,7 +156,7 @@
         "h": 5,
         "w": 6,
         "x": 6,
-        "y": 10
+        "y": 9
       },
       "datasource": {
         "type": "postgres",
@@ -172,7 +204,9 @@
         "justifyMode": "auto",
         "textMode": "value",
         "wideLayout": true
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "stat",
@@ -181,7 +215,7 @@
         "h": 5,
         "w": 6,
         "x": 12,
-        "y": 10
+        "y": 9
       },
       "datasource": {
         "type": "postgres",
@@ -229,7 +263,9 @@
         "justifyMode": "auto",
         "textMode": "value",
         "wideLayout": true
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "stat",
@@ -238,7 +274,7 @@
         "h": 5,
         "w": 6,
         "x": 18,
-        "y": 10
+        "y": 9
       },
       "datasource": {
         "type": "postgres",
@@ -286,7 +322,9 @@
         "justifyMode": "auto",
         "textMode": "value",
         "wideLayout": true
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "piechart",
@@ -295,7 +333,7 @@
         "h": 10,
         "w": 10,
         "x": 0,
-        "y": 15
+        "y": 14
       },
       "datasource": {
         "type": "postgres",
@@ -345,7 +383,9 @@
         "displayLabels": [
           "name"
         ]
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "bargauge",
@@ -354,7 +394,7 @@
         "h": 10,
         "w": 14,
         "x": 10,
-        "y": 15
+        "y": 14
       },
       "datasource": {
         "type": "postgres",
@@ -364,7 +404,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_referencia)::date AS time, COUNT(*) AS ordens FROM brasil_saas_dl.v_bi_producao WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, COUNT(*) AS ordens FROM brasil_saas_dl.v_bi_producao WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -394,7 +434,9 @@
         "showUnfilled": true,
         "valueMode": "color",
         "maxValue": 200
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "barchart",
@@ -403,7 +445,7 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 24
       },
       "datasource": {
         "type": "postgres",
@@ -413,7 +455,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_abertura)::date AS time, COUNT(*) AS ordens FROM brasil_saas_dl.v_bi_servicos WHERE data_abertura IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_abertura)::timestamp AS time, COUNT(*) AS \"ordens\" FROM brasil_saas_dl.v_bi_servicos WHERE data_abertura IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -447,7 +489,9 @@
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transparent": false,
+      "description": null
     },
     {
       "type": "barchart",
@@ -456,7 +500,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 24
       },
       "datasource": {
         "type": "postgres",
@@ -466,7 +510,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_referencia)::date AS time, SUM(valor_total) AS total FROM brasil_saas_dl.v_bi_vendas WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, SUM(valor_total) AS \"total\" FROM brasil_saas_dl.v_bi_vendas WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -499,7 +543,9 @@
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transparent": false,
+      "description": null
     }
   ],
   "refresh": "5m",
@@ -513,11 +559,11 @@
     "list": []
   },
   "time": {
-    "from": "now-1y",
+    "from": "now-180d",
     "to": "now"
   },
   "timepicker": {},
-  "timezone": "browser",
+  "timezone": "America/Sao_Paulo",
   "title": "Brasil SaaS — BI Executivo",
   "uid": "bi-brasil-saas",
   "version": 1,
