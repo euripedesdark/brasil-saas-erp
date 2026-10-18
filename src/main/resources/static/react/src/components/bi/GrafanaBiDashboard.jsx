@@ -17,23 +17,28 @@ import './grafana-embed.css';
  * @param areas      Áreas que a pessoa pode ver, ja fechadas pelo escopo.
  * @param empresaId  Empresa da pessoa, vem do token.
  */
-export default function GrafanaBiDashboard({ url, empresaId, areas }) {
+export default function GrafanaBiDashboard({ url, uid, empresaId, areas }) {
     const { t } = useTranslation();
 
     const src = useMemo(() => {
         if (!url) return null;
-        const base = url.replace(/\/$/, '');
+        // Aponta direto para o dashboard pelo UID. A raiz do Grafana mostra o
+        // painel inicial de cada pessoa, e quem entra pela primeira vez nao
+        // tem nenhum — abriria um iframe em branco.
+        const base = uid ? `${url.replace(/\/$/, '')}/d/${encodeURIComponent(uid)}` : url.replace(/\/$/, '');
+        // kiosk sem valor esconde a navegacao sem travar o painel numa tela
+        // de 1920. Com kiosk=tvpc o Grafana desenha o painel naquele tamanho
+        // fixo e o iframe so mostra um recorte, com os KPIs sobrepostos.
         const query = new URLSearchParams({
             orgId: '1',
-            kiosk: 'tvpc',
+            kiosk: '',
             refresh: '5m',
             theme: 'dark',
-            paneload: 'full',
             'var-empresa': String(empresaId ?? ''),
             'var-area': (areas?.length ? areas : ['financeiro', 'producao', 'vendas', 'servicos']).join(','),
         });
         return `${base}?${query.toString()}`;
-    }, [url, empresaId, areas]);
+    }, [url, uid, empresaId, areas]);
 
     if (!src) return null;
 

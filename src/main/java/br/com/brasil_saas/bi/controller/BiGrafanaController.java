@@ -36,7 +36,8 @@ public class BiGrafanaController {
     public ApiResponse<Dashboard> dashboard(@AuthenticationPrincipal AuthenticatedUser usuario) {
         String url = enderecoPublico(properties.getDashboardUrl());
         List<String> areas = escopo.areasVisiveis(usuario);
-        return ApiResponse.success(new Dashboard(url, areas, escopo.veTodasAsAreas(usuario)));
+        return ApiResponse.success(new Dashboard(url, properties.getDashboardUid(), areas,
+                escopo.veTodasAsAreas(usuario)));
     }
 
     /** So aceita http/https sem credencial, query ou fragmento. */
@@ -58,9 +59,13 @@ public class BiGrafanaController {
     }
 
     /**
-     * @param url        Endereco do dashboard.
+     * @param url        Endereco base do Grafana.
+     * @param uid        UID do dashboard. O iframe aponta direto para ele, e
+     *                   nao para a raiz: cada pessoa tem um dashboard inicial
+     *                   proprio no Grafana, e quem entra pela primeira vez
+     *                   nao tem nenhum — a raiz abriria um painel vazio.
      * @param areas      Areas liberadas para a pessoa (o filtro do painel).
      * @param completo   Verdadeiro quando a pessoa ve todas as areas.
      */
-    public record Dashboard(String url, List<String> areas, boolean completo) {}
+    public record Dashboard(String url, String uid, List<String> areas, boolean completo) {}
 }
