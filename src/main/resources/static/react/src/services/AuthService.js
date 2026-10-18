@@ -55,15 +55,8 @@ export const authService = {
 
     async logout() {
         try {
-            // O token continua válido no cliente até expirar (não há revogação
-            // no servidor), mas o cookie de sessão — o que o iframe do BI usa
-            // para carregar — é apagado aqui. Sem isso o dashboard do BI
-            // continuaria abrindo depois da saída.
-            await fetch('/api/auth/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-            }).catch(() => {});
+            // Logout local: não há endpoint de revogação /auth/logout no backend.
+            // O access token permanece válido até expirar; revogação exige suporte no servidor.
         } finally {
             localStorage.removeItem('brasil-saas_token');
             localStorage.removeItem('brasil-saas_refresh_token');

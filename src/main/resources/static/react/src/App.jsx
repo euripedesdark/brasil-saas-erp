@@ -151,7 +151,9 @@ import Capacidade from './components/producao/Capacidade';
 import Roteiros from './components/producao/Roteiros';
 
 import { Relatorios } from './components/Relatorios';
-import { BI } from './components/bi/BI';
+// A tela de BI e o painel do Grafana. A gestao de dashboards saiu do
+// produto: o BI se configura por banco e por codigo, nao pela interface.
+import { ResumoBI } from './components/bi/ResumoBI';
 import { Kpis } from './components/bi/Kpis';
 import { RelatoriosAgendados } from './components/bi/RelatoriosAgendados';
 import { RelatoriosBI } from './components/bi/RelatoriosBI';
@@ -347,7 +349,7 @@ function App() {
                     <Route path="ativos/indicadores" element={<IndicadoresAtivos />} />
                     <Route path="ativos/manutencao" element={<ManutencaoAtivos />} />
 
-                    <Route path="bi" element={<BI />} />
+                    <Route path="bi" element={<ResumoBI />} />
                     <Route path="bi/kpis" element={<Kpis />} />
                     <Route path="bi/relatorios" element={<RelatoriosBI />} />
                     <Route path="bi/relatorios-agendados" element={<RelatoriosAgendados />} />

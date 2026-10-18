@@ -7,7 +7,6 @@
   "error": "Impossible de consulter les indicateurs. Vérifiez la période (366 jours maximum) et la disponibilité du BI.",
   "retry": "Réessayer",
   "details": "Voir les indicateurs",
-  "management": "Gérer les tableaux de bord et rapports",
   "periodHelp": "Finances : échéances de la période et soldes actuels. Production et ventes : ordres commencés et commandes émises pendant la période. Services : ouverts par date d’ouverture, terminés par date de clôture. La valeur facturée inclut les commandes entièrement facturées par date d’émission ; elle ne représente pas les encaissements ni la facturation partielle.",
   "areas": {
     "financeiro": "Finances",
@@ -30,15 +29,6 @@
     "valor_concluido": "Valeur des ordres terminés",
     "saldo_previsto": "Solde prévu (à recevoir − à payer)",
     "valor_faturado": "Valeur des commandes facturées"
-  },
-  "openGraylog": "Ouvrir Graylog",
-  "graylogPending": "La disponibilité de l’extension est vérifiée à l’ouverture des indicateurs.",
-  "graylogBi": "Indicateurs dans Graylog",
-  "graylogStatus": {
-    "connecting": "Connexion à l’extension BI. Connectez-vous à Graylog si nécessaire.",
-    "ready": "Extension connectée. Les requêtes utilisent votre session ERP actuelle.",
-    "blocked": "Le navigateur a bloqué la fenêtre. Autorisez les fenêtres pour ce site.",
-    "unavailable": "Impossible de se connecter à l’extension. Vérifiez l’installation du plugin et l’accès à Graylog."
   },
   "month": "Mois",
   "value": "Valeur",

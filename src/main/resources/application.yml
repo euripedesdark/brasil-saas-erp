@@ -1,6 +1,5 @@
 spring:
   config:
-    import: optional:file:/etc/brasil-saas/bi-graylog.properties
   application:
     name: brasil-saas-erp
   profiles:
@@ -243,9 +242,8 @@ bi:
     enabled: ${BI_DATASOURCE_ENABLED:false}
     url: "jdbc:postgresql://${BI_DB_HOST:localhost}:${BI_DB_PORT:5432}/brasil_saas_bi?sslmode=verify-ca&sslrootcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/ca.crt&sslcert=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/issued/brasil_saas_bi_reader.crt&sslkey=${BRASIL_SAAS_CERTS_DIR:/etc/brasil-saas/pki}/private/brasil_saas_bi_reader.pk8"
     username: ${BI_DB_USER:brasil_saas_bi_reader}
-  # Grafana: dashboard do BI, servido por este ERP dentro da tela /bi.
-  # O Grafana escuta so no loopback e nao tem senha exposta aqui: quem chega
-  # nele passa pela sessao do ERP, que assina o cabecalho de identidade.
+  # Grafana: onde esta o dashboard do BI. O Grafana autentica pelo mesmo AD
+  # do ERP e filtra os dados no proprio painel; o ERP so diz onde ele esta.
   grafana:
-    url: ${BI_GRAFANA_URL:http://127.0.0.1:3000}
+    dashboard-url: ${BI_GRAFANA_DASHBOARD_URL:http://192.168.2.10:3000/grafana/}
     dashboard-uid: ${BI_GRAFANA_DASHBOARD_UID:bi-brasil-saas}

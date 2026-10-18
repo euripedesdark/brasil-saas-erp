@@ -7,7 +7,6 @@
   "error": "Unable to load indicators. Check the period (up to 366 days) and BI availability.",
   "retry": "Try again",
   "details": "View indicators",
-  "management": "Manage dashboards and reports",
   "periodHelp": "Finance: due dates in the period and current balances. Production and sales: orders started and issued in the period. Services: open orders by opening date, completed orders by closing date. Invoiced value includes fully invoiced orders by issue date; it does not represent cash receipts or partial invoicing.",
   "areas": {
     "financeiro": "Finance",
@@ -30,15 +29,6 @@
     "valor_concluido": "Completed service order value",
     "saldo_previsto": "Expected balance (receivables − payables)",
     "valor_faturado": "Fully invoiced order value"
-  },
-  "openGraylog": "Open Graylog",
-  "graylogPending": "Extension availability is checked when opening the indicators.",
-  "graylogBi": "Indicators in Graylog",
-  "graylogStatus": {
-    "connecting": "Connecting to the BI extension. Sign in to Graylog if prompted.",
-    "ready": "Extension connected. Queries use your current ERP session.",
-    "blocked": "The browser blocked the window. Allow pop-ups for this site.",
-    "unavailable": "Unable to connect to the extension. Check the plugin installation and Graylog access."
   },
   "month": "Month",
   "value": "Value",

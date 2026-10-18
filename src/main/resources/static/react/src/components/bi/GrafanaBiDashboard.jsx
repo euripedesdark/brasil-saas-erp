@@ -1,47 +1,41 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../contexts/AuthContext';
-import { apiFetch } from '../../services/ApiConfig';
 import './grafana-embed.css';
 
 /**
- * Dashboard do BI embutido na tela do sistema.
+ * O dashboard do Grafana dentro da tela de BI.
  *
- * <p>O Grafana escuta so no loopback. O endereco devolvido aqui e um caminho
- * do proprio ERP (`/api/bi/grafana/d/...`), e o ERP repassa a chamada para o
- * Grafana com a sessao aberta. Por isso o iframe fica na mesma origem do
- * sistema, nao ha porta 3000 exposta, e o filtro de departamento ja vem
- * fechado do servidor.
+ * <p>Aponta direto para o Grafana. Sem proxy, sem camada no meio: o Grafana
+ * fala com o banco `brasil_saas_bi` e o filtro de departamento vive nas
+ * queries do painel, em `$empresa` e `$area`.
+ *
+ * <p>Quem abre o Grafana direto no navegador entra com a mesma conta do AD
+ * (LDAP). Quem vem pela tela do sistema chega pelo `kiosk`, que é a sessão já
+ * aberta pelo Grafana para aquele navegador.
+ *
+ * @param url        Endereco do dashboard (vem da configuracao do sistema).
+ * @param areas      Áreas que a pessoa pode ver, ja fechadas pelo escopo.
+ * @param empresaId  Empresa da pessoa, vem do token.
  */
-export default function GrafanaBiDashboard() {
+export default function GrafanaBiDashboard({ url, empresaId, areas }) {
     const { t } = useTranslation();
-    const { user } = useAuth();
-    const [dashboard, setDashboard] = useState(null);
-    const [erro, setErro] = useState(false);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        setDashboard(null);
-        setErro(false);
-        apiFetch('/api/bi/grafana/dashboard', { signal: controller.signal })
-            .then(response => (response.ok ? response.json() : Promise.reject(new Error('BI indisponivel'))))
-            .then(body => { if (!controller.signal.aborted) setDashboard(body.data); })
-            .catch(() => { if (!controller.signal.aborted) setErro(true); });
-        return () => controller.abort();
-    }, [user?.empresaId, user?.id]);
 
     const src = useMemo(() => {
-        if (!dashboard?.url) return null;
-        const query = new URLSearchParams(dashboard.query || {}).toString();
-        return query ? `${dashboard.url}?${query}` : dashboard.url;
-    }, [dashboard]);
+        if (!url) return null;
+        const base = url.replace(/\/$/, '');
+        const query = new URLSearchParams({
+            orgId: '1',
+            kiosk: 'tvpc',
+            refresh: '5m',
+            theme: 'dark',
+            paneload: 'full',
+            'var-empresa': String(empresaId ?? ''),
+            'var-area': (areas?.length ? areas : ['financeiro', 'producao', 'vendas', 'servicos']).join(','),
+        });
+        return `${base}?${query.toString()}`;
+    }, [url, empresaId, areas]);
 
-    if (erro) {
-        return <p role="alert" className="bi-grafana-status">{t('biOverview.grafanaError')}</p>;
-    }
-    if (!src) {
-        return <p role="status" className="bi-grafana-status">{t('biOverview.grafanaLoading')}</p>;
-    }
+    if (!src) return null;
 
     return <div className="bi-grafana">
         <iframe
@@ -50,7 +44,6 @@ export default function GrafanaBiDashboard() {
             className="bi-grafana-frame"
             loading="lazy"
             referrerPolicy="same-origin"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
         />
     </div>;
 }

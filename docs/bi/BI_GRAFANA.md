@@ -20,10 +20,12 @@ A tela de BI (`/bi`) mostra o dashboard embutido em `<iframe>`, com o mesmo
 visual de Painel/Load de sempre. O usuario **nao sai do sistema**: e a mesma
 janela, so que a representacao dos dados vem do Grafana.
 
-O Grafana fica **preso ao loopback** (`127.0.0.1:3000`). O acesso a ele passa
-por um proxy autenticado do proprio ERP, em `/api/bi/grafana/**`, que exige
-sessao valida. Nao ha porta 3000 exposta na rede, e o Grafana exige login
-proprio (AD) quando aberto direto.
+O ERP **nao faz proxy de nada**. O `iframe` aponta direto para o Grafana
+(`http://192.168.2.10:3000/grafana/d/bi-brasil-saas`), que escuta em
+`0.0.0.0:3000`. O Grafana autentica pelo mesmo AD, com o mesmo login e senha
+do ERP — por isso o painel abre sem tela extra. O endpoint
+`/api/bi/grafana/dashboard` do ERP so devolve a URL do painel e a lista de areas
+que a pessoa pode ver; nao transporta dado nem consulta o Grafana.
 
 ## Login: mesma conta do ERP
 

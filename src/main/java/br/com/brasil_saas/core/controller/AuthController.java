@@ -8,10 +8,8 @@ import br.com.brasil_saas.shared.model.ApiResponse;
 import br.com.brasil_saas.shared.security.AuthenticatedUser;
 import br.com.brasil_saas.shared.security.CustomUserDetailsService;
 import br.com.brasil_saas.shared.security.SpnegoService;
-import br.com.brasil_saas.shared.security.TokenCookie;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -28,20 +26,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
-        return comCookie(authService.login(request));
-    }
-
-    /**
-     * Grava o token no cookie de sessao, para o dashboard do BI — que e um
-     * iframe — conseguir carregar. E' o mesmo JWT que ja volta no corpo; o
-     * cookie nao e uma credencial nova.
-     */
-    private ResponseEntity<ApiResponse<LoginResponse>> comCookie(LoginResponse response) {
-        HttpHeaders headers = new HttpHeaders();
-        if (response != null && response.getAccessToken() != null) {
-            headers.add(HttpHeaders.SET_COOKIE, TokenCookie.gravar(response.getAccessToken(), 8 * 3600).toString());
-        }
-        return ResponseEntity.ok().headers(headers).body(ApiResponse.success(response));
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -51,7 +37,8 @@ public class AuthController {
     @PostMapping("/login/database")
     public ResponseEntity<ApiResponse<LoginResponse>> loginDatabase(
             @Valid @RequestBody LoginRequest request) {
-        return comCookie(authService.loginBanco(request));
+        LoginResponse response = authService.loginBanco(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -61,7 +48,8 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> loginAd(
             @Valid @RequestBody LoginRequest request) {
         request.setProvider("AD");
-        return comCookie(authService.login(request));
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     /**
@@ -96,26 +84,15 @@ public class AuthController {
         }
 
         String username = CustomUserDetailsService.nomeNoAd(principal);
-        return comCookie(authService.loginPorPrincipal(username));
+        LoginResponse response = authService.loginPorPrincipal(username);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<LoginResponse>> refresh(@RequestBody Map<String, String> body) {
-        return comCookie(authService.refresh(body.get("refreshToken")));
-    }
-
-    /**
-     * Encerra a sessao no servidor: apaga o cookie do BI.
-     *
-     * <p>O token vive no cliente (localStorage), e quem apaga e o front. O que
-     * fica no servidor e o cookie, e este endpoint e o que o apaga — sem ele o
-     * dashboard continuaria carregando depois do logout.
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, TokenCookie.apagar().toString());
-        return ResponseEntity.ok().headers(headers).body(ApiResponse.success(null));
+        String token = body.get("refreshToken");
+        LoginResponse response = authService.refresh(token);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/me")
