@@ -22,7 +22,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_vencimento)::timestamp AS time, SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE 0 END) AS \"A receber\", SUM(CASE WHEN tipo='P' THEN valor_saldo ELSE 0 END) AS \"A pagar\" FROM brasil_saas_dl.v_bi_financeiro WHERE status='ABERTO' AND data_vencimento IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_vencimento)::timestamp AS time, SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE 0 END) AS \"A receber\", SUM(CASE WHEN tipo='P' THEN valor_saldo ELSE 0 END) AS \"A pagar\" FROM brasil_saas_dl.v_bi_financeiro\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('financeiro') IN (SELECT unnest(string_to_array('$area', ','))) AND status='ABERTO' AND data_vencimento IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -107,7 +107,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT COALESCE(SUM(valor_saldo),0) AS valor FROM brasil_saas_dl.v_bi_financeiro WHERE tipo='R' AND status='ABERTO'",
+          "rawSql": "SELECT COALESCE(SUM(valor_saldo),0) AS valor FROM brasil_saas_dl.v_bi_financeiro\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('financeiro') IN (SELECT unnest(string_to_array('$area', ','))) WHERE tipo='R' AND status='ABERTO'",
           "rawQuery": true
         }
       ],
@@ -166,7 +166,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT COALESCE(SUM(valor_saldo),0) AS valor FROM brasil_saas_dl.v_bi_financeiro WHERE tipo='P' AND status='ABERTO'",
+          "rawSql": "SELECT COALESCE(SUM(valor_saldo),0) AS valor FROM brasil_saas_dl.v_bi_financeiro\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('financeiro') IN (SELECT unnest(string_to_array('$area', ','))) WHERE tipo='P' AND status='ABERTO'",
           "rawQuery": true
         }
       ],
@@ -225,7 +225,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT COALESCE(SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE -valor_saldo END),0) AS valor FROM brasil_saas_dl.v_bi_financeiro WHERE status='ABERTO'",
+          "rawSql": "SELECT COALESCE(SUM(CASE WHEN tipo='R' THEN valor_saldo ELSE -valor_saldo END),0) AS valor FROM brasil_saas_dl.v_bi_financeiro\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('financeiro') IN (SELECT unnest(string_to_array('$area', ','))) WHERE status='ABERTO'",
           "rawQuery": true
         }
       ],
@@ -284,7 +284,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT COALESCE(SUM(valor_total),0) AS valor FROM brasil_saas_dl.v_bi_vendas WHERE status='FATURADO'",
+          "rawSql": "SELECT COALESCE(SUM(valor_total),0) AS valor FROM brasil_saas_dl.v_bi_vendas\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('vendas') IN (SELECT unnest(string_to_array('$area', ','))) AND status='FATURADO'",
           "rawQuery": true
         }
       ],
@@ -343,7 +343,7 @@
         {
           "refId": "A",
           "format": "table",
-          "rawSql": "SELECT CASE WHEN tipo LIKE 'SEED%' THEN 'Outros' ELSE tipo END AS tipo, SUM(valor_total) AS total FROM brasil_saas_dl.v_bi_vendas WHERE status <> 'CANCELADO' GROUP BY 1 ORDER BY 2 DESC",
+          "rawSql": "SELECT CASE WHEN tipo LIKE 'SEED%' THEN 'Outros' ELSE tipo END AS tipo, SUM(valor_total) AS total FROM brasil_saas_dl.v_bi_vendas\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('vendas') IN (SELECT unnest(string_to_array('$area', ','))) AND status <> 'CANCELADO' GROUP BY 1 ORDER BY 2 DESC",
           "rawQuery": true
         }
       ],
@@ -404,7 +404,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, COUNT(*) AS ordens FROM brasil_saas_dl.v_bi_producao WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, COUNT(*) AS ordens FROM brasil_saas_dl.v_bi_producao\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('producao') IN (SELECT unnest(string_to_array('$area', ','))) AND data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -455,7 +455,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_abertura)::timestamp AS time, COUNT(*) AS \"ordens\" FROM brasil_saas_dl.v_bi_servicos WHERE data_abertura IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_abertura)::timestamp AS time, COUNT(*) AS \"ordens\" FROM brasil_saas_dl.v_bi_servicos\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('servicos') IN (SELECT unnest(string_to_array('$area', ','))) AND data_abertura IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -510,7 +510,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, SUM(valor_total) AS \"total\" FROM brasil_saas_dl.v_bi_vendas WHERE data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
+          "rawSql": "SELECT date_trunc('month', data_referencia)::timestamp AS time, SUM(valor_total) AS \"total\" FROM brasil_saas_dl.v_bi_vendas\nWHERE empresa_id = CAST('$empresa' AS bigint) AND ('vendas') IN (SELECT unnest(string_to_array('$area', ','))) AND data_referencia IS NOT NULL GROUP BY 1 ORDER BY 1",
           "rawQuery": true
         }
       ],
@@ -556,7 +556,62 @@
     "brasil-saas"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "empresa",
+        "label": "Empresa",
+        "type": "custom",
+        "query": "1",
+        "current": {
+          "text": "1",
+          "value": "1"
+        },
+        "options": [
+          {
+            "text": "1",
+            "value": "1",
+            "selected": true
+          }
+        ],
+        "hide": 2
+      },
+      {
+        "name": "area",
+        "label": "Área",
+        "type": "custom",
+        "query": "financeiro,producao,vendas,servicos",
+        "current": {
+          "text": [
+            "financeiro",
+            "producao",
+            "vendas",
+            "servicos"
+          ],
+          "value": [
+            "financeiro",
+            "producao",
+            "vendas",
+            "servicos"
+          ]
+        },
+        "multi": true,
+        "includeAll": true,
+        "allValue": "financeiro,producao,vendas,servicos",
+        "options": [],
+        "hide": 2
+      },
+      {
+        "name": "data_inicio",
+        "label": "Início",
+        "type": "custom",
+        "query": "now-180d",
+        "current": {
+          "text": "now-180d",
+          "value": "now-180d"
+        },
+        "hide": 2
+      }
+    ]
   },
   "time": {
     "from": "now-180d",

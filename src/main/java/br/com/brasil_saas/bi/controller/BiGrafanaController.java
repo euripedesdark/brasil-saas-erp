@@ -86,6 +86,10 @@ public class BiGrafanaController {
         query.put("refresh", "5m");
         query.put("theme", "dark");
         query.put("paneload", "full");
+        // A empresa vem do token: e' o isolamento multi-empresa, e nunca da URL.
+        query.put("var-empresa", String.valueOf(usuario.getEmpresaId()));
+        // A area vem fechada do escopo, calculado no servidor a partir dos
+        // grupos do AD. Vem separada por virgula, que e o que o painel le.
         if (!areas.isEmpty()) {
             query.put("var-area", String.join(",", areas));
         }
