@@ -48,5 +48,8 @@
     "producao": "Orders by start month",
     "vendas": "Order value by issue month",
     "servicos": "Services by completion month"
-  }
+  },
+  "grafanaTitle": "BI dashboard",
+  "grafanaLoading": "Loading the BI dashboard…",
+  "grafanaError": "Could not load the BI dashboard."
 }

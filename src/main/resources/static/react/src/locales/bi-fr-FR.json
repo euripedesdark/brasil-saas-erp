@@ -48,5 +48,8 @@
     "producao": "Ordres par mois de début",
     "vendas": "Valeur des commandes par mois d’émission",
     "servicos": "Services par mois de clôture"
-  }
+  },
+  "grafanaTitle": "Tableau de bord BI",
+  "grafanaLoading": "Chargement du tableau de bord BI…",
+  "grafanaError": "Impossible de charger le tableau de bord BI."
 }
