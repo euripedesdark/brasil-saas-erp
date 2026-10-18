@@ -51,6 +51,9 @@ public class BiGrafanaController {
     /** Cabecalho que o Grafana le para saber com quem esta. */
     private static final String HEADER_USUARIO = "X-WEBAUTH-USER";
 
+    /** Prefixo publico do Grafana, o mesmo que o ERP usa para servir. */
+    private static final String PREFIXO_GRAFANA = "/api/bi/grafana";
+
     private static final String[] TIPOS_ACEITOS = {
             "application/javascript", "text/javascript", "text/css", "application/json",
             "image/png", "image/svg+xml", "image/gif", "image/webp", "font/woff",
@@ -112,7 +115,14 @@ public class BiGrafanaController {
             // sistema o que interessa e o dashboard, servido por /dashboard.
             caminho = "/d/" + dashboardUid;
         }
-        StringBuilder alvo = new StringBuilder(caminho);
+        /*
+         * O Grafana roda com serve_from_sub_path: ele so responde as URLs que
+         * comecam no prefixo configurado em root_url, que e este mesmo. Sem o
+         * prefixo, o Grafana devolve 301 para a URL canonica — e o RestClient
+         * trata 3xx como falha. Repassar com o prefixo e o que mantem o
+         * dashboard e os assets na mesma arvore de URL.
+         */
+        StringBuilder alvo = new StringBuilder(PREFIXO_GRAFANA).append(caminho);
         String query = request.getQueryString();
         if (query != null && !query.isBlank()) {
             alvo.append('?').append(query);
