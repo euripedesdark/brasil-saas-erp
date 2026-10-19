@@ -1,11 +1,5 @@
 # Apoie o Brasil SaaS ERP
-
-Este arquivo reúne os dados para doação do Brasil SaaS ERP, um ERP Open Source
-mantido por um único desenvolvedor.
-
-Se este projeto ajudou você, sua empresa ou sua equipe, considere apoiar o
-desenvolvimento. Uma doação de qualquer valor paga servidor, certificado digital e as
-taxas de emissão da prefeitura. Ela não compra garantia de prazo em nenhuma issue.
+# Support the Brasil SaaS ERP
 
 - [English](#english) · [Español](#espaol) · [Français](#franais)
 
