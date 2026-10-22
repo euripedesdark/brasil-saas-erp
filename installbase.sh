@@ -1849,7 +1849,7 @@ else
         [ -z "$P" ]
     }
 
-    NGINX_APP_CONF='/etc/nginx/conf.d/brasil-saas-app.conf'
+    NGINX_APP_CONF='/etc/nginx/conf.d/astral-saas-erp.conf'
 
     DONO_80="$(ss -tlnp 2>/dev/null | grep -E '[[:space:]]\*?:80[[:space:]]' \
                | grep -oE 'users:\(\("[a-zA-Z0-9._-]+' | head -1 | sed 's/.*"//' || true)"
