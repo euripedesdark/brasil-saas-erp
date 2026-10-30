@@ -11,7 +11,7 @@ scipy==1.16.2
 soundfile==0.13.1
 timm==1.0.22
 transformers==4.55.0
-vllm==0.30.0
+vllm==0.32.0
 keyboard
 pygame
 sounddevice==0.5.5
