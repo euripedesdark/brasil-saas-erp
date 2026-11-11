@@ -1,4 +1,4 @@
-torch==2.8.0
+torch==2.13.0
 torchaudio==2.8.0
 diffusers==0.36.0
 einops==0.8.1
