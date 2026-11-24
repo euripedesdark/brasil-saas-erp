@@ -42,7 +42,7 @@
         <jmockit.version>1.49</jmockit.version>
         <junit-jupiter.version>5.13.3</junit-jupiter.version>
         <lombok.version>1.18.38</lombok.version>
-        <jasper.version>6.20.6</jasper.version>
+        <jasper.version>7.0.7</jasper.version>
         <barbecue.version>1.5-beta1</barbecue.version>
         <zxing.version>3.2.1</zxing.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
