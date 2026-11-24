@@ -93,7 +93,7 @@
         <java-cte.version>4.00.14</java-cte.version>
         <testcontainers.version>1.20.2</testcontainers.version>
         <pgvector.version>0.1.6</pgvector.version>
-        <minio.version>8.5.17</minio.version>
+        <minio.version>8.6.0</minio.version>
         <stripe.version>34.0.0</stripe.version>
     </properties>
 
