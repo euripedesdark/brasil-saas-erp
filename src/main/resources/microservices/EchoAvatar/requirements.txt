@@ -5,7 +5,7 @@ einops==0.8.1
 huggingface_hub==0.36.2
 librosa==0.11.0
 omegaconf==2.3.0
-orjson==3.11.5
+orjson==3.11.6
 safetensors==0.6.2
 scipy==1.16.2
 soundfile==0.13.1
