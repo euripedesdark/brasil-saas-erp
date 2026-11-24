@@ -58,7 +58,7 @@
 
         <openpdf.version>3.0.5</openpdf.version>
         <pdfbox.version>3.0.5</pdfbox.version>
-        <poi.version>5.3.0</poi.version>
+        <poi.version>5.4.0</poi.version>
         <!-- TEMPORARIAMENTE FORA: JasperReports desativado (CVE-2025-10492 / CVE-2026-6009).
              Reativar com versão >= 7.x quando o módulo de relatórios voltar.
         <jasperreports.version>6.21.5</jasperreports.version>
