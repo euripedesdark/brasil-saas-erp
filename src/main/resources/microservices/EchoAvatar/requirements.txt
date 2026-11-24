@@ -1,6 +1,6 @@
 torch==2.13.0
 torchaudio==2.8.0
-diffusers==0.36.0
+diffusers==0.38.0
 einops==0.8.1
 huggingface_hub==0.36.2
 librosa==0.11.0
